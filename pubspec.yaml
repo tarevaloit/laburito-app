@@ -4,7 +4,11 @@ publish_to: 'none'
 version: 0.1.0+1
 
 environment:
-  sdk: '>=3.4.0 <4.0.0'
+  # Flutter 3.27 es el piso real: antes de esa versión no existe
+  # Color.withValues. Declararlo hace que un SDK viejo falle en `pub get`
+  # con un mensaje claro, en vez de dejar errores raros en el editor.
+  sdk: '>=3.6.0 <4.0.0'
+  flutter: '>=3.27.0'
 
 dependencies:
   flutter:

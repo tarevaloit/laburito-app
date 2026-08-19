@@ -1,0 +1,24 @@
+{
+  // El proyecto exige Flutter >= 3.27 (usa Color.withValues, entre otras cosas).
+  // Sin esta línea, VS Code toma el `dart.flutterSdkPath` de los ajustes de
+  // usuario, que apunta a un Flutter 3.22 viejo y marca errores fantasma que
+  // `flutter analyze` no reproduce.
+  "dart.flutterSdkPath": "/Users/arevalo/fvm/versions/stable",
+
+  "dart.lineLength": 80,
+  "editor.rulers": [80],
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit"
+  },
+  "[dart]": {
+    "editor.defaultFormatter": "Dart-Code.dart-code",
+    "editor.selectionHighlight": false,
+    "editor.tabCompletion": "onlySnippets",
+    "editor.wordBasedSuggestions": "off"
+  },
+  "files.exclude": {
+    "**/.dart_tool": true,
+    "**/build": true
+  }
+}
