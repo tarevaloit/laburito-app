@@ -54,7 +54,7 @@ produjo una decisión técnica, va a la sección 4 de este archivo antes de cerr
 | Esfuerzo ejecutado | **35 pts** (12 de 12 ítems) |
 | Backlog restante | 200 pts de 235 |
 | Release objetivo | v0.1.0 — tag creado |
-| Repositorio | _(completar URL)_ |
+| Repositorio | https://github.com/tarevaloit/laburito |
 | Proyecto Supabase | _(completar ref)_ |
 
 ## 2. Stack vigente
