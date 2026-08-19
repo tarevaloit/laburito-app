@@ -76,7 +76,20 @@ git init && git add . && git commit -m "chore(T-01): setup Flutter + Riverpod + 
 
    Sin estos dos cambios Supabase manda un enlace y las pantallas de código no reciben nada.
 7. **Storage**: confirmar los buckets `avatares`, `documentos` (privado) y `portafolios`.
-8. **Settings → API**: copiar `Project URL` y la clave `anon public` a `.vscode/launch.json`.
+8. **Settings → API**: copiar `Project URL` y la clave `anon public` al archivo `.env`.
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   ```
+   SUPABASE_URL=https://xxxxxxxx.supabase.co
+   SUPABASE_ANON_KEY=eyJhbGciOi...
+   ```
+
+   `.env` está en el `.gitignore`: es el único lugar donde viven las claves y no
+   se commitea. Las configuraciones de `.vscode/launch.json` ya lo leen con
+   `--dart-define-from-file=.env`, así que en VS Code alcanza con F5.
 
 ```bash
 git add supabase/ && git commit -m "feat(T-02): esquema inicial, RLS, buckets y seed de categorías"
@@ -90,9 +103,14 @@ Corré la app (F5 en VS Code, o el comando de abajo) y seguí este orden. Es tam
 el guion del video de demostración.
 
 ```bash
-flutter run -d chrome \
-  --dart-define=SUPABASE_URL=... \
-  --dart-define=SUPABASE_ANON_KEY=...
+flutter run -d chrome --dart-define-from-file=.env
+```
+
+Lo mismo vale para las compilaciones:
+
+```bash
+flutter build web --dart-define-from-file=.env
+flutter build apk --dart-define-from-file=.env
 ```
 
 | # | Circuito | CU | Qué verificar |

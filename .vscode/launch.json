@@ -7,20 +7,23 @@
       "type": "dart",
       "program": "lib/main.dart",
       "deviceId": "chrome",
-      "args": [
-        "--dart-define=SUPABASE_URL=PEGAR_PROJECT_URL",
-        "--dart-define=SUPABASE_ANON_KEY=PEGAR_ANON_PUBLIC_KEY"
-      ]
+      "toolArgs": ["--dart-define-from-file=.env"]
     },
     {
-      "name": "Laburito · Dispositivo / emulador",
+      "name": "Laburito · Dispositivo o emulador",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
-      "args": [
-        "--dart-define=SUPABASE_URL=PEGAR_PROJECT_URL",
-        "--dart-define=SUPABASE_ANON_KEY=PEGAR_ANON_PUBLIC_KEY"
-      ]
+      "toolArgs": ["--dart-define-from-file=.env"]
+    },
+    {
+      "name": "Laburito · Web (perfil de release)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "flutterMode": "release",
+      "toolArgs": ["--dart-define-from-file=.env"]
     }
   ]
 }

@@ -36,9 +36,9 @@ class _FaltaConfiguracion extends StatelessWidget {
             padding: EdgeInsets.all(32),
             child: Text(
               'Faltan las claves de Supabase.\n\n'
-              'Ejecutá la app pasando:\n'
-              '--dart-define=SUPABASE_URL=...\n'
-              '--dart-define=SUPABASE_ANON_KEY=...',
+              'Copiá .env.example como .env, completá SUPABASE_URL y '
+              'SUPABASE_ANON_KEY, y ejecutá:\n\n'
+              'flutter run --dart-define-from-file=.env',
               textAlign: TextAlign.center,
             ),
           ),
