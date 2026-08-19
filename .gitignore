@@ -43,3 +43,15 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Claves y configuración sensible (T-01). Las claves de Supabase entran por
+# --dart-define; nunca se hardcodean ni se commitean.
+.env
+.env.*
+!.env.example
+**/google-services.json
+**/GoogleService-Info.plist
+**/firebase_options.dart
+*.keystore
+*.jks
+/android/key.properties
