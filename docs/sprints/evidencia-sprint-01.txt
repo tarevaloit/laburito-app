@@ -1,0 +1,18 @@
+Laburito — Evidencia del Sprint 1 (06/08/2026 – 19/08/2026)
+
+Los 12 commits de implementación del sprint, en orden cronológico inverso.
+El commit de cierre documental (docs(S1)) es posterior a esta exportación.
+Regenerar con: git log --oneline --since="2026-08-06"
+
+13b4dff test(S1): validadores de formulario y traducción de errores
+6170dc9 feat(CU-04): recuperar contraseña por código de 6 dígitos
+0f0d4f2 feat(CU-11): dar de baja la cuenta
+1e05627 feat(CU-05): gestionar perfil y avatar
+415f65e feat(CU-09): carga de documentación al bucket privado
+866571a feat(CU-02): alta de profesional con categorías de oficio
+5f0dc84 feat(T-02): trigger de categorías, reemplazo de documentos y RPC de baja
+feb56b1 feat(CU-03,CU-10,CU-50): iniciar y cerrar sesión
+8abfd45 feat(CU-08): validar email del buscador con PIN de 6 dígitos
+fcd2ca2 feat(CU-01): registrar buscador con validación de email
+f979211 feat(T-02): esquema inicial, RLS y seed de categorías
+addb506 chore(T-01): setup Flutter + Riverpod + go_router
