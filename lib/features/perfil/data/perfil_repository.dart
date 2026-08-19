@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/providers/supabase_providers.dart';
 import '../../categorias/data/categorias_repository.dart';
+import '../../verificacion/data/documentos_repository.dart';
 
 /// Vista unificada del perfil del usuario autenticado.
 class PerfilCompleto {
@@ -148,10 +149,35 @@ class PerfilRepository {
     return urlConCacheBust;
   }
 
-  /// CU-11 — Baja lógica mediante función de base de datos.
+  /// CU-11 — Baja de la cuenta: anonimiza los datos personales, destruye los
+  /// archivos y libera el correo para que la persona pueda volver a registrarse.
+  /// La fila del perfil sobrevive porque es el ancla de las FK del historial.
   Future<void> darDeBaja({String? motivo}) async {
+    final id = _client.auth.currentUser?.id;
+    if (id != null) await _borrarArchivos(id);
+
     await _client.rpc('dar_de_baja_cuenta', params: {'p_motivo': motivo});
     await _client.auth.signOut();
+  }
+
+  /// Borra avatar y documentación por la API de Storage. Es el único camino que
+  /// elimina el objeto y no solo su fila en `storage.objects`; la RPC repite el
+  /// borrado a nivel SQL como respaldo. Va antes de la RPC porque después el
+  /// usuario ya no tiene permisos sobre su propia carpeta.
+  Future<void> _borrarArchivos(String id) async {
+    try {
+      await _client.storage.from('avatares').remove(['$id/avatar.jpg']);
+    } catch (_) {
+      // Sin corte: el respaldo de la RPC se ocupa.
+    }
+
+    try {
+      await _client.storage.from('documentos').remove([
+        for (final tipo in TipoDocumento.values) '$id/${tipo.clave}.jpg',
+      ]);
+    } catch (_) {
+      // Sin corte: el respaldo de la RPC se ocupa.
+    }
   }
 }
 

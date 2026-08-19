@@ -133,6 +133,32 @@ en las dos y evita mantener dos ramas de código. Como consecuencia, se decidió
 que los documentos del CU-09 se acepten solo como imagen: el DNI y la selfie son
 fotos, y con eso el bucket recibe siempre `image/jpeg`.
 
+### 4.5 La baja no borraba los archivos y dejaba el correo cautivo
+
+Al revisar el CU-11 aparecieron dos problemas distintos en la misma función.
+
+El primero es un defecto: la pantalla de baja le promete al usuario que se
+elimina su foto de perfil, pero la RPC solo ponía `avatar_url = null`. **El
+archivo seguía en el bucket `avatares`, que es público con lectura abierta**: la
+cara de una persona dada de baja continuaba accesible para cualquiera con la URL,
+y lo mismo pasaba con el DNI y la selfie. Faltaba además la política de `DELETE`
+sobre `storage.objects`, así que ni siquiera había forma de borrarlos.
+
+El segundo es de diseño: con la baja lógica, el correo quedaba tomado para
+siempre y la persona no podía volver nunca.
+
+**Solución.** Se descartó el borrado físico —`perfiles` es el ancla de las claves
+foráneas de pedidos, calificaciones y pagos, y la cascada se habría llevado tanto
+la auditoría de `bajas_cuenta` como el historial de la contraparte del pedido— y
+se optó por **anonimizar y liberar la identidad**: la fila sobrevive sin datos
+personales, los archivos se destruyen por la API de Storage con respaldo en SQL,
+y el correo de `auth.users` se reescribe a una lápida `baja+{uuid}@laburito.invalid`.
+Como el `id` no cambia, ninguna FK se entera, y la dirección original queda libre.
+
+**Aprendizaje:** en un marketplace, «borrar mi cuenta» nunca es un `delete`. El
+dato de una operación pertenece a las dos partes; lo que se elimina es la
+identidad, no la historia.
+
 ---
 
 ## 5. Burndown

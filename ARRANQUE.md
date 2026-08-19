@@ -54,6 +54,8 @@ git init && git add . && git commit -m "chore(T-01): setup Flutter + Riverpod + 
 1. Crear el proyecto → región **South America (São Paulo)**.
 2. **SQL Editor** → ejecutar `supabase/migrations/0001_init.sql`.
 3. **SQL Editor** → ejecutar `supabase/migrations/0002_sprint1_completo.sql`.
+   Y después `supabase/migrations/0003_cu11_anonimizacion.sql`. En orden: la 0003
+   reemplaza la función de baja que crea la 0002.
 4. **Database → Tables**: confirmar las 6 tablas con RLS activo.
 5. **Authentication → Providers → Email**: activar *Confirm email*.
 6. ⚠️ **Authentication → Email Templates**. Los dos circuitos de PIN dependen de esto.
@@ -121,10 +123,12 @@ flutter build apk --dart-define-from-file=.env
 | 4 | Registro de Profesional (2 pasos) | CU-02 | Se crean las filas en `profesionales` y `profesional_categorias` |
 | 5 | Subir los tres documentos | CU-09 | `estado_verificacion` pasa a `en_revision` |
 | 6 | Olvidé mi contraseña → código → nueva | CU-04 | Se puede entrar con la contraseña nueva |
-| 7 | Dar de baja (escribir BAJA) | CU-11 | Al reintentar el login aparece el mensaje de cuenta dada de baja |
+| 7 | Dar de baja (escribir BAJA) | CU-11 | En `perfiles` el nombre queda anonimizado y el correo con lápida; en Storage no queda ningún archivo de ese uuid |
+| 8 | Registrarse de nuevo con el mismo correo | CU-11 | Deja registrarse y crea un perfil nuevo, con otro `id` |
 
 Registrá el Profesional con un correo distinto al del Buscador, y dejá la baja
-para el final: la cuenta que des de baja no se puede reutilizar.
+para el final. El correo sí se puede reutilizar —eso es justamente lo que valida
+el circuito 8—, pero el historial de esa cuenta no vuelve.
 
 **Aprobación manual** mientras el CU-35 no exista (Sprint 6):
 

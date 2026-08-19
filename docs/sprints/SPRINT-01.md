@@ -213,11 +213,21 @@ categorías.
 - [ ] Al cambiarla, se cierran las demás sesiones
 
 ### CU-11 · Dar de Baja Cuenta (3 pts)
-Baja lógica: `estado = 'baja'`, `deleted_at = now()`, anonimización de teléfono, signOut.
+Baja **por anonimización**: `estado = 'baja'`, `deleted_at = now()`, se borran los
+datos personales y los archivos, y se libera el correo electrónico.
+
+La fila de `perfiles` sobrevive porque es el ancla de las FK de pedidos,
+calificaciones y pagos: un `delete` en cascada se llevaría también la auditoría
+de `bajas_cuenta` y el historial de contrataciones de la otra parte. Para que el
+mail no quede cautivo, el correo de `auth.users` se reescribe a una lápida
+(`baja+{uuid}@laburito.invalid`): el `id` no cambia, ninguna FK se entera, y la
+dirección original queda libre para volver a registrarse.
 
 - [ ] Doble confirmación escribiendo la palabra «BAJA»
 - [ ] Un perfil dado de baja no aparece en ninguna consulta pública (filtro en las políticas RLS)
 - [ ] Se explica qué pasa con los datos antes de confirmar
+- [ ] Se destruyen el avatar y la documentación del Storage, no solo sus referencias
+- [ ] El correo queda liberado: registrarse de nuevo con esa dirección funciona y crea una cuenta nueva
 
 ---
 

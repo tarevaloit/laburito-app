@@ -45,8 +45,9 @@ class _BajaCuentaScreenState extends ConsumerState<BajaCuentaScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Última confirmación'),
         content: const Text(
-          'Esta acción no se puede deshacer. No vas a poder volver a ingresar '
-          'con esta cuenta ni recuperar tu historial.',
+          'Esta acción no se puede deshacer. Tus datos personales y tus archivos '
+          'se borran, y no vas a poder recuperar tu historial. Podés registrarte '
+          'de nuevo más adelante, pero será una cuenta desde cero.',
         ),
         actions: [
           TextButton(
@@ -114,15 +115,22 @@ class _BajaCuentaScreenState extends ConsumerState<BajaCuentaScreen> {
                     ],
                   ),
                   SizedBox(height: 12),
-                  Text('• Perdés el acceso a tu cuenta de forma definitiva.',
+                  Text('• Perdés el acceso a esta cuenta de forma definitiva.',
+                      style: TextStyle(height: 1.5)),
+                  Text(
+                      '• Borramos tu nombre, tu teléfono, tu DNI, tu foto de perfil '
+                      'y la documentación que hayas subido.',
                       style: TextStyle(height: 1.5)),
                   Text('• Tus pedidos y publicaciones dejan de mostrarse.',
                       style: TextStyle(height: 1.5)),
-                  Text('• Se elimina tu teléfono y tu foto de perfil.',
+                  Text(
+                      '• Conservamos el historial de operaciones sin tus datos personales: '
+                      'de eso dependen los pedidos y las calificaciones de la otra parte.',
                       style: TextStyle(height: 1.5)),
                   Text(
-                      '• Conservamos el registro de la cuenta por razones de trazabilidad, '
-                      'sin datos de contacto.',
+                      '• Tu correo queda liberado. Si algún día querés volver, podés '
+                      'registrarte de nuevo con la misma dirección; será una cuenta '
+                      'nueva, sin tu historial anterior.',
                       style: TextStyle(height: 1.5)),
                   Text('• Si tenés tokens sin usar, no se reintegran.',
                       style: TextStyle(height: 1.5)),
