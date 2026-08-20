@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/mensajes_error.dart';
 import '../../../../core/utils/validadores.dart';
+import '../../../../core/widgets/boton_principal.dart';
+import '../../../../core/widgets/campo_texto.dart';
 import '../../../../core/widgets/marca_laburito.dart';
 import '../controllers/auth_controller.dart';
 
@@ -69,36 +71,26 @@ class _RecuperarPasswordScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const MarcaLaburito(subtitulo: 'Recuperá tu contraseña'),
-              const SizedBox(height: 16),
-              const Text(
-                'Ingresá el correo de tu cuenta y te enviamos un código de 6 dígitos para restablecerla.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.black54),
+              const MarcaLaburito(
+                titulo: 'Recuperá tu contraseña',
+                subtitulo:
+                    'Ingresá el correo de tu cuenta y te enviamos un código de 6 dígitos para restablecerla.',
               ),
               const SizedBox(height: 28),
-              TextFormField(
+              CampoTexto(
+                etiqueta: 'Correo electrónico',
                 controller: _email,
                 enabled: !cargando,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'Correo electrónico',
-                  prefixIcon: Icon(Icons.mail_outline),
-                ),
+                icono: Icons.mail_outline,
                 validator: Validadores.email,
                 onFieldSubmitted: (_) => cargando ? null : _enviar(),
               ),
               const SizedBox(height: 24),
-              FilledButton(
-                onPressed: cargando ? null : _enviar,
-                child: cargando
-                    ? const SizedBox(
-                        height: 22,
-                        width: 22,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Text('Enviar código'),
+              BotonPrincipal(
+                texto: 'Enviar código',
+                cargando: cargando,
+                onPressed: _enviar,
               ),
             ],
           ),

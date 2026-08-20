@@ -15,7 +15,10 @@ class CategoriasRepository {
         .from('categorias_oficio')
         .select('id, nombre, slug')
         .eq('activa', true)
-        .order('orden');
+        // `ascending` va explícito: el cliente de Supabase ordena descendente
+        // por defecto, y el catálogo salía al revés (Tapicería primero,
+        // Plomería última).
+        .order('orden', ascending: true);
 
     return (filas as List)
         .map((f) => CategoriaOficio(

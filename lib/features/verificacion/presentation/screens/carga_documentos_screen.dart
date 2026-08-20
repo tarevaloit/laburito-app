@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../app/colores.dart';
 import '../../../../core/errors/mensajes_error.dart';
 import '../../../../core/widgets/marca_laburito.dart';
 import '../../../perfil/data/perfil_repository.dart';
@@ -95,16 +96,14 @@ class _CargaDocumentosScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // El título ya está en la barra superior: acá va solo la
+                // consigna, como en la Figura 3.10 del ANEXO UI.
                 const MarcaLaburito(
-                  subtitulo: 'Necesitamos validar que sos vos',
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Subí las tres imágenes. Un administrador las revisa y habilita '
-                  'tu perfil para recibir pedidos. Solo vos y el equipo de Laburito '
-                  'pueden verlas.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.black54, height: 1.4),
+                  altoLogo: 64,
+                  subtitulo:
+                      'Subí una foto nítida del frente y del dorso de tu DNI, y una '
+                      'selfie. Validamos tu identidad para que los buscadores confíen '
+                      'en vos. Solo vos y el equipo de Laburito pueden verlas.',
                 ),
                 const SizedBox(height: 24),
                 ...TipoDocumento.values.map(
@@ -122,43 +121,22 @@ class _CargaDocumentosScreenState
                 ),
                 const SizedBox(height: 16),
                 if (completo)
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE8F5E9),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFA5D6A7)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.hourglass_top_rounded,
-                            color: Color(0xFF2E7D32)),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('Tu documentación está en revisión',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.w700)),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Estado actual: ${perfil?.estadoVerificacion ?? 'en_revision'}. '
-                                'Te avisamos apenas se apruebe.',
-                                style: const TextStyle(
-                                    fontSize: 13, color: Colors.black54),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                  AvisoEstado.exito(
+                    icono: Icons.hourglass_top_rounded,
+                    titulo: perfil?.verificacionLegible ?? 'En revisión',
+                    detalle: [
+                      if (perfil?.estadoVerificacion != 'aprobado')
+                        'Te avisamos apenas se apruebe.',
+                      'Tus documentos se eliminan del servidor una vez aprobada '
+                          'la validación (Ley 25.326).',
+                    ].join(' '),
                   )
                 else
-                  const Text(
-                    'Faltan documentos por subir.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.black54),
+                  const AvisoEstado.pendiente(
+                    icono: Icons.pending_outlined,
+                    titulo: 'Faltan documentos por subir',
+                    detalle:
+                        'Cuando estén los tres, la revisión arranca automáticamente.',
                   ),
                 const SizedBox(height: 24),
                 OutlinedButton(
@@ -191,14 +169,14 @@ class _FilaDocumento extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(Medidas.radio),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          color: Colores.superficie,
+          borderRadius: BorderRadius.circular(Medidas.radio),
           border: Border.all(
-            color: cargado ? const Color(0xFF66BB6A) : const Color(0xFFDCE0E6),
+            color: cargado ? Colores.exitoBorde : Colores.borde,
           ),
         ),
         child: Row(
@@ -207,7 +185,7 @@ class _FilaDocumento extends StatelessWidget {
               cargado
                   ? Icons.check_circle_rounded
                   : Icons.add_photo_alternate_outlined,
-              color: cargado ? const Color(0xFF2E7D32) : Colors.black38,
+              color: cargado ? Colores.exito : Colores.textoTenue,
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -215,11 +193,17 @@ class _FilaDocumento extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(tipo.etiqueta,
-                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colores.texto,
+                      )),
                   const SizedBox(height: 2),
                   Text(
                     cargado ? 'Cargado · tocá para reemplazar' : 'Sin cargar',
-                    style: const TextStyle(fontSize: 12, color: Colors.black54),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colores.textoSecundario,
+                    ),
                   ),
                 ],
               ),
@@ -231,7 +215,7 @@ class _FilaDocumento extends StatelessWidget {
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             else
-              const Icon(Icons.chevron_right, color: Colors.black26),
+              const Icon(Icons.chevron_right, color: Colores.textoTenue),
           ],
         ),
       ),

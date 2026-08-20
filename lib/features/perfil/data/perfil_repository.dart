@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/errors/mensajes_error.dart';
 import '../../../core/providers/supabase_providers.dart';
 import '../../categorias/data/categorias_repository.dart';
 import '../../verificacion/data/documentos_repository.dart';
@@ -43,6 +44,27 @@ class PerfilCompleto {
   bool get necesitaCargarDocumentacion =>
       esProfesional && estadoVerificacion == 'sin_documentacion';
   String get nombreCompleto => '$nombre $apellido';
+
+  /// Los estados viajan como identificadores de la base (`sin_documentacion`,
+  /// `en_revision`). Mostrarlos crudos parece un error del sistema, así que la
+  /// traducción vive acá y no en cada pantalla.
+  String get estadoLegible => switch (estado) {
+        'pendiente_verificacion' => 'Falta validar tu correo',
+        'activo' => 'Activa',
+        'suspendido' => 'Suspendida',
+        'baja' => 'Dada de baja',
+        _ => estado,
+      };
+
+  /// Null cuando el usuario no es Profesional: no hay verificación que mostrar.
+  String? get verificacionLegible => switch (estadoVerificacion) {
+        null => null,
+        'sin_documentacion' => 'Falta subir la documentación',
+        'en_revision' => 'En revisión',
+        'aprobado' => 'Verificado',
+        'rechazado' => 'Rechazada',
+        final otro => otro,
+      };
 }
 
 /// CU-05 (Gestionar Perfil) y CU-11 (Dar de Baja Cuenta).
@@ -160,23 +182,23 @@ class PerfilRepository {
     await _client.auth.signOut();
   }
 
-  /// Borra avatar y documentación por la API de Storage. Es el único camino que
-  /// elimina el objeto y no solo su fila en `storage.objects`; la RPC repite el
-  /// borrado a nivel SQL como respaldo. Va antes de la RPC porque después el
-  /// usuario ya no tiene permisos sobre su propia carpeta.
+  /// Destruye avatar y documentación por la API de Storage, que es el único
+  /// camino que elimina el objeto y no solo su fila en `storage.objects`
+  /// (Supabase rechaza el DML directo sobre esas tablas — ver migración 0004).
+  ///
+  /// Va **antes** de la RPC y **corta la baja si falla**. No es una precaución
+  /// de más: después del anonimizado la persona pierde los permisos sobre su
+  /// propia carpeta, así que un fallo posterior dejaría el DNI y la selfie
+  /// huérfanos, sin nadie que pueda borrarlos nunca. Frenar y reintentar es
+  /// estrictamente mejor que una baja a medias.
   Future<void> _borrarArchivos(String id) async {
     try {
       await _client.storage.from('avatares').remove(['$id/avatar.jpg']);
-    } catch (_) {
-      // Sin corte: el respaldo de la RPC se ocupa.
-    }
-
-    try {
       await _client.storage.from('documentos').remove([
         for (final tipo in TipoDocumento.values) '$id/${tipo.clave}.jpg',
       ]);
-    } catch (_) {
-      // Sin corte: el respaldo de la RPC se ocupa.
+    } on Exception {
+      throw const ArchivosNoEliminadosException();
     }
   }
 }

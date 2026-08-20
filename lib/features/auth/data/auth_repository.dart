@@ -31,6 +31,7 @@ class AuthRepository {
         'nombre': nombre.trim(),
         'apellido': apellido.trim(),
         'telefono': telefono.trim(),
+        'acepto_legales_en': _ahora(),
       },
     );
   }
@@ -59,9 +60,15 @@ class AuthRepository {
         'dni': dni.replaceAll(RegExp(r'[\.\s]'), ''),
         'descripcion': descripcion.trim(),
         'categorias': categorias,
+        'acepto_legales_en': _ahora(),
       },
     );
   }
+
+  /// Momento en que se aceptaron los Términos y la Política de Privacidad.
+  /// Queda en el metadata de `auth.users`, que es evidencia del consentimiento
+  /// sin necesidad de tocar el esquema (Ley 25.326).
+  String _ahora() => DateTime.now().toUtc().toIso8601String();
 
   /// CU-08 — Validar Email mediante PIN de 6 dígitos.
   Future<void> verificarPin({

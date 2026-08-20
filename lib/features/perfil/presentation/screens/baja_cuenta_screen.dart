@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/colores.dart';
 import '../../../../core/errors/mensajes_error.dart';
+import '../../../../core/widgets/boton_principal.dart';
+import '../../../../core/widgets/campo_texto.dart';
 import '../../../../core/widgets/marca_laburito.dart';
 import '../controllers/perfil_controller.dart';
 
@@ -55,8 +58,7 @@ class _BajaCuentaScreenState extends ConsumerState<BajaCuentaScreen> {
             child: const Text('Cancelar'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFC62828)),
+            style: FilledButton.styleFrom(backgroundColor: Colores.error),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Dar de baja'),
           ),
@@ -96,83 +98,43 @@ class _BajaCuentaScreenState extends ConsumerState<BajaCuentaScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFDECEA),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFF5C6C0)),
-              ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.warning_amber_rounded, color: Color(0xFFC62828)),
-                      SizedBox(width: 8),
-                      Text('Qué pasa cuando das de baja',
-                          style: TextStyle(fontWeight: FontWeight.w700)),
-                    ],
-                  ),
-                  SizedBox(height: 12),
-                  Text('• Perdés el acceso a esta cuenta de forma definitiva.',
-                      style: TextStyle(height: 1.5)),
-                  Text(
-                      '• Borramos tu nombre, tu teléfono, tu DNI, tu foto de perfil '
-                      'y la documentación que hayas subido.',
-                      style: TextStyle(height: 1.5)),
-                  Text('• Tus pedidos y publicaciones dejan de mostrarse.',
-                      style: TextStyle(height: 1.5)),
-                  Text(
-                      '• Conservamos el historial de operaciones sin tus datos personales: '
-                      'de eso dependen los pedidos y las calificaciones de la otra parte.',
-                      style: TextStyle(height: 1.5)),
-                  Text(
-                      '• Tu correo queda liberado. Si algún día querés volver, podés '
-                      'registrarte de nuevo con la misma dirección; será una cuenta '
-                      'nueva, sin tu historial anterior.',
-                      style: TextStyle(height: 1.5)),
-                  Text('• Si tenés tokens sin usar, no se reintegran.',
-                      style: TextStyle(height: 1.5)),
-                ],
-              ),
+            const AvisoEstado.riesgo(
+              icono: Icons.warning_amber_rounded,
+              titulo: 'Qué pasa cuando das de baja',
+              detalle:
+                  '• Perdés el acceso a esta cuenta de forma definitiva.\n'
+                  '• Borramos tu nombre, tu teléfono, tu DNI, tu foto de perfil '
+                  'y la documentación que hayas subido.\n'
+                  '• Tus pedidos y publicaciones dejan de mostrarse.\n'
+                  '• Conservamos el historial de operaciones sin tus datos personales: '
+                  'de eso dependen los pedidos y las calificaciones de la otra parte.\n'
+                  '• Tu correo queda liberado. Si algún día querés volver, podés '
+                  'registrarte de nuevo con la misma dirección; será una cuenta '
+                  'nueva, sin tu historial anterior.\n'
+                  '• Si tenés tokens sin usar, no se reintegran.',
             ),
             const SizedBox(height: 24),
-            TextField(
+            CampoTexto(
+              etiqueta: '¿Nos contás por qué te vas? (opcional)',
               controller: _motivo,
               enabled: !cargando,
               maxLines: 3,
               maxLength: 300,
-              decoration: const InputDecoration(
-                labelText: '¿Nos contás por qué te vas? (opcional)',
-                alignLabelWithHint: true,
-              ),
             ),
             const SizedBox(height: 8),
-            TextField(
+            CampoTexto(
+              etiqueta: 'Escribí BAJA para confirmar',
               controller: _confirmacion,
               enabled: !cargando,
               textCapitalization: TextCapitalization.characters,
-              decoration: const InputDecoration(
-                labelText: 'Escribí BAJA para confirmar',
-                prefixIcon: Icon(Icons.keyboard_outlined),
-              ),
+              ejemplo: 'BAJA',
+              icono: Icons.keyboard_outlined,
             ),
             const SizedBox(height: 24),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFC62828),
-                disabledBackgroundColor: const Color(0xFFE0A9A4),
-              ),
-              onPressed: (!_puedeConfirmar || cargando) ? null : _confirmar,
-              child: cargando
-                  ? const SizedBox(
-                      height: 22,
-                      width: 22,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
-                    )
-                  : const Text('Dar de baja mi cuenta'),
+            BotonPrincipal.destructivo(
+              texto: 'Dar de baja mi cuenta',
+              cargando: cargando,
+              onPressed: _puedeConfirmar ? _confirmar : null,
             ),
             const SizedBox(height: 12),
             TextButton(

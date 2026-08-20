@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../core/config/superficie.dart';
 import '../core/providers/supabase_providers.dart';
 import '../features/auth/presentation/screens/codigo_recuperacion_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
@@ -12,9 +13,9 @@ import '../features/auth/presentation/screens/nueva_password_screen.dart';
 import '../features/auth/presentation/screens/recuperar_password_screen.dart';
 import '../features/auth/presentation/screens/registro_profesional_screen.dart';
 import '../features/auth/presentation/screens/registro_screen.dart';
-import '../features/auth/presentation/screens/seleccion_tipo_screen.dart';
 import '../features/auth/presentation/screens/verificar_pin_screen.dart';
 import '../features/home/presentation/home_screen.dart';
+import '../features/legales/presentation/texto_legal_screen.dart';
 import '../features/perfil/presentation/screens/baja_cuenta_screen.dart';
 import '../features/perfil/presentation/screens/perfil_screen.dart';
 import '../features/verificacion/presentation/screens/carga_documentos_screen.dart';
@@ -23,9 +24,12 @@ import '../features/verificacion/presentation/screens/carga_documentos_screen.da
 const _soloSinSesion = <String>{
   '/login',
   '/registro',
-  '/registro/buscador',
   '/registro/profesional',
 };
+
+/// Alta de Buscador. Existe solo en la web: la app nativa es la del
+/// Profesional (ANEXO UI), así que en móvil estas rutas van al alta profesional.
+const _altaDeBuscador = <String>{'/registro', '/registro/buscador'};
 
 /// Rutas accesibles con o sin sesión. El flujo de recuperación (CU-04) abre
 /// sesión al validar el código, así que no puede expulsar al usuario al home.
@@ -34,6 +38,9 @@ const _neutrales = <String>{
   '/recuperar',
   '/recuperar/codigo',
   '/recuperar/nueva',
+  // Los textos legales se leen antes de tener cuenta y también después.
+  '/legales/terminos',
+  '/legales/privacidad',
 };
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -46,8 +53,22 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/login',
     refreshListenable: refresco,
     redirect: (context, state) {
-      final sesion = ref.read(sesionProvider);
+      // La sesión se lee del cliente, no de un provider: el redirect corre en
+      // el mismo turno que la navegación, y un provider todavía tendría
+      // cacheado el valor del evento anterior. `currentSession` la actualiza
+      // el cliente de forma sincrónica, así que siempre está al día.
+      // De esto depende que al validar el PIN (CU-08) se entre al home en vez
+      // de rebotar al login.
+      final sesion = ref.read(supabaseClientProvider).auth.currentSession;
       final destino = state.matchedLocation;
+
+      // Diferenciación por superficie: en la app nativa no hay alta de
+      // Buscador. Va primero que todo lo demás para que ni siquiera se
+      // construya la pantalla equivocada.
+      if (!Entorno.permiteAltaDeBuscador && _altaDeBuscador.contains(destino)) {
+        return '/registro/profesional';
+      }
+
       final accesibleSinSesion =
           _soloSinSesion.contains(destino) || _neutrales.contains(destino);
 
@@ -73,16 +94,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'login',
         builder: (context, state) => const LoginScreen(),
       ),
+      // El alta de Buscador es la de la web (Figura 3.1) y trae adentro el
+      // selector de rol. En la app nativa el `redirect` de arriba desvía a
+      // `/registro/profesional` antes de que esta pantalla se construya.
       GoRoute(
         path: '/registro',
         name: 'registro',
-        builder: (context, state) => const SeleccionTipoScreen(),
+        builder: (context, state) => const RegistroScreen(),
         routes: [
-          GoRoute(
-            path: 'buscador',
-            name: 'registroBuscador',
-            builder: (context, state) => const RegistroScreen(),
-          ),
           GoRoute(
             path: 'profesional',
             name: 'registroProfesional',
@@ -90,6 +109,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
+      for (final doc in DocumentoLegal.values)
+        GoRoute(
+          path: '/legales/${doc.ruta}',
+          name: 'legales-${doc.ruta}',
+          builder: (context, state) => TextoLegalScreen(documento: doc),
+        ),
       GoRoute(
         path: '/verificar',
         name: 'verificar',

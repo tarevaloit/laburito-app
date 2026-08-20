@@ -5,8 +5,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/colores.dart';
 import '../../../../core/errors/mensajes_error.dart';
 import '../../../../core/utils/validadores.dart';
+import '../../../../core/widgets/boton_principal.dart';
 import '../../../../core/widgets/marca_laburito.dart';
 import '../controllers/auth_controller.dart';
 
@@ -96,12 +98,10 @@ class _VerificarPinScreenState extends ConsumerState<VerificarPinScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const MarcaLaburito(subtitulo: 'Validá tu correo electrónico'),
-              const SizedBox(height: 20),
-              Text(
-                'Enviamos un código de 6 dígitos a ${widget.email}',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
+              MarcaLaburito(
+                titulo: 'Verificá tu correo',
+                subtitulo:
+                    'Te enviamos un código de 6 dígitos a ${widget.email}',
               ),
               const SizedBox(height: 28),
               TextFormField(
@@ -114,6 +114,7 @@ class _VerificarPinScreenState extends ConsumerState<VerificarPinScreen> {
                   fontSize: 30,
                   letterSpacing: 14,
                   fontWeight: FontWeight.w700,
+                  color: Colores.azul,
                 ),
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: const InputDecoration(
@@ -126,16 +127,10 @@ class _VerificarPinScreenState extends ConsumerState<VerificarPinScreen> {
                 },
               ),
               const SizedBox(height: 24),
-              FilledButton(
-                onPressed: cargando ? null : _verificar,
-                child: cargando
-                    ? const SizedBox(
-                        height: 22,
-                        width: 22,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Text('Validar'),
+              BotonPrincipal(
+                texto: 'Verificar mi correo',
+                cargando: cargando,
+                onPressed: _verificar,
               ),
               const SizedBox(height: 16),
               TextButton(

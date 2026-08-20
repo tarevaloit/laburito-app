@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/colores.dart';
 import '../../../../core/errors/mensajes_error.dart';
 import '../../../../core/utils/validadores.dart';
+import '../../../../core/widgets/boton_principal.dart';
+import '../../../../core/widgets/campo_texto.dart';
 import '../../../../core/widgets/marca_laburito.dart';
 import '../controllers/auth_controller.dart';
 
@@ -56,68 +59,100 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const MarcaLaburito(subtitulo: 'Ingresá a tu cuenta'),
+              const MarcaLaburito(
+                conNombre: false,
+                altoLogo: 76,
+                titulo: 'Bienvenido de nuevo',
+                subtitulo: 'Ingresá para recibir trabajos cerca tuyo',
+              ),
               const SizedBox(height: 32),
-              TextFormField(
+              CampoTexto(
+                etiqueta: 'Correo electrónico',
                 controller: _email,
                 enabled: !cargando,
                 keyboardType: TextInputType.emailAddress,
                 autofillHints: const [AutofillHints.email],
-                decoration: const InputDecoration(
-                  labelText: 'Correo electrónico',
-                  prefixIcon: Icon(Icons.mail_outline),
-                ),
+                ejemplo: 'marcelo.g@gmail.com',
                 validator: Validadores.email,
               ),
-              const SizedBox(height: 16),
-              TextFormField(
+              const SizedBox(height: 18),
+              CampoTexto(
+                etiqueta: 'Contraseña',
                 controller: _password,
                 enabled: !cargando,
                 obscureText: _ocultarPassword,
                 autofillHints: const [AutofillHints.password],
-                decoration: InputDecoration(
-                  labelText: 'Contraseña',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon: Icon(_ocultarPassword
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined),
-                    onPressed: () =>
-                        setState(() => _ocultarPassword = !_ocultarPassword),
-                  ),
+                sufijo: OjoPassword(
+                  oculto: _ocultarPassword,
+                  onCambio: () =>
+                      setState(() => _ocultarPassword = !_ocultarPassword),
                 ),
                 validator: Validadores.passwordRequerida,
                 onFieldSubmitted: (_) => cargando ? null : _ingresar(),
               ),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: cargando ? null : _ingresar,
-                child: cargando
-                    ? const SizedBox(
-                        height: 22,
-                        width: 22,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Text('Ingresar'),
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: cargando ? null : () => context.go('/recuperar'),
-                child: const Text('Olvidé mi contraseña'),
-              ),
-              const Divider(height: 32),
-              OutlinedButton(
-                onPressed: cargando ? null : () => context.go('/registro'),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(52),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: cargando ? null : () => context.go('/recuperar'),
+                  child: const Text('¿Olvidaste tu contraseña?'),
                 ),
-                child: const Text('Crear una cuenta'),
+              ),
+              const SizedBox(height: 12),
+              BotonPrincipal(
+                texto: 'Ingresar',
+                cargando: cargando,
+                onPressed: _ingresar,
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'o',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colores.textoTenue, fontSize: 12),
+              ),
+              const SizedBox(height: 12),
+              _EnlaceRegistro(
+                onTap: cargando ? null : () => context.go('/registro'),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// «¿No tenés cuenta? **Registrate**» en una sola línea, como la Figura 3.8:
+/// el enlace es la palabra, no un botón aparte.
+class _EnlaceRegistro extends StatelessWidget {
+  const _EnlaceRegistro({required this.onTap});
+
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(Medidas.radio),
+        child: const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Text.rich(
+            TextSpan(
+              text: '¿No tenés cuenta? ',
+              style: TextStyle(
+                color: Colores.textoSecundario,
+                fontSize: 14,
+              ),
+              children: [
+                TextSpan(
+                  text: 'Registrate',
+                  style: TextStyle(
+                    color: Colores.azul,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

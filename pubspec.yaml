@@ -26,3 +26,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    # El logotipo de la marca. Ver assets/logo/README.md: mientras el PNG no
+    # esté, la app dibuja un logo de reserva y compila igual.
+    - assets/logo/

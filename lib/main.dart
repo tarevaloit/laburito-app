@@ -4,9 +4,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app/app.dart';
 import 'core/config/env.dart';
+import 'core/widgets/marca_laburito.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Qué archivos de logo hay empaquetados. Se resuelve antes de dibujar para
+  // no pedir un PNG que todavía no existe.
+  await AssetsDeMarca.precargar();
 
   if (!Env.esValido) {
     runApp(const _FaltaConfiguracion());

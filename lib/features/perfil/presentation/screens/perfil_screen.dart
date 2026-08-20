@@ -3,10 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../app/colores.dart';
 import '../../../../core/errors/mensajes_error.dart';
 import '../../../../core/utils/validadores.dart';
+import '../../../../core/widgets/barra_navegacion.dart';
+import '../../../../core/widgets/boton_principal.dart';
+import '../../../../core/widgets/campo_texto.dart';
 import '../../../../core/widgets/marca_laburito.dart';
-import '../../../categorias/data/categorias_repository.dart';
+import '../../../categorias/presentation/selector_oficios.dart';
 import '../../data/perfil_repository.dart';
 import '../controllers/perfil_controller.dart';
 
@@ -109,6 +113,10 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
           onPressed: () => context.go('/home'),
         ),
       ),
+      bottomNavigationBar: BarraNavegacion.siCorresponde(
+        actual: SeccionApp.perfil,
+        mostrarBilletera: perfilAsync.valueOrNull?.esProfesional ?? false,
+      ),
       body: perfilAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('No pudimos cargar tu perfil: $e')),
@@ -127,7 +135,7 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                       children: [
                         CircleAvatar(
                           radius: 48,
-                          backgroundColor: const Color(0xFFE8EDF5),
+                          backgroundColor: Colores.azulSuave,
                           backgroundImage: p.avatarUrl != null
                               ? NetworkImage(p.avatarUrl!)
                               : null,
@@ -135,7 +143,10 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                               ? Text(
                                   p.nombre.characters.first.toUpperCase(),
                                   style: const TextStyle(
-                                      fontSize: 34, fontWeight: FontWeight.w700),
+                                    fontSize: 34,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colores.azul,
+                                  ),
                                 )
                               : null,
                         ),
@@ -143,7 +154,7 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                           right: 0,
                           bottom: 0,
                           child: Material(
-                            color: Theme.of(context).colorScheme.primary,
+                            color: Colores.naranja,
                             shape: const CircleBorder(),
                             child: InkWell(
                               customBorder: const CircleBorder(),
@@ -151,7 +162,7 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                               child: const Padding(
                                 padding: EdgeInsets.all(8),
                                 child: Icon(Icons.camera_alt,
-                                    size: 18, color: Colors.white),
+                                    size: 18, color: Colores.textoSobreColor),
                               ),
                             ),
                           ),
@@ -160,85 +171,82 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  TextFormField(
+                  CampoTexto(
+                    etiqueta: 'Correo electrónico',
                     initialValue: p.email,
                     enabled: false,
-                    decoration: const InputDecoration(
-                      labelText: 'Correo electrónico',
-                      helperText: 'El correo no se puede modificar',
-                      prefixIcon: Icon(Icons.mail_outline),
-                    ),
+                    ayuda: 'El correo no se puede modificar',
+                    icono: Icons.mail_outline,
                   ),
                   const SizedBox(height: 16),
-                  TextFormField(
+                  CampoTexto(
+                    etiqueta: 'Nombre',
                     controller: _nombre,
                     enabled: !cargando,
-                    decoration: const InputDecoration(labelText: 'Nombre'),
+                    textCapitalization: TextCapitalization.words,
                     validator: (v) => Validadores.nombre(v, campo: 'nombre'),
                   ),
                   const SizedBox(height: 16),
-                  TextFormField(
+                  CampoTexto(
+                    etiqueta: 'Apellido',
                     controller: _apellido,
                     enabled: !cargando,
-                    decoration: const InputDecoration(labelText: 'Apellido'),
+                    textCapitalization: TextCapitalization.words,
                     validator: (v) => Validadores.nombre(v, campo: 'apellido'),
                   ),
                   const SizedBox(height: 16),
-                  TextFormField(
+                  CampoTexto(
+                    etiqueta: 'Teléfono',
                     controller: _telefono,
                     enabled: !cargando,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      labelText: 'Teléfono',
-                      prefixIcon: Icon(Icons.phone_outlined),
-                    ),
+                    icono: Icons.phone_outlined,
                     validator: Validadores.telefono,
                   ),
                   if (p.esProfesional) ...[
                     const SizedBox(height: 16),
-                    TextFormField(
+                    CampoTexto(
+                      etiqueta: 'Descripción de tu trabajo',
                       controller: _descripcion,
                       enabled: !cargando,
                       maxLines: 4,
                       maxLength: 500,
-                      decoration: const InputDecoration(
-                        labelText: 'Descripción de tu trabajo',
-                        alignLabelWithHint: true,
-                      ),
+                      ejemplo:
+                          'Contá tu experiencia, qué trabajos hacés, tus horarios…',
                       validator: Validadores.descripcion,
                     ),
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Padding(
-                        padding: EdgeInsets.only(bottom: 8),
-                        child: Text('Categorías de oficio',
-                            style: TextStyle(fontWeight: FontWeight.w600)),
-                      ),
+                    SelectorOficios(
+                      elegidas: _categorias,
+                      habilitado: !cargando,
+                      maximo: _maxCategorias,
+                      onCambio: (nuevas, {required alTope}) {
+                        if (alTope) {
+                          mostrarMensaje(context,
+                              'Podés elegir hasta $_maxCategorias oficios.');
+                          return;
+                        }
+                        setState(() {
+                          _categorias
+                            ..clear()
+                            ..addAll(nuevas);
+                        });
+                      },
                     ),
-                    _selectorCategorias(cargando),
                   ],
                   const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: cargando ? null : () => _guardar(p),
-                    child: cargando
-                        ? const SizedBox(
-                            height: 22,
-                            width: 22,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Text('Guardar cambios'),
+                  BotonPrincipal(
+                    texto: 'Guardar cambios',
+                    cargando: cargando,
+                    onPressed: () => _guardar(p),
                   ),
-                  const SizedBox(height: 32),
                   const Divider(),
-                  const SizedBox(height: 8),
                   TextButton.icon(
                     onPressed:
                         cargando ? null : () => context.go('/perfil/baja'),
                     icon: const Icon(Icons.person_off_outlined,
-                        color: Color(0xFFC62828)),
+                        color: Colores.error),
                     label: const Text('Dar de baja mi cuenta',
-                        style: TextStyle(color: Color(0xFFC62828))),
+                        style: TextStyle(color: Colores.error)),
                   ),
                 ],
               ),
@@ -249,39 +257,4 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
     );
   }
 
-  Widget _selectorCategorias(bool cargando) {
-    final categorias = ref.watch(categoriasActivasProvider);
-
-    return categorias.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Text('No pudimos cargar las categorías: $e'),
-      data: (lista) => Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: lista.map((c) {
-          final elegida = _categorias.contains(c.slug);
-          return FilterChip(
-            label: Text(c.nombre),
-            selected: elegida,
-            onSelected: cargando
-                ? null
-                : (valor) {
-                    setState(() {
-                      if (valor) {
-                        if (_categorias.length >= _maxCategorias) {
-                          mostrarMensaje(context,
-                              'Podés elegir hasta $_maxCategorias oficios.');
-                          return;
-                        }
-                        _categorias.add(c.slug);
-                      } else {
-                        _categorias.remove(c.slug);
-                      }
-                    });
-                  },
-          );
-        }).toList(),
-      ),
-    );
-  }
 }
