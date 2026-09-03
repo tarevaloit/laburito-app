@@ -2,7 +2,7 @@
 
 > **Fuente de verdad del proyecto.** Este archivo se actualiza al cerrar cada sesión de trabajo.
 > Vive en `docs/ESTADO.md` del repo y se commitea junto con el código.
-> Última actualización: 19/08/2026
+> Última actualización: 02/09/2026
 
 ---
 
@@ -29,7 +29,7 @@ Trabajá directo sobre el código, no me expliques teoría salvo que te la pida.
 
 **El repo es la memoria, no el chat.** Todo lo que se decide en un chat y no queda escrito
 en `ESTADO.md`, en un commit o en el plan del sprint, se pierde. Si una conversación
-produjo una decisión técnica, va a la sección 4 de este archivo antes de cerrar.
+produjo una decisión técnica, va a la sección 5 de este archivo antes de cerrar.
 
 ### Un chat por tema, no por día
 
@@ -47,14 +47,13 @@ produjo una decisión técnica, va a la sección 4 de este archivo antes de cerr
 
 | Campo | Valor |
 |---|---|
-| Sprint en curso | **Sprint 1 — Fundaciones y Autenticación** (PT 2.0) · **cerrado en código** |
-| Período | 06/08/2026 – 19/08/2026 |
-| Entrega por BB | 19/08/2026 23:59 |
-| Reunión de revisión | 20/08/2026 |
-| Esfuerzo planificado | 35 pts |
-| Esfuerzo ejecutado | **35 pts** (12 de 12 ítems) |
-| Backlog restante | 200 pts de 235 |
-| Release objetivo | v0.1.0 — tag creado |
+| Sprint en curso | **Sprint 2 — Pedidos** (PT 3.0) · rama `sprint-2` |
+| Sprint anterior | Sprint 1 — Fundaciones y Autenticación (PT 2.0) · **cerrado en código**, 35/35 pts |
+| Período | _(completar del PT 3.0)_ |
+| Entrega por BB | _(completar del PT 3.0)_ |
+| Esfuerzo planificado | _(completar del PT 3.0)_ |
+| Backlog restante | 200 pts de 235 al cierre del Sprint 1 |
+| Release objetivo | v0.2.0 — el tag `v0.1.0` cerró el Sprint 1 |
 | Repositorio | https://github.com/tarevaloit/laburito |
 | Proyecto Supabase | _(completar ref)_ |
 
@@ -62,7 +61,9 @@ produjo una decisión técnica, va a la sección 4 de este archivo antes de cerr
 
 - **Flutter / Dart** — Web (Buscador) + App nativa (Profesional) + Panel desktop (Admin)
 - **Supabase** — Auth, PostgreSQL, RLS, Storage, Edge Functions *(reemplazó a Firebase)*
-- **Riverpod** — gestión de estado *(reemplazó a Bloc)*
+- **Riverpod** — gestión de estado *(reemplazó a Bloc)*, con `riverpod_generator`
+- **freezed** — modelos inmutables *(desde el Sprint 2; ver decisión del 02/09)*
+- **PostGIS** — geolocalización de pedidos en la base *(Sprint 2)*
 - **Firebase Cloud Messaging** — solo push notifications (Sprint 3)
 - **Google Maps Platform** — geolocalización (Sprint 2)
 - **Mercado Pago Checkout Pro** — sandbox / entorno de desarrollo (Sprint 4)
@@ -98,7 +99,75 @@ compartidos. La guía y la trazabilidad figura por figura están en `docs/UI.md`
 video de los 7 circuitos de `ARRANQUE.md`, captura del Schema Visualizer y de la
 tabla de políticas RLS, y la subida a BB.
 
-## 4. Decisiones técnicas tomadas
+## 4. Sprint 2 — en curso (PT 3.0)
+
+Rama: **`sprint-2`**, salida de `main` (no del tag `v0.1.0`: main tiene 5 commits
+posteriores al tag, incluido todo el ANEXO UI y el arreglo del CU-11).
+
+### 4.1 Alcance
+
+Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanificado`
+
+| ID | Ítem | Pts | Estado | Figura del ANEXO UI |
+|---|---|---|---|---|
+| CU-16 | _(completar del PT 3.0)_ | ? | ⬜ | — |
+| CU-13 | Publicar pedido con ubicación en el mapa | ? | ⬜ | Fig. 3.2 |
+| CU-14 | _(completar del PT 3.0)_ | ? | ⬜ | — |
+| CU-15 | _(completar del PT 3.0)_ | ? | ⬜ | — |
+| CU-20 | Gestión del pedido publicado | ? | ⬜ | Fig. 3.4 |
+| CU-29 | Gestión del pedido publicado (contraparte de CU-20) | ? | ⬜ | Fig. 3.4 |
+| CU-51 | _(completar del PT 3.0)_ | ? | ⬜ | — |
+| CU-17 | Historial de pedidos del Buscador | ? | ⬜ | Fig. 3.5 |
+| CU-18 | _(completar del PT 3.0)_ | ? | ⬜ | — |
+| | **Total** | **?** | | |
+
+> **Faltan nombres y puntos.** Los únicos títulos que se pueden sostener con una
+> fuente del repo son los que aparecen en el ANEXO UI (CU-13, CU-17, CU-20/29).
+> El resto se completa copiando del PT 3.0: no se inventan acá, porque este
+> archivo es la fuente de verdad y un nombre inventado se propaga a la entrega.
+
+El orden de la tabla es el que dio el PT 3.0. El orden de **implementación** se
+define al armar `docs/sprints/SPRINT-02.md`, siguiendo dependencias reales como
+en el Sprint 1: publicar un pedido (CU-13) es condición de gestionarlo (CU-20 /
+CU-29) y de listarlo en el historial (CU-17).
+
+### 4.2 Deuda que se arrastra del Sprint 1
+
+Cuatro ítems de la sección 6 vencen en este sprint. Los dos primeros son los que
+hay que decidir temprano, porque tocan todo lo que se escriba después:
+
+| Ítem | Por qué ahora |
+|---|---|
+| **Codegen de providers** | Hoy los providers están escritos a mano, sin `build_runner` ni `riverpod_generator`. Migrar con 8 providers cuesta menos que con 20, y el Sprint 2 suma los de pedidos. Si no se hace al principio, no se hace más |
+| **Pruebas de widget** | Hay 18 unitarias y 3 de widget del lineamiento visual, pero ningún circuito cubierto. El Sprint 1 se verificó a mano con `ARRANQUE.md`, y eso no escala a los pedidos |
+| Barra superior de la web | La Figura 3.1 la muestra con «Cómo funciona · Mis pedidos · Ayuda». «Mis pedidos» es justamente el CU-17 de este sprint: la barra deja de ser un placeholder |
+| CTA fija al pie en móvil | El Anexo la muestra anclada abajo (Fig. 3.9, 3.11, 3.15) |
+
+Además, el Sprint 1 no está cerrado del todo: falta aplicar la migración 0004 y
+grabar el material de la entrega (sección 7).
+
+### 4.3 Estado del código en la rama `sprint-2`
+
+El trabajo que estaba sin commitear quedó ordenado en cuatro commits, uno por
+unidad de cambio. Ninguno se pusheó todavía.
+
+| Commit | Qué entra |
+|---|---|
+| `40725c1` `fix(CU-03)` | El login sin saludo y con la bajada según la superficie, más el desvío anotado en `docs/UI.md` |
+| `76c69f5` `chore(T-05)` | Migración a `freezed` + `riverpod_generator` de todo lo preexistente: pubspec, providers, modelos y los `*.g.dart` / `*.freezed.dart` |
+| `e0e8d34` `feat(T-02)` | Migraciones 0005, 0006 y 0007 y el guion de diagnóstico `supabase/scripts/verificar_pedidos.sql` |
+| `feat(CU-13)` | `lib/features/pedidos/` —dominio, repositorio, providers y excepciones tipadas— con sus dos suites de pruebas |
+
+Línea base de pruebas: **77 en verde**. Son 30 del Sprint 1 (validadores,
+mensajes de error, estados de perfil y lineamiento visual) más 47 nuevas de la
+capa de pedidos. Verificado además que con el `chore(T-05)` aislado —sin nada de
+`lib/features/pedidos/` en el árbol— `flutter analyze` da 0 issues y las 30 del
+Sprint 1 siguen pasando: la migración a codegen no depende del feature nuevo.
+
+**Todavía no hay UI de pedidos.** La capa de datos está completa y probada
+contra modelos, no contra una base.
+
+## 5. Decisiones técnicas tomadas
 
 Formato: fecha · decisión · motivo. No se borran, se agregan.
 
@@ -133,14 +202,26 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 19/08 | La pantalla de selección de rol se elimina | El Anexo no la tiene: el selector va **adentro** de la tarjeta de alta (Fig. 3.1). En móvil directamente no existe, porque no hay rol que elegir |
 | 19/08 | La barra de navegación inferior se implementa completa, con la Billetera marcada «Pronto» | El Tablero (CU-43) es del Sprint 2 y la Billetera (CU-30) del Sprint 4, pero dejar la estructura del Anexo desde ahora evita rearmar la navegación después, y la demo del 20/08 muestra el recorrido real. Al Buscador no se le muestra la Billetera: los tokens son del Profesional |
 | 19/08 | El logotipo se carga de `assets/logo/laburito.png` con un logo de reserva dibujado | Permite cerrar el lineamiento visual sin bloquearse esperando el PNG: si el archivo no está, `LogoLaburito` dibuja el isotipo y el nombre, y la app compila igual. Al dejar el archivo, aparece sin tocar código |
+| 02/09 | **Se adopta codegen: `freezed` para los modelos y `riverpod_generator` para los providers, en todo el proyecto** | Revierte la decisión del 19/08, que difería la migración al Sprint 2. Se migró todo de una en vez de solo el feature nuevo: dejar la mitad del repo con providers a mano y la otra mitad generados obliga a recordar en qué archivo rige qué regla. La UI no se tocó — los nombres que genera `@riverpod` coinciden con los que estaban escritos a mano (`perfilCompletoProvider`, `sesionProvider`) — y los 30 tests del Sprint 1 siguen pasando sin cambios. Costo aceptado: `dart run build_runner build` entra al camino crítico de cada cambio de modelo |
+| 02/09 | Los providers migrados van con `@Riverpod(keepAlive: true)` | `@riverpod` genera autoDispose por defecto, y los que había eran `Provider` / `FutureProvider` / `AsyncNotifierProvider`, que no se descartan. Con autoDispose el notificador de un controller podría morir entre el `read(...notifier)` y el `read(...).error` que las pantallas hacen justo después, y el mensaje de error se perdería. Las familias nuevas de pedidos sí son autoDispose: se quiere que el historial se recargue al volver a entrar |
+| 02/09 | Los pedidos son geolocalizados con PostGIS y no con lat/lng sueltos | La búsqueda por radio del CU-21 (Sprint 3) se resuelve con `ST_DWithin` contra un índice GIST, del lado del servidor. Con lat/lng habría que traerse todos los pedidos al cliente para filtrar |
+| 02/09 | Las coordenadas se leen por *computed fields*, no por la columna | PostgREST serializa `geography` como WKB hexadecimal (`0101000020E6100000...`), que en Dart no es una coordenada, y **no admite expresiones SQL en el `select`**: `st_y(ubicacion::geometry) as lat` no es una opción. Las funciones `public.lat(pedidos)` y `public.lng(pedidos)` de la 0007 se piden como si fueran columnas. Por lo mismo, el alta manda la ubicación como EWKT: PostgREST tampoco deja llamar funciones dentro de un INSERT |
+| 02/09 | Las excepciones de las RPC viajan con un `hint` legible por máquina | Todo `raise exception` de plpgsql llega como `P0001`, así que el código solo no distingue «no se puede pasar de cerrado a publicado» de «ya renovaste 3 veces». Las funciones de la 0006 mandan además `hint = 'transicion_invalida' \| 'limite_renovaciones' \| 'sin_permiso'`, y `PedidoException` mapea por esa clave. El texto del mensaje no se lee nunca: está escrito para el usuario y va a cambiar |
+| 02/09 | Solo los `P0001` muestran el mensaje del servidor; el resto se traduce | Un `42501` trae «new row violates row-level security policy for table "pedidos"», que no se le enseña a nadie. Los `P0001` son nuestros y ya vienen redactados en castellano. Cubierto en `test/pedidos_errores_test.dart` |
+| 02/09 | Los pedidos no se borran: no hay política de DELETE | Un `delete` se llevaría por cascada la auditoría de `pedido_eventos`, que es justo lo que prueba que el pedido existió. El ciclo termina en `cerrado` o `cancelado`, que son terminales. Las fotos sí se borran: son archivos, no historia |
+| 02/09 | `listarMisPedidos` filtra por `buscador_id` aunque haya RLS | Sobre `pedidos` hay **dos** políticas de SELECT: la de los propios y la de los publicados vigentes de cualquiera, que es la que va a usar el Profesional. Sin el filtro explícito, «Mis pedidos» mostraría también los de los demás |
+| 02/09 | Al subir una foto, si falla el insert se borra el archivo | Misma lección que el CU-11: un objeto en Storage que ninguna fila referencia es invisible y eterno. Y al eliminar, primero el archivo y después la fila, por el mismo motivo |
 
-## 5. Deuda técnica y pendientes conocidos
+## 6. Deuda técnica y pendientes conocidos
 
 | Ítem | Detalle | Cuándo se salda |
 |---|---|---|
 | Aprobación manual de Profesionales | CU-09 deja al Profesional en «En Revisión» pero CU-35 (resolverla) recién está en Sprint 6. Se aprueba a mano por SQL. | Sprint 6 |
 | Categorías de oficio | Se cargan por seed en T-02; su ABM (CU-37) es del Sprint 6 | Sprint 6 |
-| Providers escritos a mano | Sin `build_runner`, `freezed` ni `riverpod_generator`. Migrable sin tocar la UI. | Sprint 2 |
+| ~~Providers escritos a mano~~ | **Saldada el 02/09.** Todo el proyecto pasó a `@riverpod` y `freezed`. La UI no se tocó: los nombres generados coinciden con los de antes. | ✅ |
+| El estado del pedido se puede cambiar sin pasar por la RPC | La política de UPDATE de `pedidos` deja escribir la fila entera, así que un PATCH directo saltea `cambiar_estado_pedido` y su máquina de estados. Se tapa con un trigger `BEFORE UPDATE`, que necesita una compuerta para que `renovar_pedido` pueda hacer `vencido → publicado`. | Sprint 2 |
+| El Profesional no puede ver las fotos de un pedido | Las políticas de Storage del bucket `pedidos` son solo del dueño, así que el CU-16 no va a poder firmar las URLs. Falta una política de SELECT para pedidos publicados vigentes, o firmarlas desde una Edge Function. | Sprint 2 (con CU-16) |
+| Sin pantallas de pedidos | La capa de datos está completa y probada, pero no hay UI: el CU-13 necesita el formulario y el mapa. | Sprint 2 |
 | Sin pruebas de widget ni de integración | Hay 18 pruebas unitarias de validadores y mensajes, más 3 de widget en `test/tema_test.dart` que cubren el lineamiento visual. Los circuitos se verifican a mano con el guion de `ARRANQUE.md`. | Sprint 2 |
 | Figura 3.1 del Anexo UI desactualizada | Muestra 3 campos; el alta tiene los 5 del CU-01. Hay que redibujarla antes de entregar el Anexo. | Antes de la entrega |
 | Textos legales provisorios | `/legales/terminos` y `/legales/privacidad` describen el alcance pero no son la redacción definitiva. | Sprint 3 |
@@ -150,19 +231,32 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | Íconos de app y favicon | Android, iOS y Web siguen con los íconos de Flutter. Se generan con `flutter_launcher_icons` cuando esté el PNG. | Al tener el archivo |
 | Tipografía del Anexo | Se usa la del sistema; el Anexo muestra una sans geométrica. Sumarla implica versionar la fuente. | Sprint 3 |
 
-## 6. Próximo paso concreto
+## 7. Próximo paso concreto
 
 _(Una sola línea. Lo primero que hay que hacer al retomar.)_
 
-→ **Aplicar `supabase/migrations/0004_cu11_storage_sin_dml.sql` en el SQL Editor** (sin eso el CU-11 falla), y después correr el guion de prueba de `ARRANQUE.md` y grabar el video de los 7 circuitos.
+→ **Migración 0008: el trigger `BEFORE UPDATE` que blinda la máquina de estados**, con la compuerta `app.transicion_estado` para que las RPC puedan seguir moviendo el estado.
 
-El código está completo y compila en Web y en Android; lo que queda del Sprint 1
-es la prueba contra el backend configurado y el material de la entrega. El
-Sprint 2 arranca por CU-13 y CU-16.
+Antes de eso, o en paralelo: **aplicar en el SQL Editor, en orden,
+`0004_cu11_storage_sin_dml.sql`, `0005_pedidos.sql`, `0006_pedidos_rls.sql` y
+`0007_pedidos_coordenadas.sql`**, y correr el guion de prueba que cada una trae
+al final. `supabase/scripts/verificar_pedidos.sql` dice cuáles están aplicadas.
+
+Del Sprint 1 sigue pendiente el material de la entrega: el video de los 7
+circuitos de `ARRANQUE.md`, la captura del Schema Visualizer y de la tabla de
+políticas RLS, y la subida a BB.
+
+Del Sprint 2 está hecha la capa de datos de pedidos —esquema, RLS, máquina de
+estados, renovación y el repositorio con sus providers y tests— pero **ninguna
+migración se probó contra una base**: no hay Docker en esta máquina, así que el
+SQL está escrito y revisado pero nunca ejecutado. Después de aplicarlas, lo que
+sigue es la UI del CU-13 (formulario y mapa) y las dos deudas que abrió esta
+capa: el trigger que blinda la máquina de estados y la política de Storage que
+le deje al Profesional ver las fotos.
 
 ---
 
-## 7. Convención de commits
+## 8. Convención de commits
 
 `<tipo>(<ID>): <descripción en infinitivo>`
 
