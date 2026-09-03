@@ -71,6 +71,16 @@ class _HistorialPedidosScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mis pedidos'),
+        // Al historial se llega con `context.go` desde el home, así que no hay
+        // nada que desapilar y la flecha de Material no aparece sola. Sin este
+        // botón, la única salida en la web es el botón «atrás» del navegador,
+        // y en Android el gesto de retroceso, que acá cierra la app.
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: 'Volver al inicio',
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/home'),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),

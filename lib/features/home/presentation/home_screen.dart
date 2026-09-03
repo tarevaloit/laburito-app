@@ -101,7 +101,9 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  p.esProfesional ? 'Cuenta de Profesional' : 'Cuenta de Buscador',
+                  p.esProfesional
+                      ? 'Cuenta de Profesional'
+                      : 'Cuenta de Buscador',
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colores.textoSecundario),
                 ),
@@ -166,12 +168,6 @@ class HomeScreen extends ConsumerWidget {
                   label: const Text('Editar mi perfil'),
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  'El historial de pedidos se incorpora más adelante en el '
-                  'Sprint 2.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colores.textoTenue, fontSize: 13),
-                ),
               ],
             ),
           );
