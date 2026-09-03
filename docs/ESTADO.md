@@ -376,6 +376,8 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 02/09 | Ningún método de `ServicioDirecciones` tira excepción | La dirección es un campo de texto editable: un servicio caído degrada a «escribila vos», no a un alta interrumpida |
 | 02/09 | El permiso de ubicación no se pide al abrir el selector, solo al tocar «Usar mi ubicación» | Disparar el diálogo del sistema apenas se abre una pantalla es la forma más rápida de que alguien apriete «no» sin leer, y en el navegador ese «no» queda pegado al sitio |
 | 02/09 | La geocodificación inversa se filtra por distancia (15 m) y por origen del movimiento | El mapa se queda quieto muchas más veces de las que el usuario elige un punto (primer encuadre, `animateCamera`, teclado); se ignoran los movimientos que hizo el propio controlador |
+| 03/09 | La fila de `profesionales` la repara una migración, no la app (0011) | Sobre esa tabla no hay política de INSERT para el usuario, a propósito: solo SELECT y UPDATE. El único que puede crear la fila es el trigger `handle_new_user`, que es SECURITY DEFINER. Darle al cliente permiso de INSERT para que se repare solo dejaría que cualquiera se fabrique una fila de Profesional |
+| 03/09 | `handle_new_user` pasa a ser idempotente | Corre dentro de la transacción del signUp: un DNI repetido o un reintento sobre un id que ya tenía perfil tumbaba **el alta entera** con un error de base en la cara del usuario. Con `on conflict do nothing` el alta sigue y lo que falte se completa después desde el perfil (CU-05) |
 | 03/09 | Los formularios del pedido viven en `widgets/campos_pedido.dart`, no adentro del asistente | El CU-15 pide «los mismos formularios» que el CU-13. Duplicarlos garantizaba que en algún momento el alta aceptara un título de 4 caracteres que la edición rechazara. Las reglas están una sola vez, en `ValidadoresPedido`, y son las mismas de los `check` de la tabla `pedidos` |
 | 03/09 | **La vigencia no se edita en el CU-15** | Estirar `fecha_vencimiento` con un PATCH sería una renovación sin límite, y el CU-51 permite tres. La fecha se mueve solo por `renovar_pedido`, que las cuenta. La app no manda ese campo; el servidor todavía no lo impide (deuda de la sección 6) |
 | 03/09 | Las fotos de la edición se aplican al instante; el resto, al guardar | El pedido ya existe, así que subir y borrar son operaciones sobre Storage que no tienen nada que esperar. Juntarlas hasta el «Guardar» obligaría a deshacer subidas si la edición falla. La pantalla lo dice en un renglón, para que nadie espere que «descartar cambios» devuelva una foto borrada |
@@ -427,7 +429,10 @@ todo, **aplicar las migraciones**, que nunca se ejecutaron contra una base.
 1. **Aplicar las migraciones en el SQL Editor de Supabase, en orden:**
    `0004_cu11_storage_sin_dml.sql`, `0005_pedidos.sql`, `0006_pedidos_rls.sql`,
    `0007_pedidos_coordenadas.sql`, `0008_pedidos_guard_estado.sql`,
-   `0009_pedidos_alta_y_ubicacion.sql` y `0010_pedido_evento_edicion.sql`.
+   `0009_pedidos_alta_y_ubicacion.sql`, `0010_pedido_evento_edicion.sql` y
+   `0011_profesionales_faltantes.sql`. **La 0011 se puede correr sola y
+   primero**: no depende de ninguna otra y es la que destraba la carga de
+   documentación del CU-09 (el `23503` contra `profesionales`).
    Cada una trae su guion de aceptación comentado al final: correrlo.
    `supabase/scripts/verificar_pedidos.sql` dice cuáles están aplicadas, y su
    bloque 8 avisa del único orden peligroso: **la 0008 aplicada a medias —el
