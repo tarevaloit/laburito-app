@@ -153,6 +153,12 @@ class HomeScreen extends ConsumerWidget {
                     onPressed: () => context.go('/pedidos/nuevo'),
                   ),
                   const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () => context.go('/pedidos'),
+                    icon: const Icon(Icons.assignment_outlined),
+                    label: const Text('Mis pedidos'),
+                  ),
+                  const SizedBox(height: 12),
                 ],
                 OutlinedButton.icon(
                   onPressed: () => context.go('/perfil'),

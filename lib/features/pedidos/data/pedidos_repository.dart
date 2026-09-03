@@ -290,11 +290,13 @@ class PedidosRepository {
   /// publicados vigentes de cualquiera (la que usa el Profesional). Sin este
   /// filtro, «Mis pedidos» mostraría también los de los demás.
   Future<List<Pedido>> listarMisPedidos({
-    FiltroPedidos filtro = FiltroPedidos.todos,
+    FiltroPedidos filtro = FiltroPedidos.activos,
+    String busqueda = '',
     int limit = 20,
     int offset = 0,
   }) {
     final buscadorId = _uid;
+    final texto = _patronDeBusqueda(busqueda);
 
     return _guardar(() async {
       var consulta =
@@ -302,6 +304,15 @@ class PedidosRepository {
 
       if (filtro.estados.isNotEmpty) {
         consulta = consulta.inFilter('estado', filtro.claves);
+      }
+
+      // La búsqueda se resuelve **en el servidor**. Traerse todos los pedidos
+      // para filtrarlos en Dart funcionaría con veinte y no con doscientos, y
+      // además pelearía con la paginación: no se puede pedir «los 20
+      // siguientes que además contengan tal palabra» si el filtro corre
+      // después de traer la página.
+      if (texto != null) {
+        consulta = consulta.or('titulo.ilike.$texto,descripcion.ilike.$texto');
       }
 
       final filas = await consulta
@@ -312,6 +323,51 @@ class PedidosRepository {
         for (final fila in filas) Pedido.desdeFila(fila),
       ];
     });
+  }
+
+  /// Cuántos pedidos hay en cada estado, para los contadores del CU-17.
+  ///
+  /// Una sola consulta que trae **solo la columna `estado`** y cuenta acá, en
+  /// vez de cuatro `HEAD` con `count` —uno por grupo— o de una RPC nueva. Con
+  /// los volúmenes de un Buscador (decenas de pedidos, no miles) una fila de
+  /// un enum por pedido pesa menos que tres viajes de más.
+  ///
+  /// No respeta la búsqueda por texto a propósito: los contadores dicen cuánto
+  /// hay en cada grupo, no cuánto coincide con lo que se está tecleando. Si
+  /// cambiaran con cada letra dejarían de servir para elegir una pestaña.
+  Future<Map<PedidoEstado, int>> contarPorEstado() {
+    final buscadorId = _uid;
+
+    return _guardar(() async {
+      final filas = await _client
+          .from('pedidos')
+          .select('estado')
+          .eq('buscador_id', buscadorId);
+
+      final cuenta = <PedidoEstado, int>{};
+      for (final fila in filas) {
+        final estado = PedidoEstado.desdeClave(fila['estado'] as String);
+        cuenta[estado] = (cuenta[estado] ?? 0) + 1;
+      }
+      return cuenta;
+    });
+  }
+
+  /// Prepara el texto para un `ilike` de PostgREST, o `null` si no hay nada
+  /// que buscar.
+  ///
+  /// Dos cosas que no son opcionales:
+  ///
+  ///   * **Se sacan las comas y los paréntesis.** El filtro viaja como
+  ///     `or=(titulo.ilike.%x%,descripcion.ilike.%x%)`: una coma escrita por
+  ///     el usuario partiría la expresión en dos condiciones y PostgREST
+  ///     devolvería un 400, no cero resultados.
+  ///   * **Menos de dos caracteres no busca.** Una sola letra hace un
+  ///     recorrido completo de la tabla para devolver casi todo.
+  static String? _patronDeBusqueda(String busqueda) {
+    final limpio = busqueda.replaceAll(RegExp(r'[,()*]'), ' ').trim();
+    if (limpio.length < 2) return null;
+    return '%$limpio%';
   }
 
   /// Null cuando el pedido no existe **o** cuando las RLS no lo dejan ver: la
@@ -578,16 +634,6 @@ class PedidosRepository {
 @Riverpod(keepAlive: true)
 PedidosRepository pedidosRepository(Ref ref) =>
     PedidosRepository(ref.watch(supabaseClientProvider));
-
-/// Pedidos propios, filtrados por estado.
-///
-/// autoDispose (el default de `@riverpod`): el historial se recarga al volver
-/// a entrar, que es lo que se espera después de publicar o cerrar un pedido.
-@riverpod
-Future<List<Pedido>> misPedidos(Ref ref, FiltroPedidos filtro) {
-  ref.watch(sesionProvider);
-  return ref.watch(pedidosRepositoryProvider).listarMisPedidos(filtro: filtro);
-}
 
 @riverpod
 Future<Pedido?> pedido(Ref ref, String id) {

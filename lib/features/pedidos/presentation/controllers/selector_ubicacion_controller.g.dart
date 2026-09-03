@@ -7,7 +7,7 @@ part of 'selector_ubicacion_controller.dart';
 // **************************************************************************
 
 String _$selectorUbicacionControllerHash() =>
-    r'f895b23dd492e1794367556d3ff28b34633b9b92';
+    r'77a5d91b9e5b1b43a12ba6a8cfcf840e8bb634dd';
 
 /// Copied from Dart SDK
 class _SystemHash {

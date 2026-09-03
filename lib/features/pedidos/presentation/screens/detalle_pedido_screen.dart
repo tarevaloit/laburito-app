@@ -57,8 +57,10 @@ class DetallePedidoScreen extends ConsumerWidget {
         title: const Text('Tu pedido'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
+          // Sin nada que desapilar —se entró por URL o recién publicado— se
+          // va al historial, que es de donde se llega a un pedido (CU-17).
           onPressed: () =>
-              context.canPop() ? context.pop() : context.go('/home'),
+              context.canPop() ? context.pop() : context.go('/pedidos'),
         ),
       ),
       body: pedidoAsync.when(

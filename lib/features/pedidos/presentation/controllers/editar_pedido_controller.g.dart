@@ -6,7 +6,7 @@ part of 'editar_pedido_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$editarPedidoHash() => r'e99495ca9a94261798e75c1f5b9a1f15b2938f50';
+String _$editarPedidoHash() => r'76363ed045ccec2cfa221fc7ae4a8d7e6ba9b7b3';
 
 /// Copied from Dart SDK
 class _SystemHash {

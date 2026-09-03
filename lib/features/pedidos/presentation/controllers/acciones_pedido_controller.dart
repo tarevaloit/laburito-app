@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../data/pedido_exception.dart';
 import '../../data/pedidos_repository.dart';
 import '../../domain/pedido_estado.dart';
+import 'historial_pedidos_controller.dart';
 
 part 'acciones_pedido_controller.freezed.dart';
 part 'acciones_pedido_controller.g.dart';
@@ -140,15 +141,13 @@ class AccionesPedido extends _$AccionesPedido {
   /// Todo lo que acaba de quedar viejo.
   ///
   /// El detalle, porque cambió el estado; la cronología, porque el trigger dejó
-  /// un evento nuevo; y las tres listas del historial (CU-17), porque el pedido
-  /// pudo haber cambiado de grupo —de «Activos» a «Cerrados»— y quien vuelva
-  /// atrás tiene que verlo donde va.
+  /// un evento nuevo; y el historial (CU-17), porque el pedido pudo haber
+  /// cambiado de grupo —de «Activos» a «Cerrados»— y quien vuelva atrás tiene
+  /// que verlo donde va, con los contadores al día.
   void _refrescar() {
     ref.invalidate(pedidoProvider(pedidoId));
     ref.invalidate(historialPedidoProvider(pedidoId));
-    for (final filtro in FiltroPedidos.values) {
-      ref.invalidate(misPedidosProvider(filtro));
-    }
+    ref.invalidate(historialPedidosProvider);
   }
 }
 

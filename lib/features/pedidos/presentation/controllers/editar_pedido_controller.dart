@@ -10,6 +10,7 @@ import '../../domain/pedido.dart';
 import '../../domain/pedido_estado.dart';
 import '../../domain/pedido_foto.dart';
 import '../../domain/ubicacion.dart';
+import 'historial_pedidos_controller.dart';
 
 part 'editar_pedido_controller.freezed.dart';
 part 'editar_pedido_controller.g.dart';
@@ -244,13 +245,11 @@ class EditarPedido extends _$EditarPedido {
     state = AsyncData(cambio(actual));
   }
 
-  /// El detalle y las listas quedaron viejos. No se invalida este controller:
-  /// el borrador es de la pantalla, no de la base.
+  /// El detalle, la cronología y el historial quedaron viejos. No se invalida
+  /// este controller: el borrador es de la pantalla, no de la base.
   void _refrescarPedido() {
     ref.invalidate(pedidoProvider(pedidoId));
     ref.invalidate(historialPedidoProvider(pedidoId));
-    for (final filtro in FiltroPedidos.values) {
-      ref.invalidate(misPedidosProvider(filtro));
-    }
+    ref.invalidate(historialPedidosProvider);
   }
 }

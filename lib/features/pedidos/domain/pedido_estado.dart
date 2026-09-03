@@ -62,13 +62,21 @@ enum PedidoEstado {
 /// armado a mano crearía un provider nuevo en cada `build` y la lista se
 /// recargaría sin parar.
 enum FiltroPedidos {
-  todos('Todos', <PedidoEstado>{}),
+  /// Lo que sigue su curso: se ve o puede volver a verse con un toque.
   activos('Activos', {PedidoEstado.publicado, PedidoEstado.pausado}),
-  historial('Historial', {
-    PedidoEstado.cerrado,
-    PedidoEstado.cancelado,
-    PedidoEstado.vencido,
-  });
+
+  /// Se quedaron sin tiempo. Van aparte de los cerrados porque **no son un
+  /// final**: son lo único que se puede renovar (CU-51), así que agruparlos
+  /// con el historial escondería la única acción que les queda.
+  vencidos('Vencidos', {PedidoEstado.vencido}),
+
+  /// El trabajo se resolvió (CU-29).
+  cerrados('Cerrados', {PedidoEstado.cerrado}),
+
+  /// Se dieron de baja sin hacerse (CU-14). Separado de los cerrados porque la
+  /// diferencia entre «se resolvió» y «no se hizo» es la que mide si Laburito
+  /// sirve, y un grupo común la borraría.
+  cancelados('Cancelados', {PedidoEstado.cancelado});
 
   const FiltroPedidos(this.etiqueta, this.estados);
 
@@ -78,6 +86,11 @@ enum FiltroPedidos {
   final Set<PedidoEstado> estados;
 
   List<String> get claves => [for (final e in estados) e.clave];
+
+  /// A qué grupo del historial pertenece un estado. Todo estado cae en uno y
+  /// en uno solo: es lo que hace que los contadores sumen el total.
+  static FiltroPedidos de(PedidoEstado estado) =>
+      values.firstWhere((f) => f.estados.contains(estado));
 }
 
 /// Urgencia declarada por el Buscador. Espeja el enum `pedido_urgencia`.

@@ -338,18 +338,39 @@ void main() {
   });
 
   group('FiltroPedidos', () {
-    test('«todos» no filtra', () {
-      expect(FiltroPedidos.todos.estados, isEmpty);
-      expect(FiltroPedidos.todos.claves, isEmpty);
+    test('los cuatro grupos parten los estados sin superponerse', () {
+      // Es lo que hace que los contadores del CU-17 sumen el total: si un
+      // estado cayera en dos grupos se contaría dos veces, y si no cayera en
+      // ninguno el pedido desaparecería del historial sin que nadie lo note.
+      final vistos = <PedidoEstado>{};
+
+      for (final filtro in FiltroPedidos.values) {
+        expect(vistos.intersection(filtro.estados), isEmpty,
+            reason: '${filtro.name} repite un estado de otro grupo');
+        vistos.addAll(filtro.estados);
+      }
+
+      expect(vistos, PedidoEstado.values.toSet(),
+          reason: 'algún estado no cae en ningún grupo');
     });
 
-    test('activos e historial parten los estados sin superponerse', () {
-      final activos = FiltroPedidos.activos.estados;
-      final historial = FiltroPedidos.historial.estados;
+    test('cada estado sabe a qué grupo pertenece', () {
+      for (final estado in PedidoEstado.values) {
+        expect(FiltroPedidos.de(estado).estados, contains(estado));
+      }
 
-      expect(activos.intersection(historial), isEmpty);
-      expect({...activos, ...historial}, PedidoEstado.values.toSet(),
-          reason: 'algún estado no cae en ningún filtro');
+      expect(FiltroPedidos.de(PedidoEstado.pausado), FiltroPedidos.activos);
+      expect(FiltroPedidos.de(PedidoEstado.vencido), FiltroPedidos.vencidos);
+    });
+
+    test('vencidos va aparte de cerrados y cancelados', () {
+      // No es un final: es lo único que se puede renovar (CU-51). Meterlo en
+      // un «Historial» común escondería la única acción que le queda.
+      expect(FiltroPedidos.vencidos.estados, {PedidoEstado.vencido});
+      expect(
+        FiltroPedidos.cerrados.estados.union(FiltroPedidos.cancelados.estados),
+        {PedidoEstado.cerrado, PedidoEstado.cancelado},
+      );
     });
 
     test('las claves son las de la base', () {

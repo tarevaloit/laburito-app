@@ -6,7 +6,7 @@ part of 'acciones_pedido_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$accionesPedidoHash() => r'a4b45018d0f88f12c62628b367f9d2568b0cb1f2';
+String _$accionesPedidoHash() => r'41ada52f067fb0520476bf0f289b5fcf8f20db3e';
 
 /// Copied from Dart SDK
 class _SystemHash {
