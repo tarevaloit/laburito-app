@@ -156,13 +156,15 @@ unidad de cambio. Ninguno se pusheó todavía.
 | `40725c1` `fix(CU-03)` | El login sin saludo y con la bajada según la superficie, más el desvío anotado en `docs/UI.md` |
 | `76c69f5` `chore(T-05)` | Migración a `freezed` + `riverpod_generator` de todo lo preexistente: pubspec, providers, modelos y los `*.g.dart` / `*.freezed.dart` |
 | `e0e8d34` `feat(T-02)` | Migraciones 0005, 0006 y 0007 y el guion de diagnóstico `supabase/scripts/verificar_pedidos.sql` |
-| `feat(CU-13)` | `lib/features/pedidos/` —dominio, repositorio, providers y excepciones tipadas— con sus dos suites de pruebas |
+| `6033700` `feat(CU-13)` | `lib/features/pedidos/` —dominio, repositorio, providers y excepciones tipadas— con sus dos suites de pruebas |
+| `fix(T-02)` | Migración 0008: el guard de la máquina de estados y el mapeo del centinela en `PedidoException` |
 
-Línea base de pruebas: **77 en verde**. Son 30 del Sprint 1 (validadores,
-mensajes de error, estados de perfil y lineamiento visual) más 47 nuevas de la
-capa de pedidos. Verificado además que con el `chore(T-05)` aislado —sin nada de
-`lib/features/pedidos/` en el árbol— `flutter analyze` da 0 issues y las 30 del
-Sprint 1 siguen pasando: la migración a codegen no depende del feature nuevo.
+Línea base de pruebas: **77 en verde** al cerrar la Fase 1. Son 30 del Sprint 1
+(validadores, mensajes de error, estados de perfil y lineamiento visual) más 47
+de la capa de pedidos. Verificado además que con el `chore(T-05)` aislado —sin
+nada de `lib/features/pedidos/` en el árbol— `flutter analyze` da 0 issues y las
+30 del Sprint 1 siguen pasando: la migración a codegen no depende del feature
+nuevo. Con el guard de la 0008 son **81**.
 
 **Todavía no hay UI de pedidos.** La capa de datos está completa y probada
 contra modelos, no contra una base.
@@ -211,6 +213,10 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 02/09 | Los pedidos no se borran: no hay política de DELETE | Un `delete` se llevaría por cascada la auditoría de `pedido_eventos`, que es justo lo que prueba que el pedido existió. El ciclo termina en `cerrado` o `cancelado`, que son terminales. Las fotos sí se borran: son archivos, no historia |
 | 02/09 | `listarMisPedidos` filtra por `buscador_id` aunque haya RLS | Sobre `pedidos` hay **dos** políticas de SELECT: la de los propios y la de los publicados vigentes de cualquiera, que es la que va a usar el Profesional. Sin el filtro explícito, «Mis pedidos» mostraría también los de los demás |
 | 02/09 | Al subir una foto, si falla el insert se borra el archivo | Misma lección que el CU-11: un objeto en Storage que ninguna fila referencia es invisible y eterno. Y al eliminar, primero el archivo y después la fila, por el mismo motivo |
+| 02/09 | La máquina de estados se blinda con un trigger y una compuerta de transacción, no restringiendo columnas en la RLS | Postgres no tiene RLS por columna, y las políticas `for update` son de fila entera: quien puede corregir el título puede escribir `estado`. La alternativa era `grant update (col, col, ...)` columna por columna, que se desincroniza en silencio cada vez que se agrega una columna. El trigger `pedidos_guard_estado` (0008) rechaza todo cambio de `estado` salvo que `app.transicion_estado` esté en `'on'`, y solo `cambiar_estado_pedido`, `renovar_pedido` y `marcar_pedidos_vencidos` la abren |
+| 02/09 | La compuerta se pone con `set_config(..., true)`, local a la transacción | Con el tercer argumento en `false` el valor sobreviviría a la request y quedaría pegado al connection pool de Supabase: la conexión siguiente, de otro usuario, encontraría la puerta abierta. Local a la transacción, una RPC que aborta la revierte sola y PostgREST —que atiende cada request en su propia transacción— no la propaga. Igual se cierra a mano después del UPDATE, para que la ventana sea del tamaño mínimo |
+| 02/09 | El guard es integridad, no seguridad | Cualquiera con una conexión SQL puede hacer `set_config('app.transicion_estado','on',...)` y abrir la puerta. Lo que la vuelve efectiva es que a través de PostgREST no hay forma de correr SQL arbitrario antes del PATCH. Quien contiene a un atacante es la RLS; el trigger está para que la propia app no se saltee su máquina de estados por descuido |
+| 02/09 | El guard levanta un centinela, no una frase | `ESTADO_NO_MODIFICABLE_DIRECTAMENTE` es la única excepción a la regla de que los P0001 se muestran tal cual: no es un error del usuario sino un bug nuestro —una pantalla mandando `estado` en el payload de una edición— y no hay nada que explicarle a quien lo ve. El mensaje lo redacta la app. Se mapea por `hint`, y por el texto del centinela como red de contención si el hint se perdiera |
 
 ## 6. Deuda técnica y pendientes conocidos
 
@@ -219,7 +225,8 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | Aprobación manual de Profesionales | CU-09 deja al Profesional en «En Revisión» pero CU-35 (resolverla) recién está en Sprint 6. Se aprueba a mano por SQL. | Sprint 6 |
 | Categorías de oficio | Se cargan por seed en T-02; su ABM (CU-37) es del Sprint 6 | Sprint 6 |
 | ~~Providers escritos a mano~~ | **Saldada el 02/09.** Todo el proyecto pasó a `@riverpod` y `freezed`. La UI no se tocó: los nombres generados coinciden con los de antes. | ✅ |
-| El estado del pedido se puede cambiar sin pasar por la RPC | La política de UPDATE de `pedidos` deja escribir la fila entera, así que un PATCH directo saltea `cambiar_estado_pedido` y su máquina de estados. Se tapa con un trigger `BEFORE UPDATE`, que necesita una compuerta para que `renovar_pedido` pueda hacer `vencido → publicado`. | Sprint 2 |
+| ~~El estado del pedido se puede cambiar sin pasar por la RPC~~ | **Saldada el 02/09 con la migración 0008.** Trigger `pedidos_guard_estado` `BEFORE UPDATE` + compuerta `app.transicion_estado` en las tres RPC que sí pueden mover el estado. | ✅ |
+| Un pedido puede nacer en un estado terminal | El guard de la 0008 es solo de UPDATE. La política de alta de la 0006 no mira `estado`, así que un INSERT puede pisar el `default 'publicado'` y crear un pedido ya `cerrado`. El daño es acotado —es su propio pedido y nace muerto— pero es un agujero de la máquina de estados. Se decide junto con `crear_pedido()`. | Sprint 2 (Fase 3) |
 | El Profesional no puede ver las fotos de un pedido | Las políticas de Storage del bucket `pedidos` son solo del dueño, así que el CU-16 no va a poder firmar las URLs. Falta una política de SELECT para pedidos publicados vigentes, o firmarlas desde una Edge Function. | Sprint 2 (con CU-16) |
 | Sin pantallas de pedidos | La capa de datos está completa y probada, pero no hay UI: el CU-13 necesita el formulario y el mapa. | Sprint 2 |
 | Sin pruebas de widget ni de integración | Hay 18 pruebas unitarias de validadores y mensajes, más 3 de widget en `test/tema_test.dart` que cubren el lineamiento visual. Los circuitos se verifican a mano con el guion de `ARRANQUE.md`. | Sprint 2 |
@@ -235,24 +242,28 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 
 _(Una sola línea. Lo primero que hay que hacer al retomar.)_
 
-→ **Migración 0008: el trigger `BEFORE UPDATE` que blinda la máquina de estados**, con la compuerta `app.transicion_estado` para que las RPC puedan seguir moviendo el estado.
+→ **Verificar cómo se escribe la geografía**: si el EWKT que manda `crearPedido()` entra bien en la columna `geography`, o si hace falta una RPC `crear_pedido()` que arme el punto del lado del servidor (migración 0009).
 
-Antes de eso, o en paralelo: **aplicar en el SQL Editor, en orden,
-`0004_cu11_storage_sin_dml.sql`, `0005_pedidos.sql`, `0006_pedidos_rls.sql` y
-`0007_pedidos_coordenadas.sql`**, y correr el guion de prueba que cada una trae
-al final. `supabase/scripts/verificar_pedidos.sql` dice cuáles están aplicadas.
+Antes de eso: **aplicar en el SQL Editor, en orden,
+`0004_cu11_storage_sin_dml.sql`, `0005_pedidos.sql`, `0006_pedidos_rls.sql`,
+`0007_pedidos_coordenadas.sql` y `0008_pedidos_guard_estado.sql`**, y correr el
+guion de prueba que cada una trae al final.
+`supabase/scripts/verificar_pedidos.sql` dice cuáles están aplicadas.
 
 Del Sprint 1 sigue pendiente el material de la entrega: el video de los 7
 circuitos de `ARRANQUE.md`, la captura del Schema Visualizer y de la tabla de
 políticas RLS, y la subida a BB.
 
 Del Sprint 2 está hecha la capa de datos de pedidos —esquema, RLS, máquina de
-estados, renovación y el repositorio con sus providers y tests— pero **ninguna
-migración se probó contra una base**: no hay Docker en esta máquina, así que el
-SQL está escrito y revisado pero nunca ejecutado. Después de aplicarlas, lo que
-sigue es la UI del CU-13 (formulario y mapa) y las dos deudas que abrió esta
-capa: el trigger que blinda la máquina de estados y la política de Storage que
-le deje al Profesional ver las fotos.
+estados blindada, renovación y el repositorio con sus providers y tests— pero
+**ninguna migración se probó contra una base**: no hay Docker en esta máquina,
+así que el SQL está escrito y revisado pero nunca ejecutado. Cada una trae su
+guion de aceptación comentado al final para correr en el SQL Editor; hasta que
+eso pase, «migración aplicada» no quiere decir «migración verificada».
+
+Después de aplicarlas, lo que sigue es la UI del CU-13 (formulario y mapa) y la
+deuda que queda abierta de esta capa: la política de Storage que le deje al
+Profesional ver las fotos de un pedido publicado (CU-16).
 
 ---
 

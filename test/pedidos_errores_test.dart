@@ -69,6 +69,53 @@ void main() {
     });
   });
 
+  group('guard de la máquina de estados (migración 0008)', () {
+    // El trigger `pedidos_guard_estado` no levanta una frase para el usuario:
+    // levanta un centinela. Es la única excepción a «el texto del mensaje no se
+    // lee», y por eso el mensaje que ve la persona lo pone la app.
+    const centinela = 'ESTADO_NO_MODIFICABLE_DIRECTAMENTE';
+
+    test('el hint lo identifica y el centinela no llega a la pantalla', () {
+      final e = PedidoException.desde(pg(
+        'P0001',
+        hint: 'estado_no_modificable',
+        message: centinela,
+      ));
+
+      expect(e.caso, CasoPedido.estadoNoModificable);
+      expect(e.message, isNot(contains(centinela)));
+      expect(e.message, contains('pausar'));
+    });
+
+    test('sin hint, se reconoce por el centinela del mensaje', () {
+      // Red de contención: si el hint se pierde en el camino, el caso se
+      // sigue distinguiendo de un P0001 cualquiera.
+      final e = PedidoException.desde(pg('P0001', message: centinela));
+
+      expect(e.caso, CasoPedido.estadoNoModificable);
+      expect(e.message, isNot(contains(centinela)));
+    });
+
+    test('MensajesError tampoco lo deja escapar', () {
+      final e = PedidoException.desde(pg(
+        'P0001',
+        hint: 'estado_no_modificable',
+        message: centinela,
+      ));
+
+      expect(MensajesError.desde(e), isNot(contains(centinela)));
+    });
+
+    test('el error original queda en causa, con centinela y todo, para el log',
+        () {
+      final original = pg('P0001', hint: 'estado_no_modificable', message: centinela);
+      final e = PedidoException.desde(original);
+
+      expect(e.causa, same(original));
+      expect((e.causa! as PostgrestException).message, centinela);
+    });
+  });
+
   group('errores de infraestructura', () {
     test('42501 (RLS) es sin permiso y NO filtra el texto de Postgres', () {
       final e = PedidoException.desde(pg(

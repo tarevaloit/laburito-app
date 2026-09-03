@@ -13,6 +13,15 @@ enum CasoPedido {
   /// El pedido agotó sus 3 renovaciones (CU-51).
   limiteRenovaciones,
 
+  /// Se intentó escribir `estado` con un UPDATE común, salteando la máquina de
+  /// estados. Lo frena el trigger `pedidos_guard_estado` de la migración 0008.
+  ///
+  /// **Es un error nuestro, no del usuario.** Si aparece, hay una pantalla
+  /// mandando `estado` en el payload de una edición en vez de llamar a
+  /// `cambiarEstado`. La pantalla no tiene nada que ofrecerle a quien lo ve más
+  /// que reintentar por el camino correcto.
+  estadoNoModificable,
+
   /// No es suyo, no existe, o no hay sesión. Las RLS no distinguen entre «no
   /// existe» y «no te lo puedo mostrar», y está bien que no lo hagan: decirlo
   /// permitiría averiguar qué ids existen.
@@ -76,8 +85,15 @@ class PedidoException implements ErrorDeNegocio {
         'P0001' => switch (error.hint) {
             'transicion_invalida' => CasoPedido.transicionInvalida,
             'limite_renovaciones' => CasoPedido.limiteRenovaciones,
+            'estado_no_modificable' => CasoPedido.estadoNoModificable,
             'sin_permiso' => CasoPedido.sinPermiso,
-            _ => CasoPedido.desconocido,
+
+            // Única excepción a «el texto del mensaje no se lee»: el guard de
+            // la 0008 levanta el centinela como mensaje, no como frase para el
+            // usuario. Se mira acá por si el `hint` se pierde en el camino.
+            _ => error.message.contains(_centinelaGuard)
+                ? CasoPedido.estadoNoModificable
+                : CasoPedido.desconocido,
           },
 
         // RLS: ninguna política habilita la operación. Es lo que devuelve el
@@ -99,6 +115,13 @@ class PedidoException implements ErrorDeNegocio {
   /// row violates row-level security policy for table "pedidos"»— y no se
   /// muestra nunca: queda en `causa` para el log.
   static String _mensaje(PostgrestException error, CasoPedido caso) {
+    // Antes que la regla general: el mensaje del guard es el centinela
+    // `ESTADO_NO_MODIFICABLE_DIRECTAMENTE`, que no se le muestra a nadie.
+    if (caso == CasoPedido.estadoNoModificable) {
+      return 'El estado del pedido no se cambia desde la edición. Usá los '
+          'botones de pausar, reanudar, cerrar, cancelar o renovar.';
+    }
+
     if (error.code == 'P0001') return error.message;
 
     if (caso == CasoPedido.sinPermiso) {
@@ -126,6 +149,10 @@ class PedidoException implements ErrorDeNegocio {
 
         _ => 'No pudimos completar la operación. Intentá nuevamente.',
       };
+
+  /// El `raise exception` del trigger `pedidos_guard_estado` (migración 0008).
+  /// Es un identificador, no una frase: nunca se le muestra al usuario.
+  static const String _centinelaGuard = 'ESTADO_NO_MODIFICABLE_DIRECTAMENTE';
 
   @override
   String toString() => 'PedidoException($caso): $message';

@@ -119,7 +119,11 @@ class PedidosRepository {
   /// nulos lo que la pantalla no editó.
   ///
   /// El estado **no** se toca acá: para eso está [cambiarEstado], que valida la
-  /// máquina de estados.
+  /// máquina de estados. Tampoco es una convención que dependa de este método:
+  /// desde la migración 0008 el trigger `pedidos_guard_estado` rechaza
+  /// cualquier UPDATE que escriba `estado`, y el error vuelve como
+  /// [CasoPedido.estadoNoModificable]. Si alguna vez aparece en pantalla, es
+  /// que este mapa de cambios se llenó mal.
   Future<Pedido> actualizarPedido(
     String id, {
     String? categoriaId,
