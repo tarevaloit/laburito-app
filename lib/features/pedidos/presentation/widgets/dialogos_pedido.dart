@@ -88,7 +88,9 @@ class _DialogoCerrarState extends State<_DialogoCerrar> {
           child: const Text('Volver'),
         ),
         FilledButton(
-          style: _estiloDestructivo,
+          // Verde, no rojo: cerrar es el desenlace bueno del pedido. Que sea
+          // irreversible lo dice el texto de arriba, no el color del botón.
+          style: _estiloExito,
           onPressed:
               _motivo == null ? null : () => Navigator.pop(context, _motivo),
           child: const Text('Cerrar pedido'),
@@ -321,8 +323,21 @@ Future<bool> avisarLimiteDeRenovaciones(BuildContext context) async {
   return publicarOtro ?? false;
 }
 
-/// El botón que confirma algo irreversible va en rojo, como el de la baja de
-/// cuenta (CU-11).
+/// El botón que confirma que algo salió bien y termina el flujo: cerrar un
+/// pedido resuelto (CU-29).
+///
+/// El color dice **qué desenlace** produce la acción, no si tiene vuelta
+/// atrás. La irreversibilidad la explica el texto del diálogo, que además
+/// exige elegir un motivo antes de habilitar el botón.
+final ButtonStyle _estiloExito = FilledButton.styleFrom(
+  backgroundColor: Colores.exito,
+  disabledBackgroundColor: Colores.exito.withValues(alpha: 0.4),
+  foregroundColor: Colores.textoSobreColor,
+  disabledForegroundColor: Colores.textoSobreColor,
+);
+
+/// El botón que confirma una baja va en rojo, como el de la baja de cuenta
+/// (CU-11): cancelar un pedido es darlo de baja sin que el trabajo se hiciera.
 final ButtonStyle _estiloDestructivo = FilledButton.styleFrom(
   backgroundColor: Colores.error,
   disabledBackgroundColor: Colores.errorApagado,

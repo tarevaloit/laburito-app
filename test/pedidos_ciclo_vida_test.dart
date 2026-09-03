@@ -126,6 +126,39 @@ void main() {
     });
   });
 
+  group('el color dice qué desenlace produce cada acción', () {
+    Color colorDelBoton(WidgetTester t, String texto) {
+      final boton = t.widget<OutlinedButton>(
+        find.ancestor(
+          of: find.text(texto),
+          matching: find.byType(OutlinedButton),
+        ),
+      );
+      return boton.style!.foregroundColor!.resolve({})!;
+    }
+
+    testWidgets('cerrar es verde y cancelar es rojo', (t) async {
+      // «Cerrar» estaba en rojo y se leía como «eliminar». Cerrar es el final
+      // bueno —el trabajo se resolvió— y la misma pantalla ya lo dibuja en
+      // verde con un tilde cuando el pedido está cerrado: el botón que lleva
+      // ahí no puede decir lo contrario.
+      //
+      // Que sea irreversible no lo hace rojo. Eso lo explica el diálogo, que
+      // además exige elegir un motivo antes de habilitar la confirmación.
+      await mostrarBarra(t, pedido());
+
+      expect(colorDelBoton(t, 'Cerrar'), Colores.exito);
+      expect(colorDelBoton(t, 'Cancelar'), Colores.error);
+    });
+
+    testWidgets('lo que deja el pedido en curso va en azul', (t) async {
+      await mostrarBarra(t, pedido());
+
+      expect(colorDelBoton(t, 'Editar'), Colores.azul);
+      expect(colorDelBoton(t, 'Pausar'), Colores.azul);
+    });
+  });
+
   group('CU-29 y CU-14 · arrepentirse no ejecuta nada', () {
     testWidgets('cerrar el diálogo de cierre no dispara la acción', (t) async {
       // Si la acción se disparara, el controlador saldría a buscar el

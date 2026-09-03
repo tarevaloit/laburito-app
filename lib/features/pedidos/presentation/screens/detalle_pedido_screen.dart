@@ -526,7 +526,8 @@ class BarraDeAccionesPedido extends ConsumerWidget {
         _BotonAccion(
           icono: Icons.check_circle_outline,
           texto: 'Cerrar',
-          destructivo: true,
+          // Verde: cerrar es el final bueno, el trabajo se resolvió.
+          color: Colores.exito,
           cargando: estado.enCurso == AccionPedido.cerrar,
           habilitado: !estado.ocupado,
           onPressed: () async {
@@ -547,7 +548,8 @@ class BarraDeAccionesPedido extends ConsumerWidget {
         _BotonAccion(
           icono: Icons.cancel_outlined,
           texto: 'Cancelar',
-          destructivo: true,
+          // Rojo: es una baja, el pedido no llegó a hacerse.
+          color: Colores.error,
           cargando: estado.enCurso == AccionPedido.cancelar,
           habilitado: !estado.ocupado,
           onPressed: () async {
@@ -611,7 +613,7 @@ class _BotonAccion extends StatelessWidget {
     required this.onPressed,
     required this.cargando,
     required this.habilitado,
-    this.destructivo = false,
+    this.color = Colores.azul,
   });
 
   final IconData icono;
@@ -620,12 +622,20 @@ class _BotonAccion extends StatelessWidget {
   final bool cargando;
   final bool habilitado;
 
-  /// Rojo para lo que no tiene vuelta atrás: cerrar y cancelar.
-  final bool destructivo;
+  /// Qué **tipo de desenlace** produce la acción, no si es reversible.
+  ///
+  /// Azul para las que dejan el pedido en curso (editar, pausar, reanudar,
+  /// renovar), verde para cerrar —el trabajo se resolvió, que es el final
+  /// bueno— y rojo para cancelar, que es dar de baja.
+  ///
+  /// Que cerrar sea irreversible **no lo hace rojo**: eso lo explica el
+  /// diálogo, que además exige elegir un motivo. Pintarlo de rojo lo hacía
+  /// leer como «eliminar» y contradecía al aviso de la misma pantalla, que
+  /// dibuja un pedido cerrado en verde con un tilde.
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    final color = destructivo ? Colores.error : Colores.azul;
 
     return OutlinedButton.icon(
       onPressed: habilitado ? onPressed : null,
