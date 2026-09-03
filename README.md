@@ -30,6 +30,23 @@ leen el `.env`.
 Si faltan las claves, la app arranca igual y muestra en pantalla qué falta
 completar, en vez de romper con una excepción.
 
+### Clave de Google Maps (CU-16)
+
+La clave viaja por **dos caminos distintos**, porque el SDK nativo de Android
+no lee `--dart-define`: lee un `meta-data` del manifiesto.
+
+- **Dart y Web** — va en el mismo `.env` que Supabase, como
+  `GOOGLE_MAPS_API_KEY`. La lee `Env.googleMapsApiKey` y la inyecta
+  `sdk_mapas_web.dart` en tiempo de ejecución (no está escrita en
+  `web/index.html`: ver el comentario ahí).
+- **Android nativo** — la lee `android/app/build.gradle.kts` de la variable
+  de entorno `MAPS_API_KEY` o, si no está, de `MAPS_API_KEY=...` en
+  `android/local.properties` (archivo del `.gitignore`, no del repo), y la
+  vuelca al `AndroidManifest.xml` como `manifestPlaceholders`.
+
+Sin la clave el mapa no se dibuja, pero el resto de la app funciona igual
+(`Env.googleMapsApiKey` no entra en `Env.esValido`).
+
 ## Base de datos
 
 El esquema está versionado en [`supabase/migrations/`](supabase/migrations/) y se

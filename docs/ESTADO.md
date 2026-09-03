@@ -110,7 +110,7 @@ Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanific
 
 | ID | Ítem | Pts | Estado | Figura del ANEXO UI |
 |---|---|---|---|---|
-| CU-16 | _(completar del PT 3.0)_ | ? | ⬜ | — |
+| CU-16 | Localizar Pedido en Mapa | 8 | ✅ | — |
 | CU-13 | Publicar pedido con ubicación en el mapa | ? | ⬜ | Fig. 3.2 |
 | CU-14 | _(completar del PT 3.0)_ | ? | ⬜ | — |
 | CU-15 | _(completar del PT 3.0)_ | ? | ⬜ | — |
@@ -159,17 +159,52 @@ unidad de cambio. Ninguno se pusheó todavía.
 | `6033700` `feat(CU-13)` | `lib/features/pedidos/` —dominio, repositorio, providers y excepciones tipadas— con sus dos suites de pruebas |
 | `e0d3fe5` `fix(T-02)` | Migración 0008: el guard de la máquina de estados y el mapeo del centinela en `PedidoException` |
 | `fix(CU-13)` | Migración 0009: alta y cambio de ubicación por RPC, con el punto armado del lado del servidor |
+| `feat(CU-16)` | `lib/core/mapas/` completo + `SelectorUbicacion` en `lib/features/pedidos/presentation/widgets/`, manifiesto de Android, `web/index.html`, `.env.example`, README y `test/mapa_config_test.dart` + `test/servicio_direcciones_test.dart` |
 
 Línea base de pruebas: **77 en verde** al cerrar la Fase 1. Son 30 del Sprint 1
 (validadores, mensajes de error, estados de perfil y lineamiento visual) más 47
 de la capa de pedidos. Verificado además que con el `chore(T-05)` aislado —sin
 nada de `lib/features/pedidos/` en el árbol— `flutter analyze` da 0 issues y las
 30 del Sprint 1 siguen pasando: la migración a codegen no depende del feature
-nuevo. Con el guard de la 0008 son **81**, y con la ida y vuelta de la
-coordenada de la 0009, **87**.
+nuevo. Con el guard de la 0008 son **81**, con la ida y vuelta de la
+coordenada de la 0009, **87**, y con las pruebas del CU-16 (`mapa_config_test`
++ `servicio_direcciones_test`), **101**.
 
-**Todavía no hay UI de pedidos.** La capa de datos está completa y probada
-contra modelos, no contra una base.
+**Todavía no hay wizard de alta de pedido (CU-13).** El CU-16 aporta el
+selector de ubicación reutilizable; falta el resto de la pantalla que lo
+invoca, que es la Fase 5.
+
+### 4.4 Fase 4 — CU-16 Localizar Pedido en Mapa · **HECHA**
+
+Se retomó donde había quedado interrumpida (ver historial de este archivo) y
+se terminó completa: compilador arreglado, widget escrito, configuración
+nativa y pruebas. `flutter analyze` en 0 issues, `flutter build web` y
+`flutter build apk --debug` compilan los dos.
+
+#### Lo que se escribió (sin commitear)
+
+| Archivo | Qué hace |
+|---|---|
+| `lib/core/mapas/mapa_config.dart` | Tokens del mapa: clave, zoom de dirección y de detalle, centro de reserva en José C. Paz, tolerancia de 15 m y los dos *debounce*. `asegurarSdk()` delega en el cargador por plataforma |
+| `lib/core/mapas/sdk_mapas.dart` + `_stub.dart` + `_web.dart` | Carga del SDK resuelta con `export … if (dart.library.js_interop)`. En Android no hay nada que cargar; en Web inyecta el `<script>` de Maps con la clave del `--dart-define` |
+| `lib/core/mapas/ubicacion_dispositivo.dart` | `geolocator` detrás de un tipo sellado `PosicionObtenida` / `SinPosicion`. Dos entradas: `actual()` pide permiso, `actualSiYaHayPermiso()` no molesta a nadie |
+| `lib/core/mapas/servicio_direcciones.dart` | Places API (New) para el autocompletado y Geocoding API para la geocodificación inversa. Ningún método tira excepción: devuelven `null` o lista vacía |
+| `lib/core/mapas/mapas_providers.dart` | `servicioDireccionesProvider` y `ubicacionDispositivoProvider`, los dos `keepAlive` |
+| `lib/features/pedidos/presentation/controllers/selector_ubicacion_controller.dart` | Estado del selector en freezed + Notifier `@riverpod` autoDispose con familia sobre la `Ubicacion` inicial. El `ref.mounted` que no existe en Riverpod 2.6 se reemplazó por la bandera `_vivo` ya declarada |
+| `lib/features/pedidos/presentation/widgets/selector_ubicacion.dart` | El widget `SelectorUbicacion` (pantalla completa) y `abrirSelectorUbicacion(context, inicial: ...)`, que lo empuja con `Navigator.push` y devuelve `Ubicacion?` |
+| `lib/core/config/env.dart` | Se le agregó `googleMapsApiKey`. **No** entra en `Env.esValido`: sin mapa la app arranca igual |
+| `android/app/src/main/AndroidManifest.xml` | `meta-data com.google.android.geo.API_KEY` con `${MAPS_API_KEY}` y los permisos `ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION` |
+| `android/app/build.gradle.kts` | Lee `MAPS_API_KEY` de la variable de entorno o de `android/local.properties` (gitignored) y la vuelca como `manifestPlaceholders["MAPS_API_KEY"]`, con `""` por defecto |
+| `web/index.html` | Sin la clave; solo un comentario que explica que el `<script>` de Maps lo inyecta `sdk_mapas_web.dart` |
+| `.env.example` | `GOOGLE_MAPS_API_KEY=` vacío y las tres APIs a habilitar en Google Cloud |
+| `README.md` | Sección «Clave de Google Maps (CU-16)»: los dos caminos de la clave y por qué son dos |
+| `test/mapa_config_test.dart` + `test/servicio_direcciones_test.dart` | Centro de reserva y tolerancia; parseo del autocompletado, del detalle y de la geocodificación inversa con `MockClient`, `includedRegionCodes: ['ar']` en el cuerpo, y que un 500 devuelva `null`/lista vacía en vez de tirar |
+| `pubspec.yaml` / `pubspec.lock` | `google_maps_flutter`, `google_maps_flutter_web`, `geolocator`, `web`, y `http` que pasó de `dev_dependencies` a `dependencies` |
+
+Verificado: `flutter analyze` 0 issues, `flutter test` 101 en verde,
+`flutter build web` y `flutter build apk --debug` compilan los dos.
+Decisiones técnicas de esta fase: sección 5, entradas del 02/09.
+Falta commitear (`feat(CU-16): localizar el pedido en el mapa`).
 
 ## 5. Decisiones técnicas tomadas
 
@@ -222,6 +257,13 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 02/09 | Las RPC nuevas devuelven `setof public.pedidos`, no `public.pedidos` | Con `setof`, PostgREST trata el resultado como un recurso y admite `select=*,lat,lng,categorias_oficio(nombre)` sobre la llamada: el alta sigue siendo **un solo viaje**. Con el tipo compuesto a secas devuelve la fila cruda, sin computed fields ni embeds, y hay que releer el pedido —que es lo que hoy hacen `cambiar_estado_pedido` y `renovar_pedido`, y conviene corregir cuando se las toque |
 | 02/09 | Editar la ubicación es una llamada aparte de editar el resto | Un `geography` no se escribe desde un UPDATE de PostgREST. `actualizarPedido` manda primero la RPC de ubicación y después el PATCH de los campos de texto: en ese orden, una edición sobre un pedido cerrado falla antes de haber escrito nada, porque la RPC valida estado y dueño y el PATCH solo dueño. Costo asumido: son dos escrituras sin transacción común, así que si la segunda falla la primera queda hecha. La alternativa era una RPC con el formulario entero adentro y el problema del centinela para distinguir «no cambiar» de «poner en null» |
 | 02/09 | El guard levanta un centinela, no una frase | `ESTADO_NO_MODIFICABLE_DIRECTAMENTE` es la única excepción a la regla de que los P0001 se muestran tal cual: no es un error del usuario sino un bug nuestro —una pantalla mandando `estado` en el payload de una edición— y no hay nada que explicarle a quien lo ve. El mensaje lo redacta la app. Se mapea por `hint`, y por el texto del centinela como red de contención si el hint se perdiera |
+| 02/09 | Places **API (New)** en vez del servicio clásico con `components=country:ar` (CU-16) | El endpoint viejo no manda cabeceras CORS: desde el navegador toda llamada muere antes de salir. El filtro equivalente es `includedRegionCodes: ['ar']`. **Desvío respecto de la consigna del sprint**, que pedía el parámetro clásico |
+| 02/09 | El `<script>` de Google Maps se inyecta desde Dart, no se escribe en `web/index.html` | La documentación de `google_maps_flutter_web` lo pone en el HTML, pero ahí la clave queda en un archivo del repositorio. La regla del proyecto es que las claves entran por `--dart-define`; se paga una espera la primera vez que se abre un mapa |
+| 02/09 | La clave de Maps viaja por dos caminos: `--dart-define` para Dart/Web, `manifestPlaceholders` de Gradle para Android nativo | El SDK nativo no lee `--dart-define`, lee el `meta-data` del manifiesto. Es la misma clave cargada en los dos lados; `Env.googleMapsApiKey` no entra en `Env.esValido` porque sin mapa el resto de la app funciona igual |
+| 02/09 | Ningún método de `ServicioDirecciones` tira excepción | La dirección es un campo de texto editable: un servicio caído degrada a «escribila vos», no a un alta interrumpida |
+| 02/09 | El permiso de ubicación no se pide al abrir el selector, solo al tocar «Usar mi ubicación» | Disparar el diálogo del sistema apenas se abre una pantalla es la forma más rápida de que alguien apriete «no» sin leer, y en el navegador ese «no» queda pegado al sitio |
+| 02/09 | La geocodificación inversa se filtra por distancia (15 m) y por origen del movimiento | El mapa se queda quieto muchas más veces de las que el usuario elige un punto (primer encuadre, `animateCamera`, teclado); se ignoran los movimientos que hizo el propio controlador |
+| 02/09 | El botón «Mi ubicación» y las sugerencias de búsqueda van en la columna del `SelectorUbicacion`, no flotando sobre el mapa | En Web, `GoogleMap` se dibuja con `HtmlElementView`, y un widget interactivo apilado arriba necesita `pointer_interceptor` para recibir el mouse. Se resolvió con una columna —búsqueda arriba, mapa con solo el pin encima (`IgnorePointer`, no necesita recibir toques), panel de «mi ubicación»/dirección/referencia abajo— en vez de sumar otra dependencia |
 
 ## 6. Deuda técnica y pendientes conocidos
 

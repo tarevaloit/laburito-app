@@ -24,15 +24,29 @@ dependencies:
   riverpod_annotation: ^2.6.1
   freezed_annotation: ^3.1.0
 
+  # CU-16 — mapa. `google_maps_flutter_web` no viene endosado por el paquete
+  # principal: hay que declararlo a mano o la Web compila y muestra un hueco.
+  google_maps_flutter: ^2.18.0
+  google_maps_flutter_web: ^0.6.3
+
+  # Posición del dispositivo y permisos, con un solo camino de código para Web
+  # (Geolocation del navegador) y Android.
+  geolocator: ^14.0.3
+
+  # Cliente HTTP. Lo usan los servicios de Places y de geocodificación inversa
+  # del CU-16, y `package:http/testing.dart` en las pruebas del repositorio.
+  # Pasó de `dev_dependencies` a acá cuando dejó de ser solo de tests.
+  http: ^1.6.0
+
+  # DOM del navegador. Solo lo importa `lib/core/mapas/sdk_mapas_web.dart`, que
+  # inyecta el `<script>` de Maps con la clave del `--dart-define` en vez de
+  # dejarla escrita en `web/index.html`.
+  web: ^1.1.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
-
-  # Cliente HTTP falso (`package:http/testing.dart`) para probar el repositorio
-  # sin salir a la red. Ya venía como dependencia transitiva de supabase; se
-  # declara acá porque los tests lo importan directo.
-  http: ^1.2.0
 
   # Generadores. Después de tocar un modelo o un provider:
   #   dart run build_runner build --delete-conflicting-outputs

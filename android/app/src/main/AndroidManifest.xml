@@ -3,6 +3,14 @@
         android:label="laburito"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- CU-16: clave de Google Maps Platform. El SDK nativo no lee el
+             dart-define de Flutter, así que este placeholder lo rellena
+             Gradle desde `android/app/build.gradle.kts` (variable de entorno
+             MAPS_API_KEY o `android/local.properties`, que está en el
+             .gitignore). -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${MAPS_API_KEY}" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -43,4 +51,7 @@
         </intent>
     </queries>
     <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- CU-16: posición del dispositivo para «Usar mi ubicación». -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 </manifest>

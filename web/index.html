@@ -31,6 +31,14 @@
 
   <title>Laburito</title>
   <link rel="manifest" href="manifest.json">
+
+  <!--
+    CU-16: acá NO va el <script> de Google Maps con la clave. Lo inyecta
+    lib/core/mapas/sdk_mapas_web.dart en tiempo de ejecución, con la clave que
+    llega por el dart-define GOOGLE_MAPS_API_KEY, para no commitear un
+    secreto en un archivo del repositorio. Ver ese archivo antes de agregarlo
+    a mano acá.
+  -->
 </head>
 <body>
   <!--
