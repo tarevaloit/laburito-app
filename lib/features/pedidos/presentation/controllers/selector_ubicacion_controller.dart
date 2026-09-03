@@ -170,9 +170,23 @@ class SelectorUbicacionController extends _$SelectorUbicacionController {
     if (!_vivo) return;
 
     // Entre que salió la consulta y volvió, el usuario pudo haber seguido
-    // arrastrando: si el centro ya no es el mismo, esta respuesta es vieja y
-    // escribirla dejaría el campo describiendo otra esquina.
-    final vigente = state.lat == lat && state.lng == lng;
+    // arrastrando: si el centro ya se fue a otra parte, esta respuesta es
+    // vieja y escribirla dejaría el campo describiendo otra esquina.
+    //
+    // **Se compara por distancia y no por igualdad de doubles.** Con `==` esto
+    // fallaba siempre en el camino de «Usar mi ubicación»: el controlador pone
+    // la coordenada del GPS, el mapa termina de animar y su `onCameraIdle`
+    // devuelve el centro real de la cámara, que difiere del pedido en los
+    // últimos decimales. Esa diferencia invisible hacía que la respuesta se
+    // descartara por «vieja», la dirección nunca se escribiera y el botón de
+    // confirmar quedara deshabilitado para siempre.
+    //
+    // La tolerancia es la misma con la que se filtran los movimientos del
+    // mapa: por debajo de 15 m es el mismo punto para lo que acá importa, que
+    // es qué dirección mostrar.
+    final vigente =
+        Geolocator.distanceBetween(state.lat, state.lng, lat, lng) <
+            MapaConfig.toleranciaMetros;
 
     state = state.copyWith(
       resolviendoDireccion: false,
