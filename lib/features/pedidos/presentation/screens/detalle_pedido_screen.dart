@@ -11,6 +11,7 @@ import '../../domain/pedido.dart';
 import '../../domain/pedido_estado.dart';
 import '../controllers/acciones_pedido_controller.dart';
 import '../widgets/chip_estado_pedido.dart';
+import '../widgets/dialogos_pedido.dart';
 import '../widgets/fotos_pedido.dart';
 import '../widgets/mini_mapa_pedido.dart';
 
@@ -463,6 +464,27 @@ class BarraDeAccionesPedido extends ConsumerWidget {
             }
           },
         ),
+      // CU-29 — Cerrar: el trabajo se resolvió.
+      if (pedido.estado.puedePasarA(PedidoEstado.cerrado))
+        _BotonAccion(
+          icono: Icons.check_circle_outline,
+          texto: 'Cerrar',
+          destructivo: true,
+          cargando: estado.enCurso == AccionPedido.cerrar,
+          habilitado: !estado.ocupado,
+          onPressed: () async {
+            final motivo = await pedirMotivoDeCierre(context);
+            if (motivo == null) return;
+
+            if (await controlador.cerrar(motivo) && context.mounted) {
+              mostrarMensaje(
+                context,
+                'Cerramos tu pedido. Queda en tu historial.',
+                esError: false,
+              );
+            }
+          },
+        ),
     ];
 
     if (acciones.isEmpty) return const SizedBox.shrink();
@@ -493,6 +515,7 @@ class _BotonAccion extends StatelessWidget {
     required this.onPressed,
     required this.cargando,
     required this.habilitado,
+    this.destructivo = false,
   });
 
   final IconData icono;
@@ -501,9 +524,12 @@ class _BotonAccion extends StatelessWidget {
   final bool cargando;
   final bool habilitado;
 
+  /// Rojo para lo que no tiene vuelta atrás: cerrar y cancelar.
+  final bool destructivo;
+
   @override
   Widget build(BuildContext context) {
-    const color = Colores.azul;
+    final color = destructivo ? Colores.error : Colores.azul;
 
     return OutlinedButton.icon(
       onPressed: habilitado ? onPressed : null,
