@@ -485,6 +485,28 @@ class BarraDeAccionesPedido extends ConsumerWidget {
             }
           },
         ),
+      // CU-14 — Cancelar: el pedido se da de baja sin haberse hecho.
+      if (pedido.estado.puedePasarA(PedidoEstado.cancelado))
+        _BotonAccion(
+          icono: Icons.cancel_outlined,
+          texto: 'Cancelar',
+          destructivo: true,
+          cargando: estado.enCurso == AccionPedido.cancelar,
+          habilitado: !estado.ocupado,
+          onPressed: () async {
+            final confirmada = await confirmarCancelacion(context);
+            if (confirmada == null) return;
+
+            final hecho = await controlador.cancelar(motivo: confirmada.motivo);
+            if (hecho && context.mounted) {
+              mostrarMensaje(
+                context,
+                'Dimos de baja tu pedido. Queda en tu historial.',
+                esError: false,
+              );
+            }
+          },
+        ),
     ];
 
     if (acciones.isEmpty) return const SizedBox.shrink();
