@@ -319,7 +319,17 @@ class AvisoEstado extends StatelessWidget {
 }
 
 /// SnackBar unificado para errores y confirmaciones.
-void mostrarMensaje(BuildContext context, String texto, {bool esError = true}) {
+///
+/// [duracion] existe para los mensajes que explican algo que el usuario tiene
+/// que poder leer y entender —por qué no entró una foto, por ejemplo— y no
+/// solo confirman lo que acaba de hacer. Los cuatro segundos por defecto de
+/// Material alcanzan para «Guardado» y no para una frase.
+void mostrarMensaje(
+  BuildContext context,
+  String texto, {
+  bool esError = true,
+  Duration duracion = const Duration(seconds: 4),
+}) {
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(
@@ -327,6 +337,7 @@ void mostrarMensaje(BuildContext context, String texto, {bool esError = true}) {
         content: Text(texto),
         backgroundColor: esError ? Colores.error : Colores.exito,
         behavior: SnackBarBehavior.floating,
+        duration: duracion,
       ),
     );
 }

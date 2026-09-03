@@ -95,6 +95,13 @@ class _CarruselFotosPedidoState extends ConsumerState<CarruselFotosPedido> {
   Map<String, String> _urls = const {};
   int _actual = 0;
 
+  /// Hay un pedido de firmas en vuelo.
+  ///
+  /// Sin esta bandera, «todavía no llegó la URL» y «la URL no se pudo obtener»
+  /// eran el mismo estado —el mapa sin la clave— y la foto quedaba girando
+  /// para siempre en vez de caer en el placeholder.
+  bool _firmando = false;
+
   @override
   void initState() {
     super.initState();
@@ -117,11 +124,18 @@ class _CarruselFotosPedidoState extends ConsumerState<CarruselFotosPedido> {
   Future<void> _firmar() async {
     if (widget.fotos.isEmpty) return;
 
+    setState(() => _firmando = true);
+
     final urls = await ref
         .read(urlsFirmadasProvider)
         .resolver([for (final f in widget.fotos) f.storagePath]);
 
-    if (mounted) setState(() => _urls = urls);
+    if (mounted) {
+      setState(() {
+        _urls = urls;
+        _firmando = false;
+      });
+    }
   }
 
   @override
@@ -153,10 +167,37 @@ class _CarruselFotosPedidoState extends ConsumerState<CarruselFotosPedido> {
                 final url = _urls[widget.fotos[i].storagePath];
 
                 if (url == null) {
+                  // Mientras se pide la firma, el indicador. Si la firma ya
+                  // volvió sin esta ruta, el archivo no está o no se puede
+                  // leer: se muestra el placeholder y se ofrece reintentar,
+                  // que es lo único accionable desde acá.
                   return Container(
                     color: Colores.azulSuave,
                     alignment: Alignment.center,
-                    child: const CircularProgressIndicator(),
+                    child: _firmando
+                        ? const CircularProgressIndicator()
+                        : Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                iconoDeCategoria(widget.categoriaNombre),
+                                size: 40,
+                                color: Colores.azul,
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'No pudimos cargar esta foto',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colores.textoSecundario,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: _firmar,
+                                child: const Text('Reintentar'),
+                              ),
+                            ],
+                          ),
                   );
                 }
 

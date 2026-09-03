@@ -86,11 +86,24 @@ class _CrearPedidoScreenState extends ConsumerState<CrearPedidoScreen> {
     ref.listen(crearPedidoControllerProvider, (anterior, siguiente) {
       final creado = siguiente.pedidoCreado;
       if (creado != null && anterior?.pedidoCreado == null) {
-        final mensaje = siguiente.erroresFotos.isEmpty
-            ? 'Pedido publicado.'
-            : 'Pedido publicado. ${siguiente.erroresFotos.length} '
-                'foto(s) no se pudieron subir; podés reintentar desde el detalle.';
-        mostrarMensaje(context, mensaje, esError: false);
+        final fallidas = siguiente.erroresFotos;
+
+        // El pedido se publicó igual: una foto que no entra no deshace el
+        // alta. Pero el motivo tiene que llegar, y con el detalle suficiente
+        // para hacer algo: antes esto decía «1 foto(s) no se pudieron subir»
+        // y el porqué se perdía. Se muestra en rojo y con más tiempo, porque
+        // es una frase para leer y no una confirmación.
+        if (fallidas.isEmpty) {
+          mostrarMensaje(context, 'Pedido publicado.', esError: false);
+        } else {
+          mostrarMensaje(
+            context,
+            'Pedido publicado, pero ${fallidas.length} de '
+            '${siguiente.fotos.length} foto(s) no entraron: ${fallidas.first} '
+            'Podés volver a subirlas desde «Editar».',
+            duracion: const Duration(seconds: 10),
+          );
+        }
         // Al detalle del pedido recién creado y no al home: quien acaba de
         // publicar quiere ver cómo le quedó, y es desde ahí que se pausa, se
         // edita o se cierra.
