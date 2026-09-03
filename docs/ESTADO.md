@@ -2,7 +2,7 @@
 
 > **Fuente de verdad del proyecto.** Este archivo se actualiza al cerrar cada sesión de trabajo.
 > Vive en `docs/ESTADO.md` del repo y se commitea junto con el código.
-> Última actualización: 02/09/2026
+> Última actualización: 03/09/2026
 
 ---
 
@@ -111,15 +111,20 @@ Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanific
 | ID | Ítem | Pts | Estado | Figura del ANEXO UI |
 |---|---|---|---|---|
 | CU-16 | Localizar Pedido en Mapa | 8 | ✅ | — |
-| CU-13 | Publicar pedido con ubicación en el mapa | ? | 🟡 | Fig. 3.2 |
-| CU-14 | _(completar del PT 3.0)_ | ? | ⬜ | — |
-| CU-15 | _(completar del PT 3.0)_ | ? | ⬜ | — |
-| CU-20 | Gestión del pedido publicado | ? | ⬜ | Fig. 3.4 |
-| CU-29 | Gestión del pedido publicado (contraparte de CU-20) | ? | ⬜ | Fig. 3.4 |
-| CU-51 | _(completar del PT 3.0)_ | ? | ⬜ | — |
-| CU-17 | Historial de pedidos del Buscador | ? | ⬜ | Fig. 3.5 |
-| CU-18 | _(completar del PT 3.0)_ | ? | ⬜ | — |
-| | **Total** | **?** | | |
+| CU-13 | Publicar pedido con ubicación en el mapa | 8 | ✅ | Fig. 3.2 |
+| CU-14 | Cancelar Pedido | 3 | ✅ | Fig. 3.4 |
+| CU-15 | Editar Pedido | 3 | ✅ | Fig. 3.2 |
+| CU-20 | Pausar Publicación (y reanudarla) | 3 | ✅ | Fig. 3.4 |
+| CU-29 | Cerrar Pedido | 3 | ✅ | Fig. 3.4 |
+| CU-51 | Renovar Pedido Vencido | 3 | ✅ | — |
+| CU-17 | Consultar Historial de pedidos | 5 | ⏭️ | Fig. 3.5 |
+| CU-18 | Solicitar Reenvío de Enlace de Gestión | 4 | ⏭️ | — |
+| | **Total** | **40** | **31 ejecutados** | |
+
+Los 9 puntos que faltan son el CU-17 (5) y el CU-18 (4), replanificados el
+03/09 por tiempo: ver la sección 6. El CU-18 ya estaba marcado como
+descartable en el plan del sprint; el CU-17 no, y su ausencia tiene una
+consecuencia concreta para la demo que está anotada en la sección 7.
 
 > **Faltan nombres y puntos.** Los únicos títulos que se pueden sostener con una
 > fuente del repo son los que aparecen en el ANEXO UI (CU-13, CU-17, CU-20/29).
@@ -244,6 +249,53 @@ prácticamente gratis y evita seguir escribiendo sobre código que no compila.
 | Los campos de texto del asistente usan `initialValue` de `CampoTexto`, no `TextEditingController` | Cada paso se renderiza condicionalmente (`switch` sobre `estado.paso`), así que al volver a un paso ya visitado el widget se reconstruye entero con el valor que quedó en el controller. Evita instanciar y descartar `TextEditingController` a mano en cuatro pasos |
 | Las fotos se comprimen con `maxWidth: 1600` / `imageQuality: 80` de `image_picker`, igual que el CU-09 | Mismo criterio ya usado para el DNI y la selfie: un solo camino de código para Web y Android, sin herramienta de compresión aparte |
 
+### 4.6 Fase 6 — Ciclo de vida del pedido · **HECHA** (5 commits, uno por CU)
+
+Pantalla de detalle en `/pedidos/:id`, que es el centro del ciclo de vida:
+carrusel de fotos con URLs firmadas, encabezado con chip de estado y
+categoría, descripción, mini-mapa con el pin, dirección, datos (presupuesto,
+fechas, renovaciones) y un aviso que explica qué significa el estado actual.
+Abajo, la barra de acciones, que ofrece **solo** lo que la máquina de estados
+de la migración 0006 admite.
+
+| Commit | Caso de uso | Qué entra |
+|---|---|---|
+| `9441bea` | CU-20 | Detalle completo + pausar/reanudar. `AccionesPedido` (familia Riverpod para las cuatro operaciones), `ChipEstadoPedido`, `MiniMapaPedido`, `UrlsFirmadas` (caché de firmas en lote), `Fechas` |
+| `afb44fe` | CU-29 | Cerrar con motivo de lista cerrada, confirmación obligatoria, ninguna opción preseleccionada |
+| `fd6949c` | CU-14 | Cancelar con motivo libre y opcional; el copy diferencia cerrar de cancelar |
+| `04558a4` | CU-51 | Renovar 7/15/30, límite de 3 resuelto en cliente y por `CasoPedido.limiteRenovaciones` del servidor, con CTA a publicar uno nuevo |
+| `a557db7` | CU-15 | Editar en `/pedidos/:id/editar` + migración **0010** (`registrar_edicion_pedido`) |
+
+Archivos nuevos de la fase:
+
+| Archivo | Qué hace |
+|---|---|
+| `presentation/screens/detalle_pedido_screen.dart` | La pantalla y su barra de acciones |
+| `presentation/screens/editar_pedido_screen.dart` | CU-15, con la sección de fotos |
+| `presentation/controllers/acciones_pedido_controller.dart` | Pausar, reanudar, cerrar, cancelar, renovar + `MotivoCierre` |
+| `presentation/controllers/editar_pedido_controller.dart` | El borrador de la edición |
+| `presentation/widgets/campos_pedido.dart` | Los formularios **compartidos** con el asistente + `ValidadoresPedido` |
+| `presentation/widgets/dialogos_pedido.dart` | Cerrar, cancelar, renovar y límite de renovaciones |
+| `presentation/widgets/chip_estado_pedido.dart` · `fotos_pedido.dart` · `mini_mapa_pedido.dart` | Chip por estado, carrusel + placeholder por categoría, mini-mapa |
+| `data/urls_firmadas.dart` | Caché de URLs firmadas, en lote |
+| `core/utils/fechas.dart` | Fechas y frases relativas en castellano |
+| `supabase/migrations/0010_pedido_evento_edicion.sql` | El evento de edición del CU-15 |
+
+**Verificado el 03/09, todo junto como se había planificado:** `flutter
+analyze` 0 issues, `flutter test` **101 en verde** (sin regresiones contra la
+línea base del CU-16), `flutter build web`, `flutter build apk --debug` y
+`flutter build ios --simulator --debug` compilan los tres, y el grep de
+secretos (`eyJ`, `AIza`, `service_role`) sale vacío.
+
+### 4.7 iOS quedó compilando otra vez (`2254b16`)
+
+iOS no levantaba desde que el CU-16 sumó `google_maps_flutter` y `geolocator`.
+Era configuración nativa, no código: piso de iOS 14 (lo pide
+`google_maps_flutter_ios`, el Runner estaba en 13), `pod install` con el
+`Podfile.lock` que había quedado de antes del CU-16,
+`NSLocationWhenInUseUsageDescription` —sin esa clave iOS no pide permiso: mata
+la app— y el tercer camino de la clave de Maps, `ios/Flutter/Maps.xcconfig`.
+
 ## 5. Decisiones técnicas tomadas
 
 Formato: fecha · decisión · motivo. No se borran, se agregan.
@@ -301,6 +353,15 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 02/09 | Ningún método de `ServicioDirecciones` tira excepción | La dirección es un campo de texto editable: un servicio caído degrada a «escribila vos», no a un alta interrumpida |
 | 02/09 | El permiso de ubicación no se pide al abrir el selector, solo al tocar «Usar mi ubicación» | Disparar el diálogo del sistema apenas se abre una pantalla es la forma más rápida de que alguien apriete «no» sin leer, y en el navegador ese «no» queda pegado al sitio |
 | 02/09 | La geocodificación inversa se filtra por distancia (15 m) y por origen del movimiento | El mapa se queda quieto muchas más veces de las que el usuario elige un punto (primer encuadre, `animateCamera`, teclado); se ignoran los movimientos que hizo el propio controlador |
+| 03/09 | Los formularios del pedido viven en `widgets/campos_pedido.dart`, no adentro del asistente | El CU-15 pide «los mismos formularios» que el CU-13. Duplicarlos garantizaba que en algún momento el alta aceptara un título de 4 caracteres que la edición rechazara. Las reglas están una sola vez, en `ValidadoresPedido`, y son las mismas de los `check` de la tabla `pedidos` |
+| 03/09 | **La vigencia no se edita en el CU-15** | Estirar `fecha_vencimiento` con un PATCH sería una renovación sin límite, y el CU-51 permite tres. La fecha se mueve solo por `renovar_pedido`, que las cuenta. La app no manda ese campo; el servidor todavía no lo impide (deuda de la sección 6) |
+| 03/09 | Las fotos de la edición se aplican al instante; el resto, al guardar | El pedido ya existe, así que subir y borrar son operaciones sobre Storage que no tienen nada que esperar. Juntarlas hasta el «Guardar» obligaría a deshacer subidas si la edición falla. La pantalla lo dice en un renglón, para que nadie espere que «descartar cambios» devuelva una foto borrada |
+| 03/09 | El evento de edición se marca con `estado_anterior = estado_nuevo` y el motivo `edicion` (migración 0010) | `pedido_eventos` solo lo escribía el trigger que dispara al cambiar el estado, y una edición no cambia el estado: quedaba sin rastro. Un Profesional que leyó el pedido ayer y lo ve distinto hoy tiene que poder verlo en la cronología. No se agrega un enum ni una columna nueva: el motivo ya existe y es texto. SECURITY DEFINER porque sobre `pedido_eventos` no hay política de INSERT, a propósito |
+| 03/09 | Un fallo al registrar la edición **no** hace fallar la edición | La edición ya se escribió y no se puede deshacer (son escrituras sin transacción común, igual que la ubicación). Mostrar «no se pudo guardar» sobre datos que sí se guardaron es peor que un renglón faltante en la cronología. Queda en la consola |
+| 03/09 | «Renovar» se ofrece también sobre un pedido caduco que todavía figura publicado o pausado | Es el mismo caso real: el barrido `marcar_pedidos_vencidos` no corrió. Sin eso, un pedido pausado y caduco no se puede ni reanudar —la RPC lo rechaza y manda a renovar— ni renovar, y queda en un callejón sin salida. Es un desvío consciente del «solo en vencido» de la consigna |
+| 03/09 | Las URLs firmadas se piden en lote con `createSignedUrlsResult` y se cachean hasta 2 minutos antes de vencer | Una página del historial son 20 portadas: firmarlas de a una son 20 viajes contra uno. El plural clásico (`createSignedUrls`) está deprecado justamente porque no distingue una ruta que no se pudo firmar de una que sí, y esa diferencia es la que decide entre mostrar la foto o el placeholder. El margen evita entregar una firma que expira mientras la imagen se descarga |
+| 03/09 | Las fechas en castellano se escriben a mano (`core/utils/fechas.dart`), sin `DateFormat` | Formatear en español obliga a inicializar los datos de locale de `intl`; si falta, la app no falla al compilar sino **al dibujar la primera fecha**, que es el peor momento posible. Hacen falta seis frases y ningún calendario. La diferencia de días se cuenta por calendario y no por múltiplos de 24 h: a las 23:00, «mañana a las 08:00» tiene que decir «vence mañana», no «vence hoy» |
+| 03/09 | El piso de iOS pasa a 14 y la clave de Maps viaja por un **tercer** camino | `google_maps_flutter_ios` declara `platform :ios, '14.0'`: con 13 no hay `pod install` que funcione. Y el SDK nativo de iOS no lee `--dart-define` ni el manifiesto de Android: lee el `Info.plist`, que toma `MAPS_API_KEY` de `ios/Flutter/Maps.xcconfig` (gitignored, con `.example` al lado). Con la clave vacía no se llama a `provideAPIKey`: con `""` el SDK aborta la app al arrancar |
 | 02/09 | El botón «Mi ubicación» y las sugerencias de búsqueda van en la columna del `SelectorUbicacion`, no flotando sobre el mapa | En Web, `GoogleMap` se dibuja con `HtmlElementView`, y un widget interactivo apilado arriba necesita `pointer_interceptor` para recibir el mouse. Se resolvió con una columna —búsqueda arriba, mapa con solo el pin encima (`IgnorePointer`, no necesita recibir toques), panel de «mi ubicación»/dirección/referencia abajo— en vez de sumar otra dependencia |
 
 ## 6. Deuda técnica y pendientes conocidos
@@ -314,8 +375,12 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | ~~Un pedido puede nacer en un estado terminal~~ | **Saldada el 02/09 con la migración 0009.** Trigger `pedidos_guard_alta` `BEFORE INSERT`, con la misma compuerta que el de UPDATE. | ✅ |
 | El PATCH de edición no mira el estado del pedido | `actualizar_ubicacion_pedido` exige que el pedido esté `publicado` o `pausado`, pero el UPDATE de PostgREST que cambia título, descripción o presupuesto no: la RLS solo comprueba dueño. Hoy se le puede editar el título a un pedido cerrado. No molesta a nadie —el pedido ya no se lista— pero es una regla del CU-15 que vive solo en el cliente. | Sprint 3 |
 | El Profesional no puede ver las fotos de un pedido | Las políticas de Storage del bucket `pedidos` son solo del dueño, así que el CU-16 no va a poder firmar las URLs. Falta una política de SELECT para pedidos publicados vigentes, o firmarlas desde una Edge Function. | Sprint 2 (con CU-16) |
-| **A partir del 02/09 (Fase 5): `flutter test`, `flutter build web` y `flutter build apk` se dejan de correr fase por fase** | Decisión explícita para priorizar velocidad de desarrollo con la entrega encima: se corre solo `flutter analyze` (0 issues) después de cada cambio, que tarda segundos y evita seguir escribiendo sobre código roto. La verificación completa —tests, build web, build APK— se hace una sola vez al terminar todas las fases del sprint, no en cada una. Riesgo asumido: un error de *runtime* que `analyze` no detecta (por ejemplo un `initialValue` que no existe en cierta versión de un widget) puede acumularse en varias fases sin que se note hasta el cierre | Al cerrar el desarrollo del Sprint 2 |
-| Wizard de alta (CU-13) sin ejercitar contra la app corriendo ni con pruebas de widget | Se escribió y se revisó a mano (no hay `flutter test`/`flutter run` de por medio, ver el ítem de arriba). Falta la corrida real: elegir categoría, completar los 4 pasos, publicar, y confirmar que el `DropdownButtonFormField` con `initialValue` refleja bien la selección al volver a un paso | Al cerrar el desarrollo del Sprint 2 |
+| ~~`flutter test` y los builds se dejan de correr fase por fase~~ | **Saldada el 03/09.** La verificación diferida se hizo entera al cerrar la Fase 6: analyze 0 issues, 101 tests en verde, y web, APK e iOS compilando. La apuesta salió bien: no había ningún error acumulado de las Fases 5 y 6 | ✅ |
+| **CU-17 Consultar Historial (Fase 7) — replanificado** | No se hizo. **Consecuencia concreta: no existe la ruta `/pedidos`, así que al detalle solo se llega recién publicado un pedido** (el asistente redirige ahí) o escribiendo `/pedidos/<uuid>` a mano en la web. Sin esta pantalla, cuatro de los cinco casos de uso de la Fase 6 no tienen camino desde el home. Lo que ya está hecho y espera: `UrlsFirmadas` (firma en lote), `Fechas.vigencia` («vence en 3 días»), `PlaceholderCategoria`, `ChipEstadoPedido(compacto: true)`, `listarMisPedidos` con paginación y `marcarVencidos` | Sprint 3, o antes de la demo |
+| **CU-18 Reenvío de Enlace de Gestión (Fase 8) — replanificado** | No se hizo. Ya estaba marcado como descartable en el plan del sprint: es el único ítem que no condiciona nada del Sprint 3 y se replanifica al Sprint 5, donde ya hay trabajo de enlaces públicos (CU-26 y CU-27) | Sprint 5 |
+| Pruebas de widget del Sprint 2 (Fase 9a) | Siguen sin escribirse: wizard del CU-13, validadores, diálogos de cerrar y cancelar, chip de estado en los cinco estados, máquina de estados del lado del cliente y mapeo de `PostgrestException`. Las 101 que hay son unitarias y de lineamiento visual | Sprint 3 |
+| El asistente del CU-13 y el ciclo de vida (Fase 6) sin ejercitar contra la app corriendo | Compilan en las tres plataformas y las pruebas unitarias pasan, pero nadie completó todavía los 4 pasos ni tocó los botones de pausar, cerrar, cancelar, renovar y editar contra una base real. Es lo primero que hay que hacer, y depende de aplicar las migraciones | Antes de la demo |
+| El PATCH de edición tampoco mira `fecha_vencimiento` | Del mismo tipo que el ítem de arriba sobre el estado: la app no manda ese campo al editar (decisión del 03/09), pero la RLS no lo impide, así que un cliente que lo mandara renovaría sin gastar renovaciones. Se cierra con un trigger, como el `pedidos_guard_estado` de la 0008 | Sprint 3 |
 | Sin pruebas de widget ni de integración | Hay 18 pruebas unitarias de validadores y mensajes, más 3 de widget en `test/tema_test.dart` que cubren el lineamiento visual, más `mapa_config_test.dart`/`servicio_direcciones_test.dart` del CU-16 (101 en total). Los circuitos se verifican a mano con el guion de `ARRANQUE.md`. El wizard del CU-13 no tiene pruebas de widget todavía (ver Fase 9 del plan del sprint) | Sprint 2 |
 | Figura 3.1 del Anexo UI desactualizada | Muestra 3 campos; el alta tiene los 5 del CU-01. Hay que redibujarla antes de entregar el Anexo. | Antes de la entrega |
 | Textos legales provisorios | `/legales/terminos` y `/legales/privacidad` describen el alcance pero no son la redacción definitiva. | Sprint 3 |
@@ -327,33 +392,55 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 
 ## 7. Próximo paso concreto
 
-_(Una sola línea. Lo primero que hay que hacer al retomar.)_
+_(Lo primero que hay que hacer al retomar. Está en orden: cada punto depende
+del anterior.)_
 
-→ **CU-16: configurar Google Maps y escribir el `SelectorUbicacion`**, que es lo que el asistente del CU-13 necesita para el paso «Dónde».
+El **código está completo y compila en las tres plataformas**. Lo que falta
+para levantar el proyecto no es código: es configuración de entorno y, sobre
+todo, **aplicar las migraciones**, que nunca se ejecutaron contra una base.
 
-Antes de eso: **aplicar en el SQL Editor, en orden,
-`0004_cu11_storage_sin_dml.sql`, `0005_pedidos.sql`, `0006_pedidos_rls.sql`,
-`0007_pedidos_coordenadas.sql`, `0008_pedidos_guard_estado.sql` y
-`0009_pedidos_alta_y_ubicacion.sql`**, y correr el guion de prueba que cada una
-trae al final. `supabase/scripts/verificar_pedidos.sql` dice cuáles están
-aplicadas, y su bloque 8 avisa del único orden peligroso: la 0008 aplicada a
-medias —el trigger sí, las RPC no— deja el sistema **peor** que antes, porque
-entonces nada puede mover el estado.
+### 7.1 Para que la app levante y funcione (bloqueante)
 
-Del Sprint 1 sigue pendiente el material de la entrega: el video de los 7
-circuitos de `ARRANQUE.md`, la captura del Schema Visualizer y de la tabla de
-políticas RLS, y la subida a BB.
+1. **Aplicar las migraciones en el SQL Editor de Supabase, en orden:**
+   `0004_cu11_storage_sin_dml.sql`, `0005_pedidos.sql`, `0006_pedidos_rls.sql`,
+   `0007_pedidos_coordenadas.sql`, `0008_pedidos_guard_estado.sql`,
+   `0009_pedidos_alta_y_ubicacion.sql` y `0010_pedido_evento_edicion.sql`.
+   Cada una trae su guion de aceptación comentado al final: correrlo.
+   `supabase/scripts/verificar_pedidos.sql` dice cuáles están aplicadas, y su
+   bloque 8 avisa del único orden peligroso: **la 0008 aplicada a medias —el
+   trigger sí, las RPC no— deja el sistema peor que antes**, porque entonces
+   nada puede mover el estado. Sin esto, todo el Sprint 2 devuelve
+   `PGRST202: falta aplicar una migración`.
+2. **Clave de Google Maps Platform**, con Maps SDK for Android, Maps
+   JavaScript API, Places API (New) y Geocoding API habilitadas. Va por tres
+   caminos, uno por plataforma (README, sección «Clave de Google Maps»):
+   `GOOGLE_MAPS_API_KEY` del `.env` / `--dart-define` para Dart y Web,
+   `MAPS_API_KEY` en `android/local.properties` para Android, y
+   `ios/Flutter/Maps.xcconfig` (copiar del `.example`) para iOS.
+3. **Correr la app** y hacer el circuito completo contra la base: publicar un
+   pedido con foto y ubicación, y después pausar, reanudar, editar, renovar,
+   cerrar y cancelar. Es lo que nunca se ejercitó (sección 6).
+4. Si iOS vuelve a fallar después de agregar un plugin: `cd ios && pod install
+   --repo-update`. El piso es iOS 14.
 
-Del Sprint 2 está hecha la capa de datos de pedidos —esquema, RLS, máquina de
-estados blindada, renovación y el repositorio con sus providers y tests— pero
-**ninguna migración se probó contra una base**: no hay Docker en esta máquina,
-así que el SQL está escrito y revisado pero nunca ejecutado. Cada una trae su
-guion de aceptación comentado al final para correr en el SQL Editor; hasta que
-eso pase, «migración aplicada» no quiere decir «migración verificada».
+### 7.2 Antes de mostrarlo
 
-Después de aplicarlas, lo que sigue es la UI del CU-13 (formulario y mapa) y la
-deuda que queda abierta de esta capa: la política de Storage que le deje al
-Profesional ver las fotos de un pedido publicado (CU-16).
+5. **No hay pantalla de «Mis pedidos» (CU-17).** Al detalle del pedido solo se
+   llega recién publicado, o escribiendo `/pedidos/<uuid>` en la barra del
+   navegador. Para la demo hay dos caminos: publicar un pedido en vivo y
+   seguir desde ahí —el asistente redirige al detalle—, o implementar el
+   CU-17, que es lo primero que habría que retomar.
+6. Aprobar a mano por SQL a un Profesional de prueba (CU-35 es del Sprint 6).
+7. Del **Sprint 1** sigue pendiente el material de la entrega: el video de los
+   7 circuitos de `ARRANQUE.md`, la captura del Schema Visualizer y de la
+   tabla de políticas RLS, y la subida a BB.
+
+### 7.3 Cierre del sprint (Fase 9c, sin hacer)
+
+8. Merge de `sprint-2` a `main`, tag `v0.2.0` con el mensaje
+   *Sprint 2 — Gestión de Pedidos y Geolocalización (PT 3.0)*, push del tag y
+   `CHANGELOG.md` con `v0.1.0` y `v0.2.0` agrupados por caso de uso.
+   **Ningún commit del sprint está pusheado todavía.**
 
 ---
 
