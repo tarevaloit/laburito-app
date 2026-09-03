@@ -320,7 +320,16 @@ class _SeccionFotosState extends ConsumerState<_SeccionFotos> {
         .read(editarPedidoProvider(widget.pedidoId).notifier)
         .agregarFoto(foto.bytes, foto.nombre);
 
-    if (agregada) _firmar();
+    if (!agregada) return; // El error lo avisa la pantalla, que lo escucha.
+
+    _firmar();
+
+    // Confirmar acá no es decorativo. La foto ya quedó guardada, pero el botón
+    // «Guardar cambios» sigue deshabilitado —no hay nada pendiente que
+    // guardar— y sin este aviso eso se lee como que la foto no se agregó.
+    if (mounted) {
+      mostrarMensaje(context, 'Foto agregada y guardada.', esError: false);
+    }
   }
 
   Future<void> _quitar(PedidoFoto foto) async {
@@ -348,9 +357,13 @@ class _SeccionFotosState extends ConsumerState<_SeccionFotos> {
 
     if (confirmado != true) return;
 
-    await ref
+    final borrada = await ref
         .read(editarPedidoProvider(widget.pedidoId).notifier)
         .eliminarFoto(foto);
+
+    if (borrada && mounted) {
+      mostrarMensaje(context, 'Foto borrada.', esError: false);
+    }
   }
 
   @override
@@ -360,11 +373,19 @@ class _SeccionFotosState extends ConsumerState<_SeccionFotos> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const EtiquetaCampo('Fotos'),
-        const Text(
-          'Los cambios en las fotos se aplican al instante, no esperan al '
-          'botón de guardar.',
-          style: TextStyle(fontSize: 12, color: Colores.textoSecundario),
+        const EtiquetaCampo('Fotos · se guardan solas'),
+        const Row(
+          children: [
+            Icon(Icons.info_outline, size: 14, color: Colores.azulMedio),
+            SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                'Agregar o borrar una foto se aplica en el momento: no hace '
+                'falta tocar «Guardar cambios».',
+                style: TextStyle(fontSize: 12, color: Colores.textoSecundario),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 10),
         GridView.count(

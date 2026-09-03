@@ -5,6 +5,7 @@ import 'package:laburito/app/colores.dart';
 import 'package:laburito/app/theme.dart';
 import 'package:laburito/features/pedidos/domain/pedido.dart';
 import 'package:laburito/features/pedidos/domain/pedido_estado.dart';
+import 'package:laburito/features/pedidos/domain/pedido_foto.dart';
 import 'package:laburito/features/pedidos/domain/ubicacion.dart';
 import 'package:laburito/features/pedidos/presentation/controllers/editar_pedido_controller.dart';
 import 'package:laburito/features/pedidos/presentation/screens/detalle_pedido_screen.dart';
@@ -217,6 +218,33 @@ void main() {
       // de edición en la auditoría.
       final base = borradorDe(pedido());
       expect(base.copyWith(titulo: '  ${base.titulo}  ').hayCambios, isFalse);
+    });
+
+    test('tocar las fotos NO habilita «Guardar cambios», y está bien', () {
+      // Se reportó como bug: agregar o borrar una foto deja el botón
+      // deshabilitado. Es a propósito, y el botón tiene razón: cuando llega
+      // acá la foto **ya está guardada**. El pedido existe, así que subirla y
+      // borrarla son operaciones sobre Storage que se aplican en el momento;
+      // no hay nada pendiente que un «Guardar» pueda hacer.
+      //
+      // Lo que faltaba no era habilitar el botón —eso sería un botón que no
+      // hace nada— sino avisar que la operación ya ocurrió. Eso lo resuelve la
+      // pantalla con un mensaje al agregar y al borrar.
+      final base = borradorDe(pedido());
+
+      final conFotoNueva = base.copyWith(fotos: [
+        ...base.fotos,
+        PedidoFoto(
+          id: 'f-9',
+          pedidoId: base.original.id,
+          storagePath: '${base.original.id}/f-9.jpg',
+          orden: 0,
+          createdAt: DateTime(2026, 9, 3),
+        ),
+      ]);
+
+      expect(conFotoNueva.hayCambios, isFalse);
+      expect(conFotoNueva.copyWith(fotos: const []).hayCambios, isFalse);
     });
 
     test('cambiar la ubicación se distingue del resto', () {
