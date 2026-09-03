@@ -32,8 +32,8 @@ completar, en vez de romper con una excepción.
 
 ### Clave de Google Maps (CU-16)
 
-La clave viaja por **dos caminos distintos**, porque el SDK nativo de Android
-no lee `--dart-define`: lee un `meta-data` del manifiesto.
+La clave viaja por **tres caminos distintos**, porque ningún SDK nativo lee
+`--dart-define`: cada uno la busca en su propio lugar.
 
 - **Dart y Web** — va en el mismo `.env` que Supabase, como
   `GOOGLE_MAPS_API_KEY`. La lee `Env.googleMapsApiKey` y la inyecta
@@ -43,9 +43,26 @@ no lee `--dart-define`: lee un `meta-data` del manifiesto.
   de entorno `MAPS_API_KEY` o, si no está, de `MAPS_API_KEY=...` en
   `android/local.properties` (archivo del `.gitignore`, no del repo), y la
   vuelca al `AndroidManifest.xml` como `manifestPlaceholders`.
+- **iOS nativo** — copiá `ios/Flutter/Maps.xcconfig.example` a
+  `ios/Flutter/Maps.xcconfig` (también del `.gitignore`) y completá
+  `MAPS_API_KEY=`. De ahí la toma la clave `GMSApiKey` del `Info.plist` y
+  `AppDelegate.swift` se la pasa a `GMSServices.provideAPIKey`.
 
 Sin la clave el mapa no se dibuja, pero el resto de la app funciona igual
-(`Env.googleMapsApiKey` no entra en `Env.esValido`).
+(`Env.googleMapsApiKey` no entra en `Env.esValido`, y en iOS el `AppDelegate`
+directamente no inicializa el SDK en vez de abortar con una clave vacía).
+
+### iOS
+
+El piso es **iOS 14**, que es lo que pide `google_maps_flutter_ios`. Después de
+un `flutter pub get` que agregue plugins nuevos hay que rearmar los pods:
+
+```bash
+cd ios && pod install --repo-update && cd ..
+```
+
+Sin eso, `flutter run -d ios` falla con «required a higher minimum deployment
+target» o con símbolos que no encuentra.
 
 ## Base de datos
 

@@ -44,6 +44,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+# Gradle deja acá la salida del módulo `android`, que no es la del `/build`
+# de la raíz y no estaba ignorada: aparecía como ruido en cada `git status`.
+/android/build/
 
 # Claves y configuración sensible (T-01). Las claves de Supabase entran por
 # --dart-define; nunca se hardcodean ni se commitean.
@@ -56,3 +59,5 @@ app.*.map.json
 *.keystore
 *.jks
 /android/key.properties
+# Clave de Google Maps para el SDK nativo de iOS (CU-16). El `.example` sí va.
+/ios/Flutter/Maps.xcconfig
