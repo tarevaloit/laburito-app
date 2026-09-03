@@ -6,6 +6,7 @@ import '../../../../app/colores.dart';
 import '../../../../core/errors/mensajes_error.dart';
 import '../../../../core/utils/fechas.dart';
 import '../../../../core/widgets/marca_laburito.dart';
+import '../../data/pedido_exception.dart';
 import '../../data/pedidos_repository.dart';
 import '../../domain/pedido.dart';
 import '../../domain/pedido_estado.dart';
@@ -34,11 +35,21 @@ class DetallePedidoScreen extends ConsumerWidget {
 
     // Los errores de las acciones se avisan una sola vez, acá: cada botón se
     // ocupa de disparar la acción y nada más.
-    ref.listen(accionesPedidoProvider(id), (anterior, siguiente) {
+    ref.listen(accionesPedidoProvider(id), (anterior, siguiente) async {
       final error = siguiente.error;
-      if (error != null && error != anterior?.error) {
-        mostrarMensaje(context, error.message);
+      if (error == null || error == anterior?.error) return;
+
+      // El caso se lee del `PedidoException`, no del texto: cuando el servidor
+      // dice que el pedido agotó sus renovaciones no alcanza con avisarlo, hay
+      // que ofrecer la salida, que es publicar uno nuevo (CU-51).
+      if (error.caso == CasoPedido.limiteRenovaciones) {
+        if (await avisarLimiteDeRenovaciones(context) && context.mounted) {
+          context.go('/pedidos/nuevo');
+        }
+        return;
       }
+
+      mostrarMensaje(context, error.message);
     });
 
     return Scaffold(
@@ -423,6 +434,39 @@ class BarraDeAccionesPedido extends ConsumerWidget {
 
   final Pedido pedido;
 
+  /// CU-51 — Renovar, con el límite de 3 resuelto antes de salir a la red.
+  ///
+  /// El cliente ya sabe cuántas renovaciones lleva el pedido, así que un
+  /// pedido agotado no gasta un viaje para que el servidor conteste lo mismo.
+  /// Igual el servidor manda: si su respuesta es `limiteRenovaciones` —porque
+  /// el pedido se renovó desde otra pestaña—, la pantalla del detalle muestra
+  /// este mismo diálogo al recibir el error.
+  Future<void> _renovar(
+    BuildContext context,
+    AccionesPedido controlador,
+  ) async {
+    if (pedido.renovacionesRestantes <= 0) {
+      if (await avisarLimiteDeRenovaciones(context) && context.mounted) {
+        context.go('/pedidos/nuevo');
+      }
+      return;
+    }
+
+    final dias = await pedirDiasDeRenovacion(
+      context,
+      restantes: pedido.renovacionesRestantes,
+    );
+    if (dias == null) return;
+
+    if (await controlador.renovar(dias) && context.mounted) {
+      mostrarMensaje(
+        context,
+        'Renovamos tu pedido por $dias días. Vuelve a estar visible.',
+        esError: false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final estado = ref.watch(accionesPedidoProvider(pedido.id));
@@ -506,6 +550,23 @@ class BarraDeAccionesPedido extends ConsumerWidget {
               );
             }
           },
+        ),
+      // CU-51 — Renovar. Es la única salida del estado vencido: de `vencido`
+      // no hay transición válida, ni siquiera a `publicado`, porque volver a
+      // publicar sin correr la fecha dejaría el pedido visible y ya vencido.
+      //
+      // También se ofrece sobre un pedido cuya fecha ya pasó pero que todavía
+      // figura publicado o pausado: es el mismo caso: el barrido
+      // `marcar_pedidos_vencidos` todavía no corrió. Sin esto, un pedido
+      // pausado y caduco no se podría ni reanudar (la RPC lo rechaza) ni
+      // renovar, que es un callejón sin salida.
+      if (pedido.estado == PedidoEstado.vencido || pedido.estaCaduco())
+        _BotonAccion(
+          icono: Icons.autorenew,
+          texto: 'Renovar',
+          cargando: estado.enCurso == AccionPedido.renovar,
+          habilitado: !estado.ocupado,
+          onPressed: () => _renovar(context, controlador),
         ),
     ];
 

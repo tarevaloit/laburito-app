@@ -203,6 +203,124 @@ class _DialogoCancelarState extends State<_DialogoCancelar> {
   }
 }
 
+// ----------------------------------------------------------------------------
+// CU-51 — Renovar
+// ----------------------------------------------------------------------------
+
+/// Las tres duraciones que se ofrecen, las mismas del alta (CU-13).
+const List<int> diasDeRenovacion = [7, 15, 30];
+
+/// CU-51 — Por cuántos días se renueva.
+///
+/// Devuelve los días elegidos, o `null` si se canceló. No se ofrece un campo
+/// libre: `renovar_pedido` acepta de 1 a 30 días, y tres opciones se eligen de
+/// un toque mientras que un número escrito a mano hay que validarlo.
+Future<int?> pedirDiasDeRenovacion(
+  BuildContext context, {
+  required int restantes,
+}) {
+  return showDialog<int>(
+    context: context,
+    builder: (_) => _DialogoRenovar(restantes: restantes),
+  );
+}
+
+class _DialogoRenovar extends StatefulWidget {
+  const _DialogoRenovar({required this.restantes});
+
+  /// Cuántas renovaciones le quedan al pedido, para avisar cuando es la última.
+  final int restantes;
+
+  @override
+  State<_DialogoRenovar> createState() => _DialogoRenovarState();
+}
+
+class _DialogoRenovarState extends State<_DialogoRenovar> {
+  int _dias = diasDeRenovacion.first;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Renovar el pedido'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Vuelve a publicarse y a verse desde ahora, por el plazo que '
+            'elijas.',
+            style: TextStyle(color: Colores.textoSecundario, height: 1.4),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final dias in diasDeRenovacion)
+                ChoiceChip(
+                  label: Text('$dias días'),
+                  selected: _dias == dias,
+                  onSelected: (_) => setState(() => _dias = dias),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            widget.restantes <= 1
+                ? 'Es la última renovación de este pedido: son 3 en total.'
+                : 'Te quedan ${widget.restantes} renovaciones de 3.',
+            style: const TextStyle(fontSize: 13, color: Colores.textoSecundario),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Volver'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, _dias),
+          child: const Text('Renovar'),
+        ),
+      ],
+    );
+  }
+}
+
+/// CU-51 — El pedido agotó sus 3 renovaciones.
+///
+/// Devuelve `true` si el usuario eligió publicar uno nuevo.
+///
+/// Es el caso [CasoPedido.limiteRenovaciones] del `PedidoException`, y se
+/// muestra por dos caminos: cuando el cliente ya sabe que no quedan —el
+/// pedido trae `renovaciones = 3`— y cuando lo dice el servidor, que es la
+/// respuesta que manda. Un callejón sin salida con una salida: publicar de
+/// nuevo es exactamente lo que esa persona quería hacer.
+Future<bool> avisarLimiteDeRenovaciones(BuildContext context) async {
+  final publicarOtro = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Este pedido ya no se puede renovar'),
+      content: const Text(
+        'Se renovó 3 veces, que es el máximo. Si todavía necesitás el '
+        'trabajo, publicá un pedido nuevo: podés copiar el texto de este.',
+        style: TextStyle(color: Colores.textoSecundario, height: 1.4),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: const Text('Volver'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          child: const Text('Publicar uno nuevo'),
+        ),
+      ],
+    ),
+  );
+
+  return publicarOtro ?? false;
+}
+
 /// El botón que confirma algo irreversible va en rojo, como el de la baja de
 /// cuenta (CU-11).
 final ButtonStyle _estiloDestructivo = FilledButton.styleFrom(
