@@ -1,9 +1,12 @@
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/providers/supabase_providers.dart';
+
+part 'documentos_repository.g.dart';
 
 /// Documentos exigidos al Profesional (CU-09).
 enum TipoDocumento {
@@ -107,11 +110,12 @@ class DocumentosRepository {
   }
 }
 
-final documentosRepositoryProvider = Provider<DocumentosRepository>(
-  (ref) => DocumentosRepository(ref.watch(supabaseClientProvider)),
-);
+@Riverpod(keepAlive: true)
+DocumentosRepository documentosRepository(Ref ref) =>
+    DocumentosRepository(ref.watch(supabaseClientProvider));
 
-final documentosCargadosProvider = FutureProvider<Map<String, String>>((ref) {
+@Riverpod(keepAlive: true)
+Future<Map<String, String>> documentosCargados(Ref ref) {
   ref.watch(sesionProvider);
   return ref.watch(documentosRepositoryProvider).cargados();
-});
+}

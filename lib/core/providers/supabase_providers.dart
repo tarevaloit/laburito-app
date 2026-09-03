@@ -1,15 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+part 'supabase_providers.g.dart';
+
 /// Cliente único de Supabase.
-final supabaseClientProvider = Provider<SupabaseClient>(
-  (ref) => Supabase.instance.client,
-);
+///
+/// `keepAlive` en todo este archivo: los providers generados son autoDispose
+/// por defecto, y estos tres estaban escritos a mano como `Provider` /
+/// `StreamProvider`, que no se descartan. Se conserva la semántica anterior;
+/// un cliente que se recree al quedarse sin oyentes tiraría abajo la
+/// suscripción de auth.
+@Riverpod(keepAlive: true)
+SupabaseClient supabaseClient(Ref ref) => Supabase.instance.client;
 
 /// Stream de cambios de autenticación. Alimenta el redirect del router.
-final authStateChangesProvider = StreamProvider<AuthState>(
-  (ref) => ref.watch(supabaseClientProvider).auth.onAuthStateChange,
-);
+@Riverpod(keepAlive: true)
+Stream<AuthState> authStateChanges(Ref ref) =>
+    ref.watch(supabaseClientProvider).auth.onAuthStateChange;
 
 /// Sesión vigente, o null si no hay usuario autenticado.
 ///
@@ -21,7 +29,8 @@ final authStateChangesProvider = StreamProvider<AuthState>(
 /// eso rompía el CU-08: al validar el PIN la sesión ya existía, pero el router
 /// leía todavía el evento anterior —`initialSession`, con sesión nula— y mandaba
 /// al login a alguien que acababa de autenticarse.
-final sesionProvider = Provider<Session?>((ref) {
+@Riverpod(keepAlive: true)
+Session? sesion(Ref ref) {
   ref.watch(authStateChangesProvider);
   return ref.watch(supabaseClientProvider).auth.currentSession;
-});
+}

@@ -1,8 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/errors/mensajes_error.dart';
 import '../../../core/providers/supabase_providers.dart';
+
+part 'auth_repository.g.dart';
 
 /// Acceso a Supabase Auth y a la tabla `perfiles`.
 /// Cubre CU-01, CU-02, CU-03, CU-04, CU-08, CU-10 y CU-50.
@@ -156,6 +159,6 @@ class AuthRepository {
   }
 }
 
-final authRepositoryProvider = Provider<AuthRepository>(
-  (ref) => AuthRepository(ref.watch(supabaseClientProvider)),
-);
+@Riverpod(keepAlive: true)
+AuthRepository authRepository(Ref ref) =>
+    AuthRepository(ref.watch(supabaseClientProvider));

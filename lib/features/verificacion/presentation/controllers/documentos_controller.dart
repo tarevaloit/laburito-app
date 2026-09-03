@@ -1,13 +1,16 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../perfil/data/perfil_repository.dart';
 import '../../data/documentos_repository.dart';
 
+part 'documentos_controller.g.dart';
+
 /// CU-09.
-class DocumentosController extends AsyncNotifier<void> {
+@Riverpod(keepAlive: true)
+class DocumentosController extends _$DocumentosController {
   @override
   FutureOr<void> build() {}
 
@@ -30,6 +33,3 @@ class DocumentosController extends AsyncNotifier<void> {
     return !state.hasError;
   }
 }
-
-final documentosControllerProvider =
-    AsyncNotifierProvider<DocumentosController, void>(DocumentosController.new);
