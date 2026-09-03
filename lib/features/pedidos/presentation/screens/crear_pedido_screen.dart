@@ -88,13 +88,17 @@ class _CrearPedidoScreenState extends ConsumerState<CrearPedidoScreen> {
     final controller = ref.read(crearPedidoControllerProvider.notifier);
 
     ref.listen(crearPedidoControllerProvider, (anterior, siguiente) {
-      if (siguiente.pedidoCreado != null && anterior?.pedidoCreado == null) {
+      final creado = siguiente.pedidoCreado;
+      if (creado != null && anterior?.pedidoCreado == null) {
         final mensaje = siguiente.erroresFotos.isEmpty
             ? 'Pedido publicado.'
             : 'Pedido publicado. ${siguiente.erroresFotos.length} '
                 'foto(s) no se pudieron subir; podés reintentar desde el detalle.';
         mostrarMensaje(context, mensaje, esError: false);
-        context.go('/home');
+        // Al detalle del pedido recién creado y no al home: quien acaba de
+        // publicar quiere ver cómo le quedó, y es desde ahí que se pausa, se
+        // edita o se cierra.
+        context.go('/pedidos/${creado.id}');
       } else if (siguiente.error != null && siguiente.error != anterior?.error) {
         mostrarMensaje(context, MensajesError.desde(siguiente.error!));
       }

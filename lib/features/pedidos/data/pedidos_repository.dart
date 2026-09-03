@@ -455,6 +455,41 @@ class PedidosRepository {
     }
   }
 
+  /// Firma varias rutas de una sola vez.
+  ///
+  /// Es `createSignedUrls` —plural— y no un `for` con [urlFirmada] adentro: una
+  /// página del historial (CU-17) trae hasta 20 pedidos, y firmar la portada de
+  /// cada uno por separado son 20 viajes contra uno. Devuelve un mapa
+  /// `storagePath → url`; las rutas que el servidor no pudo firmar
+  /// simplemente no están en el mapa, y quien las pidió muestra el placeholder.
+  ///
+  /// No tira: una foto que no se puede mostrar no es motivo para romper la
+  /// pantalla que la contiene, igual que en [urlFirmada].
+  Future<Map<String, String>> urlsFirmadas(
+    List<String> rutas, {
+    int segundos = 600,
+  }) async {
+    if (rutas.isEmpty) return const {};
+
+    try {
+      // `createSignedUrlsResult` y no `createSignedUrls`: el plural clásico
+      // está deprecado justamente porque no deja distinguir una ruta que no se
+      // pudo firmar de una que sí, y acá esa diferencia es la que decide entre
+      // mostrar la foto o el placeholder.
+      final resultados = await _client.storage
+          .from(_bucket)
+          .createSignedUrlsResult(rutas, segundos);
+
+      return {
+        for (final resultado in resultados)
+          if (resultado case SignedUrlSuccess(:final path, :final signedUrl))
+            path: signedUrl,
+      };
+    } catch (_) {
+      return const {};
+    }
+  }
+
   // --------------------------------------------------------------------------
   // Interno
   // --------------------------------------------------------------------------
