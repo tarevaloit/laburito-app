@@ -30,17 +30,14 @@ abstract class Ubicacion with _$Ubicacion {
   bool get esValida =>
       lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180 &&
       direccionTexto.trim().isNotEmpty;
-
-  /// Representación que entiende la función de entrada de `geography`.
-  ///
-  /// Se manda como texto porque PostgREST no admite llamar funciones dentro de
-  /// un INSERT, así que `public.punto()` no está disponible desde el cliente.
-  ///
-  /// Dos trampas, las dos cubiertas por los tests:
-  ///   * PostGIS toma **(x, y) = (lng, lat)**, al revés de como se dice.
-  ///   * `toStringAsFixed` evita la notación exponencial que `toString()`
-  ///     produce con valores muy chicos (`1e-7`), que el parser de WKT no
-  ///     acepta. Siete decimales son ~1 cm: sobra.
-  String aEwkt() =>
-      'SRID=4326;POINT(${lng.toStringAsFixed(7)} ${lat.toStringAsFixed(7)})';
 }
+
+// Acá vivía `aEwkt()`, que armaba «SRID=4326;POINT(lng lat)» para mandarle la
+// coordenada a la base como texto. Desde la migración 0009 el punto lo arma
+// `public.punto(lat, lng)` del lado del servidor y el cliente manda los dos
+// números sueltos, así que el método quedó sin usar y se borró.
+//
+// No se conserva «por las dudas» a propósito: era el único lugar de Dart donde
+// estaba escrito el orden `(x, y) = (lng, lat)` de PostGIS, y dejarlo a mano
+// invita a volver a usarlo. Si alguna vez hace falta EWKT —para un seed, para
+// un import— que se escriba en SQL, que es donde vive esa regla.

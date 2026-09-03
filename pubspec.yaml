@@ -29,6 +29,11 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^4.0.0
 
+  # Cliente HTTP falso (`package:http/testing.dart`) para probar el repositorio
+  # sin salir a la red. Ya venía como dependencia transitiva de supabase; se
+  # declara acá porque los tests lo importan directo.
+  http: ^1.2.0
+
   # Generadores. Después de tocar un modelo o un provider:
   #   dart run build_runner build --delete-conflicting-outputs
   build_runner: ^2.5.4

@@ -157,14 +157,16 @@ unidad de cambio. Ninguno se pusheó todavía.
 | `76c69f5` `chore(T-05)` | Migración a `freezed` + `riverpod_generator` de todo lo preexistente: pubspec, providers, modelos y los `*.g.dart` / `*.freezed.dart` |
 | `e0e8d34` `feat(T-02)` | Migraciones 0005, 0006 y 0007 y el guion de diagnóstico `supabase/scripts/verificar_pedidos.sql` |
 | `6033700` `feat(CU-13)` | `lib/features/pedidos/` —dominio, repositorio, providers y excepciones tipadas— con sus dos suites de pruebas |
-| `fix(T-02)` | Migración 0008: el guard de la máquina de estados y el mapeo del centinela en `PedidoException` |
+| `e0d3fe5` `fix(T-02)` | Migración 0008: el guard de la máquina de estados y el mapeo del centinela en `PedidoException` |
+| `fix(CU-13)` | Migración 0009: alta y cambio de ubicación por RPC, con el punto armado del lado del servidor |
 
 Línea base de pruebas: **77 en verde** al cerrar la Fase 1. Son 30 del Sprint 1
 (validadores, mensajes de error, estados de perfil y lineamiento visual) más 47
 de la capa de pedidos. Verificado además que con el `chore(T-05)` aislado —sin
 nada de `lib/features/pedidos/` en el árbol— `flutter analyze` da 0 issues y las
 30 del Sprint 1 siguen pasando: la migración a codegen no depende del feature
-nuevo. Con el guard de la 0008 son **81**.
+nuevo. Con el guard de la 0008 son **81**, y con la ida y vuelta de la
+coordenada de la 0009, **87**.
 
 **Todavía no hay UI de pedidos.** La capa de datos está completa y probada
 contra modelos, no contra una base.
@@ -216,6 +218,9 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 02/09 | La máquina de estados se blinda con un trigger y una compuerta de transacción, no restringiendo columnas en la RLS | Postgres no tiene RLS por columna, y las políticas `for update` son de fila entera: quien puede corregir el título puede escribir `estado`. La alternativa era `grant update (col, col, ...)` columna por columna, que se desincroniza en silencio cada vez que se agrega una columna. El trigger `pedidos_guard_estado` (0008) rechaza todo cambio de `estado` salvo que `app.transicion_estado` esté en `'on'`, y solo `cambiar_estado_pedido`, `renovar_pedido` y `marcar_pedidos_vencidos` la abren |
 | 02/09 | La compuerta se pone con `set_config(..., true)`, local a la transacción | Con el tercer argumento en `false` el valor sobreviviría a la request y quedaría pegado al connection pool de Supabase: la conexión siguiente, de otro usuario, encontraría la puerta abierta. Local a la transacción, una RPC que aborta la revierte sola y PostgREST —que atiende cada request en su propia transacción— no la propaga. Igual se cierra a mano después del UPDATE, para que la ventana sea del tamaño mínimo |
 | 02/09 | El guard es integridad, no seguridad | Cualquiera con una conexión SQL puede hacer `set_config('app.transicion_estado','on',...)` y abrir la puerta. Lo que la vuelve efectiva es que a través de PostgREST no hay forma de correr SQL arbitrario antes del PATCH. Quien contiene a un atacante es la RLS; el trigger está para que la propia app no se saltee su máquina de estados por descuido |
+| 02/09 | El alta y el cambio de ubicación pasan a RPC; se borra `Ubicacion.aEwkt()` | El EWKT **funcionaba**: `'SRID=4326;POINT(lng lat)'` lo acepta la función de entrada de `geography` y PostgREST lo manda como texto sin enterarse. Se cambió por tres cosas que el EWKT no puede dar: el orden `(x, y) = (lng, lat)` dejaba de estar escrito en Dart y pasa a estar una sola vez, en `public.punto()` de la 0007; el rango de la coordenada se valida del lado del servidor (PostGIS acepta una latitud de 190 y la normaliza en silencio); y el estado inicial deja de ser elegible. `aEwkt()` se borró en vez de conservarse: era el único lugar de Dart donde estaba el orden de PostGIS, y dejarlo a mano invita a volver a usarlo |
+| 02/09 | Las RPC nuevas devuelven `setof public.pedidos`, no `public.pedidos` | Con `setof`, PostgREST trata el resultado como un recurso y admite `select=*,lat,lng,categorias_oficio(nombre)` sobre la llamada: el alta sigue siendo **un solo viaje**. Con el tipo compuesto a secas devuelve la fila cruda, sin computed fields ni embeds, y hay que releer el pedido —que es lo que hoy hacen `cambiar_estado_pedido` y `renovar_pedido`, y conviene corregir cuando se las toque |
+| 02/09 | Editar la ubicación es una llamada aparte de editar el resto | Un `geography` no se escribe desde un UPDATE de PostgREST. `actualizarPedido` manda primero la RPC de ubicación y después el PATCH de los campos de texto: en ese orden, una edición sobre un pedido cerrado falla antes de haber escrito nada, porque la RPC valida estado y dueño y el PATCH solo dueño. Costo asumido: son dos escrituras sin transacción común, así que si la segunda falla la primera queda hecha. La alternativa era una RPC con el formulario entero adentro y el problema del centinela para distinguir «no cambiar» de «poner en null» |
 | 02/09 | El guard levanta un centinela, no una frase | `ESTADO_NO_MODIFICABLE_DIRECTAMENTE` es la única excepción a la regla de que los P0001 se muestran tal cual: no es un error del usuario sino un bug nuestro —una pantalla mandando `estado` en el payload de una edición— y no hay nada que explicarle a quien lo ve. El mensaje lo redacta la app. Se mapea por `hint`, y por el texto del centinela como red de contención si el hint se perdiera |
 
 ## 6. Deuda técnica y pendientes conocidos
@@ -226,7 +231,8 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | Categorías de oficio | Se cargan por seed en T-02; su ABM (CU-37) es del Sprint 6 | Sprint 6 |
 | ~~Providers escritos a mano~~ | **Saldada el 02/09.** Todo el proyecto pasó a `@riverpod` y `freezed`. La UI no se tocó: los nombres generados coinciden con los de antes. | ✅ |
 | ~~El estado del pedido se puede cambiar sin pasar por la RPC~~ | **Saldada el 02/09 con la migración 0008.** Trigger `pedidos_guard_estado` `BEFORE UPDATE` + compuerta `app.transicion_estado` en las tres RPC que sí pueden mover el estado. | ✅ |
-| Un pedido puede nacer en un estado terminal | El guard de la 0008 es solo de UPDATE. La política de alta de la 0006 no mira `estado`, así que un INSERT puede pisar el `default 'publicado'` y crear un pedido ya `cerrado`. El daño es acotado —es su propio pedido y nace muerto— pero es un agujero de la máquina de estados. Se decide junto con `crear_pedido()`. | Sprint 2 (Fase 3) |
+| ~~Un pedido puede nacer en un estado terminal~~ | **Saldada el 02/09 con la migración 0009.** Trigger `pedidos_guard_alta` `BEFORE INSERT`, con la misma compuerta que el de UPDATE. | ✅ |
+| El PATCH de edición no mira el estado del pedido | `actualizar_ubicacion_pedido` exige que el pedido esté `publicado` o `pausado`, pero el UPDATE de PostgREST que cambia título, descripción o presupuesto no: la RLS solo comprueba dueño. Hoy se le puede editar el título a un pedido cerrado. No molesta a nadie —el pedido ya no se lista— pero es una regla del CU-15 que vive solo en el cliente. | Sprint 3 |
 | El Profesional no puede ver las fotos de un pedido | Las políticas de Storage del bucket `pedidos` son solo del dueño, así que el CU-16 no va a poder firmar las URLs. Falta una política de SELECT para pedidos publicados vigentes, o firmarlas desde una Edge Function. | Sprint 2 (con CU-16) |
 | Sin pantallas de pedidos | La capa de datos está completa y probada, pero no hay UI: el CU-13 necesita el formulario y el mapa. | Sprint 2 |
 | Sin pruebas de widget ni de integración | Hay 18 pruebas unitarias de validadores y mensajes, más 3 de widget en `test/tema_test.dart` que cubren el lineamiento visual. Los circuitos se verifican a mano con el guion de `ARRANQUE.md`. | Sprint 2 |
@@ -242,13 +248,16 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 
 _(Una sola línea. Lo primero que hay que hacer al retomar.)_
 
-→ **Verificar cómo se escribe la geografía**: si el EWKT que manda `crearPedido()` entra bien en la columna `geography`, o si hace falta una RPC `crear_pedido()` que arme el punto del lado del servidor (migración 0009).
+→ **CU-16: configurar Google Maps y escribir el `SelectorUbicacion`**, que es lo que el asistente del CU-13 necesita para el paso «Dónde».
 
 Antes de eso: **aplicar en el SQL Editor, en orden,
 `0004_cu11_storage_sin_dml.sql`, `0005_pedidos.sql`, `0006_pedidos_rls.sql`,
-`0007_pedidos_coordenadas.sql` y `0008_pedidos_guard_estado.sql`**, y correr el
-guion de prueba que cada una trae al final.
-`supabase/scripts/verificar_pedidos.sql` dice cuáles están aplicadas.
+`0007_pedidos_coordenadas.sql`, `0008_pedidos_guard_estado.sql` y
+`0009_pedidos_alta_y_ubicacion.sql`**, y correr el guion de prueba que cada una
+trae al final. `supabase/scripts/verificar_pedidos.sql` dice cuáles están
+aplicadas, y su bloque 8 avisa del único orden peligroso: la 0008 aplicada a
+medias —el trigger sí, las RPC no— deja el sistema **peor** que antes, porque
+entonces nada puede mover el estado.
 
 Del Sprint 1 sigue pendiente el material de la entrega: el video de los 7
 circuitos de `ARRANQUE.md`, la captura del Schema Visualizer y de la tabla de

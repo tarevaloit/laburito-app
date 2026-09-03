@@ -145,19 +145,9 @@ void main() {
       direccionTexto: 'Av. Siempreviva 742',
     );
 
-    test('el EWKT sale en orden (lng lat), que es el de PostGIS', () {
-      expect(ubicacion.aEwkt(), 'SRID=4326;POINT(-58.3816000 -34.6037000)');
-    });
-
-    test('no usa notación exponencial, que el parser de WKT no acepta', () {
-      const cercaDelCero = Ubicacion(
-        lat: 0.0000001,
-        lng: -0.0000002,
-        direccionTexto: 'Golfo de Guinea',
-      );
-      expect(cercaDelCero.aEwkt(), isNot(contains('e')));
-      expect(cercaDelCero.aEwkt(), 'SRID=4326;POINT(-0.0000002 0.0000001)');
-    });
+    // El orden `(lng, lat)` ya no se prueba acá: desde la migración 0009 lo
+    // pone `public.punto()` del lado del servidor y `aEwkt()` se borró. La ida
+    // y vuelta de la coordenada está en `test/pedidos_geografia_test.dart`.
 
     test('rechaza coordenadas fuera de rango y direcciones vacías', () {
       expect(ubicacion.esValida, isTrue);

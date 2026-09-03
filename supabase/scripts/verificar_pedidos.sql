@@ -135,3 +135,87 @@ select relname, relrowsecurity as rls_activo
  where relname in ('pedidos', 'pedido_fotos', 'pedido_eventos')
  order by relname;
 -- Se espera: true en las tres.
+
+
+-- ----------------------------------------------------------------------------
+-- 8. ¿Está la 0008? (guard de la máquina de estados)
+-- ----------------------------------------------------------------------------
+--
+-- Sin esto, un PATCH directo sobre `pedidos.estado` saltea
+-- `cambiar_estado_pedido` y su tabla de transiciones. La app no se rompe: se
+-- rompe la regla.
+--
+-- `abre_compuerta` es el punto fino. Si el trigger está pero las tres RPC son
+-- todavía las de la 0006 —sin el `set_config`—, entonces **nada** puede mover
+-- el estado y la app queda muerta: pausar, cerrar y renovar fallan todos con
+-- ESTADO_NO_MODIFICABLE_DIRECTAMENTE. Es el único orden de aplicación que deja
+-- el sistema peor que antes, así que se mira junto.
+-- ----------------------------------------------------------------------------
+select
+    exists (
+        select 1 from pg_trigger
+         where tgname = 'pedidos_guard_estado'
+           and tgrelid = 'public.pedidos'::regclass
+    ) as trigger_guard,
+    p.proname,
+    prosrc like '%app.transicion_estado%' as abre_compuerta
+  from pg_proc p
+  join pg_namespace n on n.oid = p.pronamespace
+ where n.nspname = 'public'
+   and p.proname in ('cambiar_estado_pedido', 'renovar_pedido',
+                     'marcar_pedidos_vencidos')
+ order by p.proname;
+-- Se espera: trigger_guard = true y abre_compuerta = true en las tres.
+-- Si trigger_guard es true y alguna abre_compuerta es false → volvé a correr
+-- 0008_pedidos_guard_estado.sql entera.
+
+
+-- ----------------------------------------------------------------------------
+-- 9. ¿Está la 0009? (alta y cambio de ubicación por RPC)
+-- ----------------------------------------------------------------------------
+--
+-- Sin esto el alta del CU-13 falla con PGRST202 «function not found»: el
+-- repositorio ya no hace INSERT directo.
+-- ----------------------------------------------------------------------------
+select
+    to_regprocedure(
+        'public.crear_pedido(uuid, text, text, double precision, '
+        'double precision, text, timestamptz, text, public.pedido_urgencia, '
+        'numeric)'
+    ) is not null as rpc_crear_pedido,
+    to_regprocedure(
+        'public.actualizar_ubicacion_pedido(uuid, double precision, '
+        'double precision, text, text)'
+    ) is not null as rpc_mover_ubicacion,
+    exists (
+        select 1 from pg_trigger
+         where tgname = 'pedidos_guard_alta'
+           and tgrelid = 'public.pedidos'::regclass
+    ) as trigger_guard_alta;
+-- Se espera: todo true.
+
+
+-- ----------------------------------------------------------------------------
+-- 10. Orden de los triggers sobre `pedidos`
+-- ----------------------------------------------------------------------------
+--
+-- Los BEFORE de una misma tabla se disparan en orden alfabético. El guard tiene
+-- que correr antes que `pedidos_set_updated_at`, para que un update rechazado
+-- no llegue a tocar la fila.
+-- ----------------------------------------------------------------------------
+select tgname,
+       case tgtype & 2 when 2 then 'BEFORE' else 'AFTER' end as momento,
+       case when tgtype &  4 > 0 then 'INSERT'
+            when tgtype & 16 > 0 then 'UPDATE'
+            else '?' end as evento
+  from pg_trigger
+ where tgrelid = 'public.pedidos'::regclass
+   and not tgisinternal
+ order by tgname;
+--
+-- Se esperan cuatro, en este orden:
+--
+--   pedidos_guard_alta        BEFORE  INSERT
+--   pedidos_guard_estado      BEFORE  UPDATE
+--   pedidos_registrar_evento  AFTER   UPDATE
+--   pedidos_set_updated_at    BEFORE  UPDATE

@@ -51,6 +51,12 @@ class PedidosRepository {
     return id;
   }
 
+  /// Falla antes de salir a la red cuando no hay sesión.
+  ///
+  /// Las RPC lo verifican igual con `auth.uid()`, pero un viaje de ida y vuelta
+  /// para contestar «iniciá sesión» es un viaje de más.
+  void _exigirSesion() => _uid;
+
   /// Envuelve cualquier fallo del backend en un [PedidoException].
   Future<T> _guardar<T>(Future<T> Function() accion) async {
     try {
@@ -65,7 +71,18 @@ class PedidosRepository {
   // --------------------------------------------------------------------------
 
   /// CU-13 — Publicar un pedido. Nace en `publicado`, que es el default de la
-  /// tabla.
+  /// tabla y lo custodia el trigger `pedidos_guard_alta` de la 0009.
+  ///
+  /// Va por la RPC `crear_pedido` y no por un INSERT de PostgREST. El INSERT
+  /// también funcionaba —la ubicación viajaba como EWKT, que la función de
+  /// entrada de `geography` acepta— pero dejaba tres cosas del lado del
+  /// cliente que no le corresponden: el orden `(lng, lat)` de PostGIS, la
+  /// validación del rango de la coordenada y la posibilidad de elegir el estado
+  /// inicial. Ahora el punto lo arma `public.punto(lat, lng)` en la base, que
+  /// es el único lugar donde ese orden está escrito.
+  ///
+  /// La RPC devuelve `setof pedidos`, así que admite `.select()` con los
+  /// computed fields y los embeds: sigue siendo un solo viaje.
   Future<Pedido> crearPedido({
     required String categoriaId,
     required String titulo,
@@ -75,7 +92,9 @@ class PedidosRepository {
     PedidoUrgencia urgencia = PedidoUrgencia.media,
     double? presupuestoEstimado,
   }) {
-    final buscadorId = _uid;
+    // El `buscador_id` lo pone la RPC con `auth.uid()`; acá solo se evita el
+    // viaje cuando ya se sabe que no hay sesión.
+    _exigirSesion();
 
     if (!ubicacion.esValida) {
       throw const PedidoException(
@@ -92,20 +111,18 @@ class PedidosRepository {
 
     return _guardar(() async {
       final fila = await _client
-          .from('pedidos')
-          .insert({
-            'buscador_id': buscadorId,
-            'categoria_id': categoriaId,
-            'titulo': titulo.trim(),
-            'descripcion': descripcion.trim(),
-            'urgencia': urgencia.clave,
-            // La ubicación viaja como EWKT: PostgREST no deja llamar
-            // `public.punto()` dentro de un INSERT. Ver migración 0007.
-            'ubicacion': ubicacion.aEwkt(),
-            'direccion_texto': ubicacion.direccionTexto.trim(),
-            'referencia_ubicacion': _oNulo(ubicacion.referencia),
-            'presupuesto_estimado': presupuestoEstimado,
-            'fecha_vencimiento': fechaVencimiento.toUtc().toIso8601String(),
+          .rpc('crear_pedido', params: {
+            'p_categoria_id': categoriaId,
+            'p_titulo': titulo.trim(),
+            'p_descripcion': descripcion.trim(),
+            // Van los dos números sueltos: el orden lo pone `public.punto()`.
+            'p_lat': ubicacion.lat,
+            'p_lng': ubicacion.lng,
+            'p_direccion_texto': ubicacion.direccionTexto.trim(),
+            'p_fecha_vencimiento': fechaVencimiento.toUtc().toIso8601String(),
+            'p_referencia': _oNulo(ubicacion.referencia),
+            'p_urgencia': urgencia.clave,
+            'p_presupuesto': presupuestoEstimado,
           })
           .select(_columnas)
           .single();
@@ -134,16 +151,13 @@ class PedidosRepository {
     DateTime? fechaVencimiento,
     Object? presupuestoEstimado = _sinCambio,
   }) {
+    // La ubicación no entra en este mapa: no se puede escribir un `geography`
+    // desde un UPDATE de PostgREST sin construirlo. Va aparte, por RPC.
     final cambios = <String, dynamic>{
       if (categoriaId != null) 'categoria_id': categoriaId,
       if (titulo != null) 'titulo': titulo.trim(),
       if (descripcion != null) 'descripcion': descripcion.trim(),
       if (urgencia != null) 'urgencia': urgencia.clave,
-      if (ubicacion != null) ...{
-        'ubicacion': ubicacion.aEwkt(),
-        'direccion_texto': ubicacion.direccionTexto.trim(),
-        'referencia_ubicacion': _oNulo(ubicacion.referencia),
-      },
       if (fechaVencimiento != null)
         'fecha_vencimiento': fechaVencimiento.toUtc().toIso8601String(),
       // Sentinela: `null` es un valor legítimo acá (borrar el presupuesto),
@@ -152,29 +166,59 @@ class PedidosRepository {
         'presupuesto_estimado': presupuestoEstimado,
     };
 
-    if (ubicacion != null && !ubicacion.esValida) {
+    return _guardar(() async {
+      // Primero la ubicación. No es indistinto: `actualizar_ubicacion_pedido`
+      // valida dueño y estado editable, y el UPDATE de PostgREST solo lo
+      // primero. Empezando por la RPC, una edición sobre un pedido cerrado
+      // falla antes de haber escrito nada.
+      //
+      // Aun así son dos escrituras sin transacción común: si la segunda falla,
+      // la primera queda hecha. Se asume a cambio de no meter todo el formulario
+      // en una RPC gigante; la pantalla del CU-15 relee el pedido al terminar.
+      if (ubicacion != null) {
+        await actualizarUbicacion(id, ubicacion);
+      }
+
+      if (cambios.isEmpty) return _releer(id);
+
+      final fila = await _client
+          .from('pedidos')
+          .update(cambios)
+          .eq('id', id)
+          .select(_columnas)
+          .single();
+
+      return Pedido.desdeFila(fila);
+    });
+  }
+
+  /// CU-15 — Mueve el pedido de lugar.
+  ///
+  /// Va por la RPC `actualizar_ubicacion_pedido` (migración 0009) por el mismo
+  /// motivo que el alta: el punto lo arma `public.punto(lat, lng)` en la base y
+  /// el orden `(lng, lat)` de PostGIS no se escribe nunca del lado del cliente.
+  ///
+  /// La RPC además exige que el pedido esté `publicado` o `pausado`: un pedido
+  /// cerrado, cancelado o vencido es historia y no se edita.
+  Future<Pedido> actualizarUbicacion(String id, Ubicacion ubicacion) {
+    _exigirSesion();
+
+    if (!ubicacion.esValida) {
       throw const PedidoException(
         CasoPedido.desconocido,
         'La ubicación del pedido no es válida. Marcala de nuevo en el mapa.',
       );
     }
 
-    if (cambios.isEmpty) {
-      return obtenerPedido(id).then(
-        (p) =>
-            p ??
-            (throw const PedidoException(
-              CasoPedido.sinPermiso,
-              'El pedido no existe o no es tuyo.',
-            )),
-      );
-    }
-
     return _guardar(() async {
       final fila = await _client
-          .from('pedidos')
-          .update(cambios)
-          .eq('id', id)
+          .rpc('actualizar_ubicacion_pedido', params: {
+            'p_pedido_id': id,
+            'p_lat': ubicacion.lat,
+            'p_lng': ubicacion.lng,
+            'p_direccion_texto': ubicacion.direccionTexto.trim(),
+            'p_referencia': _oNulo(ubicacion.referencia),
+          })
           .select(_columnas)
           .single();
 
