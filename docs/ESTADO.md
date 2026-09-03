@@ -117,14 +117,14 @@ Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanific
 | CU-20 | Pausar Publicación (y reanudarla) | 3 | ✅ | Fig. 3.4 |
 | CU-29 | Cerrar Pedido | 3 | ✅ | Fig. 3.4 |
 | CU-51 | Renovar Pedido Vencido | 3 | ✅ | — |
-| CU-17 | Consultar Historial de pedidos | 5 | ⏭️ | Fig. 3.5 |
+| CU-17 | Consultar Historial de pedidos | 5 | ✅ | Fig. 3.5 |
 | CU-18 | Solicitar Reenvío de Enlace de Gestión | 4 | ⏭️ | — |
-| | **Total** | **40** | **31 ejecutados** | |
+| | **Total** | **40** | **36 ejecutados** | |
 
-Los 9 puntos que faltan son el CU-17 (5) y el CU-18 (4), replanificados el
-03/09 por tiempo: ver la sección 6. El CU-18 ya estaba marcado como
-descartable en el plan del sprint; el CU-17 no, y su ausencia tiene una
-consecuencia concreta para la demo que está anotada en la sección 7.
+Los 4 puntos que faltan son el CU-18, que ya estaba marcado como descartable
+en el plan del sprint: es el único ítem que no condiciona nada del Sprint 3 y
+se replanifica al Sprint 5, donde ya hay trabajo de enlaces públicos (CU-26 y
+CU-27).
 
 > **Faltan nombres y puntos.** Los únicos títulos que se pueden sostener con una
 > fuente del repo son los que aparecen en el ANEXO UI (CU-13, CU-17, CU-20/29).
@@ -310,7 +310,26 @@ arriba —que sin el arreglo falla con el mismo «BoxConstraints forces an
 infinite width»—. Cierra la deuda del apartado 7.1.7 del informe del Sprint 1,
 acotada a lo que existe: nada del CU-17 ni del CU-18.
 
-### 4.9 iOS quedó compilando otra vez (`2254b16`)
+### 4.9 Fase 7 — CU-17 Consultar Historial · **HECHA** (`0f6df51`)
+
+`/pedidos`, el home del Buscador. Era la pieza que faltaba para que el sprint
+se sostenga solo: sin ella, al detalle de un pedido únicamente se llegaba
+recién publicado.
+
+| Qué | Cómo |
+|---|---|
+| Cuatro grupos con contador | `FiltroPedidos` rehecho: Activos, Vencidos, Cerrados, Cancelados, que **parten los estados sin superponerse**. Los contadores salen de una consulta que trae solo la columna `estado` |
+| Búsqueda por texto | `ilike` sobre título y descripción, del lado del servidor, con el texto saneado antes de armar el `or` de PostgREST |
+| Scroll infinito | 20 por página, pidiendo la siguiente 400 px antes del final |
+| Pull to refresh | Corre `marcar_pedidos_vencidos()` **antes** de leer |
+| Portadas | Firmadas en lote con el caché de `UrlsFirmadas` de la Fase 6 |
+| Vacíos | Dos distintos: «todavía no publicaste» ofrece publicar, «no encontramos nada» no |
+
+Archivos: `presentation/screens/historial_pedidos_screen.dart`,
+`presentation/controllers/historial_pedidos_controller.dart`,
+`presentation/widgets/tarjeta_pedido.dart`.
+
+### 4.10 iOS quedó compilando otra vez (`2254b16`)
 
 iOS no levantaba desde que el CU-16 sumó `google_maps_flutter` y `geolocator`.
 Era configuración nativa, no código: piso de iOS 14 (lo pide
@@ -376,6 +395,9 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 02/09 | Ningún método de `ServicioDirecciones` tira excepción | La dirección es un campo de texto editable: un servicio caído degrada a «escribila vos», no a un alta interrumpida |
 | 02/09 | El permiso de ubicación no se pide al abrir el selector, solo al tocar «Usar mi ubicación» | Disparar el diálogo del sistema apenas se abre una pantalla es la forma más rápida de que alguien apriete «no» sin leer, y en el navegador ese «no» queda pegado al sitio |
 | 02/09 | La geocodificación inversa se filtra por distancia (15 m) y por origen del movimiento | El mapa se queda quieto muchas más veces de las que el usuario elige un punto (primer encuadre, `animateCamera`, teclado); se ignoran los movimientos que hizo el propio controlador |
+| 03/09 | «Vencidos» es un grupo propio del historial, no parte de un «Historial» común | No es un final: es lo único que se puede renovar (CU-51). Meterlo junto a cerrados y cancelados escondería la única acción que le queda. Por lo mismo, cerrados y cancelados van separados: la diferencia entre «se resolvió» y «no se hizo» es la que mide si Laburito sirve |
+| 03/09 | La búsqueda del CU-17 se sanea antes de armar el filtro | El `or` de PostgREST separa condiciones con comas, así que una coma escrita por el usuario parte la expresión y el servidor contesta 400 en vez de cero resultados. Se reemplazan comas, paréntesis y asteriscos por espacios, y con menos de dos caracteres no se busca: un `ilike` de una letra recorre la tabla entera para devolver casi todo |
+| 03/09 | Los contadores de las pestañas no respetan la búsqueda | Dicen cuánto hay en cada grupo, que es lo que sirve para elegir pestaña. Si cambiaran con cada letra tecleada dejarían de ser un punto de referencia |
 | 03/09 | El color de una acción dice **qué desenlace produce**, no si es reversible | «Cerrar» estaba en rojo, como «Cancelar», y se leía como «eliminar». Cerrar es el final bueno —el trabajo se resolvió— y la misma pantalla ya dibuja el pedido cerrado en verde con un tilde: el botón que lleva ahí no puede decir lo contrario. La irreversibilidad la comunica el diálogo, que además exige elegir un motivo antes de habilitar la confirmación. Queda: azul lo que deja el pedido en curso, verde cerrar, rojo cancelar. Cubierto en `test/pedidos_ciclo_vida_test.dart` |
 | 03/09 | La fila de `profesionales` la repara una migración, no la app (0011) | Sobre esa tabla no hay política de INSERT para el usuario, a propósito: solo SELECT y UPDATE. El único que puede crear la fila es el trigger `handle_new_user`, que es SECURITY DEFINER. Darle al cliente permiso de INSERT para que se repare solo dejaría que cualquiera se fabrique una fila de Profesional |
 | 03/09 | `handle_new_user` pasa a ser idempotente | Corre dentro de la transacción del signUp: un DNI repetido o un reintento sobre un id que ya tenía perfil tumbaba **el alta entera** con un error de base en la cara del usuario. Con `on conflict do nothing` el alta sigue y lo que falte se completa después desde el perfil (CU-05) |
@@ -402,7 +424,7 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | El PATCH de edición no mira el estado del pedido | `actualizar_ubicacion_pedido` exige que el pedido esté `publicado` o `pausado`, pero el UPDATE de PostgREST que cambia título, descripción o presupuesto no: la RLS solo comprueba dueño. Hoy se le puede editar el título a un pedido cerrado. No molesta a nadie —el pedido ya no se lista— pero es una regla del CU-15 que vive solo en el cliente. | Sprint 3 |
 | El Profesional no puede ver las fotos de un pedido | Las políticas de Storage del bucket `pedidos` son solo del dueño, así que el CU-16 no va a poder firmar las URLs. Falta una política de SELECT para pedidos publicados vigentes, o firmarlas desde una Edge Function. | Sprint 2 (con CU-16) |
 | ~~`flutter test` y los builds se dejan de correr fase por fase~~ | **Saldada el 03/09.** La verificación diferida se hizo entera al cerrar la Fase 6: analyze 0 issues, 101 tests en verde, y web, APK e iOS compilando. La apuesta salió bien: no había ningún error acumulado de las Fases 5 y 6 | ✅ |
-| **CU-17 Consultar Historial (Fase 7) — replanificado** | No se hizo. **Consecuencia concreta: no existe la ruta `/pedidos`, así que al detalle solo se llega recién publicado un pedido** (el asistente redirige ahí) o escribiendo `/pedidos/<uuid>` a mano en la web. Sin esta pantalla, cuatro de los cinco casos de uso de la Fase 6 no tienen camino desde el home. Lo que ya está hecho y espera: `UrlsFirmadas` (firma en lote), `Fechas.vigencia` («vence en 3 días»), `PlaceholderCategoria`, `ChipEstadoPedido(compacto: true)`, `listarMisPedidos` con paginación y `marcarVencidos` | Sprint 3, o antes de la demo |
+| ~~CU-17 Consultar Historial (Fase 7)~~ | **Hecho el 03/09.** Con los cuatro grupos y sus contadores, búsqueda por texto en el servidor, scroll infinito de 20, pull to refresh que corre el barrido de vencimientos, portadas firmadas en lote y dos estados vacíos distintos | ✅ |
 | **CU-18 Reenvío de Enlace de Gestión (Fase 8) — replanificado** | No se hizo. Ya estaba marcado como descartable en el plan del sprint: es el único ítem que no condiciona nada del Sprint 3 y se replanifica al Sprint 5, donde ya hay trabajo de enlaces públicos (CU-26 y CU-27) | Sprint 5 |
 | ~~Pruebas de widget del Sprint 2 (Fase 9a)~~ | **Saldada el 03/09.** 62 pruebas nuevas, de 101 a **163**: el asistente del CU-13 contra el árbol de widgets, los diálogos del ciclo de vida, la barra de acciones en los cinco estados, el borrador de edición del CU-15, los validadores compartidos y las fechas. Ninguna toca Supabase | ✅ |
 | El ciclo de vida (Fase 6) sin ejercitar contra una base real | Las pruebas de widget cubren la UI y la máquina de estados del lado del cliente, pero nadie tocó todavía los botones de pausar, cerrar, cancelar, renovar y editar contra Supabase. Depende de aplicar las migraciones | Antes de la demo |
@@ -454,19 +476,15 @@ todo, **aplicar las migraciones**, que nunca se ejecutaron contra una base.
 
 ### 7.2 Antes de mostrarlo
 
-5. **No hay pantalla de «Mis pedidos» (CU-17).** Al detalle del pedido solo se
-   llega recién publicado, o escribiendo `/pedidos/<uuid>` en la barra del
-   navegador. Para la demo hay dos caminos: publicar un pedido en vivo y
-   seguir desde ahí —el asistente redirige al detalle—, o implementar el
-   CU-17, que es lo primero que habría que retomar.
-6. Aprobar a mano por SQL a un Profesional de prueba (CU-35 es del Sprint 6).
-7. Del **Sprint 1** sigue pendiente el material de la entrega: el video de los
+5. Aprobar a mano por SQL a un Profesional de prueba, con
+   `supabase/scripts/aprobar_profesional.sql` (CU-35 es del Sprint 6).
+6. Del **Sprint 1** sigue pendiente el material de la entrega: el video de los
    7 circuitos de `ARRANQUE.md`, la captura del Schema Visualizer y de la
    tabla de políticas RLS, y la subida a BB.
 
 ### 7.3 Cierre del sprint (Fase 9c, sin hacer)
 
-8. Merge de `sprint-2` a `main`, tag `v0.2.0` con el mensaje
+7. Merge de `sprint-2` a `main`, tag `v0.2.0` con el mensaje
    *Sprint 2 — Gestión de Pedidos y Geolocalización (PT 3.0)*, push del tag y
    `CHANGELOG.md` con `v0.1.0` y `v0.2.0` agrupados por caso de uso.
    **Ningún commit del sprint está pusheado todavía.**
