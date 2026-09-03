@@ -1,11 +1,10 @@
-import 'dart:math';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/providers/supabase_providers.dart';
+import '../../../core/utils/identificadores.dart';
 import '../domain/pedido.dart';
 import '../domain/pedido_estado.dart';
 import '../domain/pedido_evento.dart';
@@ -391,7 +390,7 @@ class PedidosRepository {
       final siguiente =
           ordenes.isEmpty ? 0 : (ordenes.first['orden'] as num).toInt() + 1;
 
-      final ruta = '$pedidoId/${_nombreUnico()}.$extension';
+      final ruta = '$pedidoId/${_nombreUnico(extension)}';
 
       await _client.storage.from(_bucket).uploadBinary(
             ruta,
@@ -563,10 +562,13 @@ class PedidosRepository {
 
   /// El nombre solo tiene que ser único dentro de la carpeta del pedido: las
   /// políticas de Storage miran el primer segmento de la ruta y nada más.
-  static String _nombreUnico() {
-    final azar = Random().nextInt(1 << 32).toRadixString(16);
-    return '${DateTime.now().microsecondsSinceEpoch}_$azar';
-  }
+  ///
+  /// Lo arma [Identificadores.nombreDeArchivo], que está en `core/utils`
+  /// porque ahí se puede probar en un navegador de verdad: la versión anterior
+  /// de esta línea usaba `Random().nextInt(1 << 32)` y **solo fallaba en la
+  /// web**, donde `1 << 32` vale 0.
+  static String _nombreUnico(String extension) =>
+      Identificadores.nombreDeArchivo(extension);
 }
 
 // ----------------------------------------------------------------------------

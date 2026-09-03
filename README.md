@@ -147,7 +147,16 @@ que envíen `{{ .Token }}`; el detalle está en [`ARRANQUE.md`](ARRANQUE.md).
 ```bash
 flutter analyze
 flutter test
+
+# Las trampas que solo existen en la web, en un navegador de verdad:
+flutter test --platform chrome test/identificadores_test.dart
 ```
+
+Ese último no es opcional por capricho. En la web los `int` de Dart son los
+números de JavaScript, y hay código que funciona en la VM —donde corre
+`flutter test`— y falla en el navegador. Ya pasó dos veces: `1 << 32` vale 0 en
+la web e hizo que ninguna foto se pudiera subir, y el `toString()` de un double
+entero imprime «200000.0» en la VM y «200000» en la web.
 
 ## Convención de commits
 
