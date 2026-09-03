@@ -178,6 +178,57 @@ void main() {
     });
   });
 
+  group('errores de Storage al subir una foto', () {
+    // Todos caían en «Revisá la conexión e intentá de nuevo», que manda a
+    // buscar el problema donde no está: ninguno de estos cuatro se arregla
+    // mirando el wifi.
+    test('bucket inexistente manda a aplicar la migración', () {
+      final e = PedidoException.desde(const StorageException(
+        'Bucket not found',
+        error: 'Bucket not found',
+        statusCode: '404',
+      ));
+
+      expect(e.message, contains('falta aplicar una migración'));
+      expect(e.message, isNot(contains('conexión')));
+    });
+
+    test('archivo demasiado grande dice cuál es el tope', () {
+      final e = PedidoException.desde(const StorageException(
+        'The object exceeded the maximum allowed size',
+        statusCode: '413',
+      ));
+
+      expect(e.message, contains('5 MB'));
+    });
+
+    test('formato rechazado dice qué formatos entran', () {
+      final e = PedidoException.desde(const StorageException(
+        'mime type image/heic is not supported',
+        statusCode: '415',
+      ));
+
+      expect(e.message, contains('JPG, PNG o WEBP'));
+    });
+
+    test('rechazo por RLS no le pide al usuario que revise su conexión', () {
+      final e = PedidoException.desde(const StorageException(
+        'new row violates row-level security policy',
+        statusCode: '403',
+      ));
+
+      expect(e.message, contains('permisos'));
+      expect(e.message, isNot(contains('row-level')));
+    });
+
+    test('lo que no se reconoce sigue siendo un problema de subida', () {
+      final e = PedidoException.desde(const StorageException('vaya a saber'));
+
+      expect(e.message, contains('No pudimos subir la imagen'));
+      expect(e.caso, CasoPedido.desconocido);
+    });
+  });
+
   group('integración con MensajesError', () {
     test('un PedidoException no se vuelve a envolver', () {
       const original = PedidoException(CasoPedido.sinPermiso, 'No es tuyo.');
