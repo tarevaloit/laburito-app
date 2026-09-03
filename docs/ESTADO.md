@@ -111,7 +111,7 @@ Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanific
 | ID | Ítem | Pts | Estado | Figura del ANEXO UI |
 |---|---|---|---|---|
 | CU-16 | Localizar Pedido en Mapa | 8 | ✅ | — |
-| CU-13 | Publicar pedido con ubicación en el mapa | ? | ⬜ | Fig. 3.2 |
+| CU-13 | Publicar pedido con ubicación en el mapa | ? | 🟡 | Fig. 3.2 |
 | CU-14 | _(completar del PT 3.0)_ | ? | ⬜ | — |
 | CU-15 | _(completar del PT 3.0)_ | ? | ⬜ | — |
 | CU-20 | Gestión del pedido publicado | ? | ⬜ | Fig. 3.4 |
@@ -204,7 +204,45 @@ nativa y pruebas. `flutter analyze` en 0 issues, `flutter build web` y
 Verificado: `flutter analyze` 0 issues, `flutter test` 101 en verde,
 `flutter build web` y `flutter build apk --debug` compilan los dos.
 Decisiones técnicas de esta fase: sección 5, entradas del 02/09.
-Falta commitear (`feat(CU-16): localizar el pedido en el mapa`).
+Commit: `69b272f` `feat(CU-16): localizar el pedido en el mapa`.
+
+### 4.5 Fase 5 — CU-13 Crear Pedido · **asistente hecho, sin verificar**
+
+Wizard de 4 pasos en `/pedidos/nuevo`, ruta que exige sesión (como el resto de
+la app) y valida el rol Buscador **adentro de la pantalla**: con una cuenta
+Profesional muestra un aviso en vez de la ruta a `/login` — no se tocó el
+`redirect` de `router.dart`, que no tiene forma síncrona de leer el rol sin
+arriesgar una carrera con `perfilCompletoProvider`, que es asíncrono.
+
+| Archivo | Qué hace |
+|---|---|
+| `lib/features/pedidos/presentation/controllers/crear_pedido_controller.dart` | `EstadoCrearPedido` (freezed) + `CrearPedidoController` (`@riverpod`, autoDispose). Guarda las fotos en memoria (`FotoPendiente`, bytes + nombre) hasta confirmar: el pedido tiene que existir antes de que una foto pueda subirse |
+| `lib/features/pedidos/presentation/screens/crear_pedido_screen.dart` | La pantalla: barra de progreso, los 4 pasos (`_PasoQueNecesitas`, `_PasoDonde`, `_PasoFotos`, `_PasoVigencia`) y la barra de acciones Atrás/Siguiente/Publicar |
+| `lib/app/router.dart` | Ruta `/pedidos/nuevo` |
+| `lib/features/home/presentation/home_screen.dart` | Botón «Publicar un pedido», solo para cuentas Buscador |
+
+Flujo de alta: `crearPedido` (RPC, Fase 3) y después, en orden, `subirFoto` por
+cada foto elegida. Una foto que falla **no** deshace el pedido —ya quedó
+publicado—, se junta en `erroresFotos` y se avisa aparte. Al terminar redirige
+a `/home` con un mensaje de éxito: el detalle del pedido (CU-20, Fase 6) y el
+historial (CU-17, Fase 7) todavía no existen, así que no hay a dónde más
+mandar a alguien que acaba de publicar. Se corrige cuando esas pantallas
+existan.
+
+**Sin verificar con `flutter test` ni con los builds de Web/Android**, a
+pedido explícito: se prioriza terminar el desarrollo de las fases que faltan y
+verificar todo junto al cierre del sprint. Ver la entrada nueva de la sección
+6. Sí se corrió `flutter analyze` después de cada cambio (0 issues): es
+prácticamente gratis y evita seguir escribiendo sobre código que no compila.
+
+#### Decisiones que se tomaron acá
+
+| Decisión | Motivo |
+|---|---|
+| El rol Buscador se valida en la pantalla, no en el `redirect` del router | `perfilCompletoProvider` es asíncrono y el `redirect` de go_router necesita una respuesta síncrona (la misma razón por la que la sesión se lee de `auth.currentSession` y no de un provider, decisión del 20/08). Gatear por rol ahí arriesgaba la misma carrera que ya se había resuelto para la sesión |
+| `PopScope` necesita una bandera `_salidaForzada` además de `canPop` | Con `canPop: false`, volver a llamar `Navigator.pop()` **dentro del propio** `onPopInvokedWithResult` no saca de la pantalla: el pop programático también queda interceptado y el diálogo de «¿descartar?» se mostraría de nuevo en loop. La bandera es lo que hace que la segunda vuelta de `canPop` dé `true` |
+| Los campos de texto del asistente usan `initialValue` de `CampoTexto`, no `TextEditingController` | Cada paso se renderiza condicionalmente (`switch` sobre `estado.paso`), así que al volver a un paso ya visitado el widget se reconstruye entero con el valor que quedó en el controller. Evita instanciar y descartar `TextEditingController` a mano en cuatro pasos |
+| Las fotos se comprimen con `maxWidth: 1600` / `imageQuality: 80` de `image_picker`, igual que el CU-09 | Mismo criterio ya usado para el DNI y la selfie: un solo camino de código para Web y Android, sin herramienta de compresión aparte |
 
 ## 5. Decisiones técnicas tomadas
 
@@ -276,8 +314,9 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | ~~Un pedido puede nacer en un estado terminal~~ | **Saldada el 02/09 con la migración 0009.** Trigger `pedidos_guard_alta` `BEFORE INSERT`, con la misma compuerta que el de UPDATE. | ✅ |
 | El PATCH de edición no mira el estado del pedido | `actualizar_ubicacion_pedido` exige que el pedido esté `publicado` o `pausado`, pero el UPDATE de PostgREST que cambia título, descripción o presupuesto no: la RLS solo comprueba dueño. Hoy se le puede editar el título a un pedido cerrado. No molesta a nadie —el pedido ya no se lista— pero es una regla del CU-15 que vive solo en el cliente. | Sprint 3 |
 | El Profesional no puede ver las fotos de un pedido | Las políticas de Storage del bucket `pedidos` son solo del dueño, así que el CU-16 no va a poder firmar las URLs. Falta una política de SELECT para pedidos publicados vigentes, o firmarlas desde una Edge Function. | Sprint 2 (con CU-16) |
-| Sin pantallas de pedidos | La capa de datos está completa y probada, pero no hay UI: el CU-13 necesita el formulario y el mapa. | Sprint 2 |
-| Sin pruebas de widget ni de integración | Hay 18 pruebas unitarias de validadores y mensajes, más 3 de widget en `test/tema_test.dart` que cubren el lineamiento visual. Los circuitos se verifican a mano con el guion de `ARRANQUE.md`. | Sprint 2 |
+| **A partir del 02/09 (Fase 5): `flutter test`, `flutter build web` y `flutter build apk` se dejan de correr fase por fase** | Decisión explícita para priorizar velocidad de desarrollo con la entrega encima: se corre solo `flutter analyze` (0 issues) después de cada cambio, que tarda segundos y evita seguir escribiendo sobre código roto. La verificación completa —tests, build web, build APK— se hace una sola vez al terminar todas las fases del sprint, no en cada una. Riesgo asumido: un error de *runtime* que `analyze` no detecta (por ejemplo un `initialValue` que no existe en cierta versión de un widget) puede acumularse en varias fases sin que se note hasta el cierre | Al cerrar el desarrollo del Sprint 2 |
+| Wizard de alta (CU-13) sin ejercitar contra la app corriendo ni con pruebas de widget | Se escribió y se revisó a mano (no hay `flutter test`/`flutter run` de por medio, ver el ítem de arriba). Falta la corrida real: elegir categoría, completar los 4 pasos, publicar, y confirmar que el `DropdownButtonFormField` con `initialValue` refleja bien la selección al volver a un paso | Al cerrar el desarrollo del Sprint 2 |
+| Sin pruebas de widget ni de integración | Hay 18 pruebas unitarias de validadores y mensajes, más 3 de widget en `test/tema_test.dart` que cubren el lineamiento visual, más `mapa_config_test.dart`/`servicio_direcciones_test.dart` del CU-16 (101 en total). Los circuitos se verifican a mano con el guion de `ARRANQUE.md`. El wizard del CU-13 no tiene pruebas de widget todavía (ver Fase 9 del plan del sprint) | Sprint 2 |
 | Figura 3.1 del Anexo UI desactualizada | Muestra 3 campos; el alta tiene los 5 del CU-01. Hay que redibujarla antes de entregar el Anexo. | Antes de la entrega |
 | Textos legales provisorios | `/legales/terminos` y `/legales/privacidad` describen el alcance pero no son la redacción definitiva. | Sprint 3 |
 | Barra superior de la web | La Figura 3.1 la muestra con «Cómo funciona · Mis pedidos · Ayuda»; las tres secciones son de sprints posteriores. | Sprint 2 |

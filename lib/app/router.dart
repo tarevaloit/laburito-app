@@ -16,6 +16,7 @@ import '../features/auth/presentation/screens/registro_screen.dart';
 import '../features/auth/presentation/screens/verificar_pin_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/legales/presentation/texto_legal_screen.dart';
+import '../features/pedidos/presentation/screens/crear_pedido_screen.dart';
 import '../features/perfil/presentation/screens/baja_cuenta_screen.dart';
 import '../features/perfil/presentation/screens/perfil_screen.dart';
 import '../features/verificacion/presentation/screens/carga_documentos_screen.dart';
@@ -162,6 +163,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/verificacion',
         name: 'verificacion',
         builder: (context, state) => const CargaDocumentosScreen(),
+      ),
+      GoRoute(
+        path: '/pedidos/nuevo',
+        name: 'pedidosNuevo',
+        builder: (context, state) => const CrearPedidoScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
