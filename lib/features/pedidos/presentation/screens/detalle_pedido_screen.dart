@@ -140,6 +140,8 @@ class _Detalle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      // `stretch`: de acá sale el ancho de la barra de acciones de abajo.
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
           child: TarjetaFormulario(

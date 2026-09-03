@@ -175,6 +175,9 @@ class _EditarPedidoScreenState extends ConsumerState<EditarPedidoScreen> {
               ),
             ),
             body: Column(
+              // `stretch`: de acá sale el ancho completo de la barra de abajo
+              // y de su botón. El tema ya no lo impone (ver `theme.dart`).
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
                   child: TarjetaFormulario(

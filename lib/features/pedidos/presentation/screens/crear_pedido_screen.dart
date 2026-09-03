@@ -154,6 +154,9 @@ class _CrearPedidoScreenState extends ConsumerState<CrearPedidoScreen> {
               ),
             ),
             body: Column(
+              // `stretch`: de acá sale el ancho de la barra de progreso y de
+              // la de acciones. El tema ya no lo impone (ver `theme.dart`).
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _BarraDeProgreso(paso: estado.paso),
                 Expanded(
@@ -558,9 +561,14 @@ class _PasoVigencia extends StatelessWidget {
                 _FilaResumen('Vigencia', '${estado.diasVigencia} días'),
                 _FilaResumen(
                   'Presupuesto',
+                  // `toStringAsFixed(0)` y no interpolación directa: el
+                  // `toString()` de un double entero **no da lo mismo en las
+                  // dos plataformas**. En la VM imprime «200000.0» y en la web
+                  // «200000», porque ahí los números son los de JavaScript. Se
+                  // fija el formato, que además es el que corresponde a pesos.
                   estado.presupuestoEstimado == null
                       ? 'Sin definir'
-                      : r'$' '${estado.presupuestoEstimado}',
+                      : '\$${estado.presupuestoEstimado!.toStringAsFixed(0)}',
                 ),
               ],
             ),
