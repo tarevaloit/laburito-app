@@ -282,12 +282,35 @@ Archivos nuevos de la fase:
 | `supabase/migrations/0010_pedido_evento_edicion.sql` | El evento de edición del CU-15 |
 
 **Verificado el 03/09, todo junto como se había planificado:** `flutter
-analyze` 0 issues, `flutter test` **101 en verde** (sin regresiones contra la
+analyze` 0 issues, `flutter test` **163 en verde** (101 antes de sumar las pruebas de la Fase 9a; sin regresiones contra la
 línea base del CU-16), `flutter build web`, `flutter build apk --debug` y
 `flutter build ios --simulator --debug` compilan los tres, y el grep de
 secretos (`eyJ`, `AIza`, `service_role`) sale vacío.
 
-### 4.7 iOS quedó compilando otra vez (`2254b16`)
+### 4.7 El bug que encontró la primera corrida real (`84bc8e5`)
+
+Al llegar al paso 4 del asistente en la web, la barra de acciones no se
+dibujaba y tocar donde deberían estar los botones llenaba la consola de
+excepciones en cascada. La causa era **una línea del tema**:
+`minimumSize: Size.fromHeight(52)` deja el ancho en `double.infinity`, así que
+todos los botones de la app exigían ancho infinito. En una `Column` con
+`stretch` no se nota; en un `Row`, en un `Wrap` o en las acciones de un
+`AlertDialog` —o sea, en **todos** los diálogos de confirmación del proyecto,
+incluido el de la baja de cuenta del Sprint 1— el layout reventaba.
+
+Vale la pena anotarlo porque es exactamente el riesgo que se había aceptado al
+diferir la verificación: un error de *runtime* que `flutter analyze` no ve.
+Estaba en el repo desde el Sprint 1 y no lo encontró nadie porque ninguna
+pantalla anterior ponía dos botones en fila.
+
+### 4.8 Pruebas de las Fases 5 y 6 (`07375ec`)
+
+62 pruebas nuevas, de 101 a **163**, incluida la de regresión del bug de
+arriba —que sin el arreglo falla con el mismo «BoxConstraints forces an
+infinite width»—. Cierra la deuda del apartado 7.1.7 del informe del Sprint 1,
+acotada a lo que existe: nada del CU-17 ni del CU-18.
+
+### 4.9 iOS quedó compilando otra vez (`2254b16`)
 
 iOS no levantaba desde que el CU-16 sumó `google_maps_flutter` y `geolocator`.
 Era configuración nativa, no código: piso de iOS 14 (lo pide
@@ -378,8 +401,8 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | ~~`flutter test` y los builds se dejan de correr fase por fase~~ | **Saldada el 03/09.** La verificación diferida se hizo entera al cerrar la Fase 6: analyze 0 issues, 101 tests en verde, y web, APK e iOS compilando. La apuesta salió bien: no había ningún error acumulado de las Fases 5 y 6 | ✅ |
 | **CU-17 Consultar Historial (Fase 7) — replanificado** | No se hizo. **Consecuencia concreta: no existe la ruta `/pedidos`, así que al detalle solo se llega recién publicado un pedido** (el asistente redirige ahí) o escribiendo `/pedidos/<uuid>` a mano en la web. Sin esta pantalla, cuatro de los cinco casos de uso de la Fase 6 no tienen camino desde el home. Lo que ya está hecho y espera: `UrlsFirmadas` (firma en lote), `Fechas.vigencia` («vence en 3 días»), `PlaceholderCategoria`, `ChipEstadoPedido(compacto: true)`, `listarMisPedidos` con paginación y `marcarVencidos` | Sprint 3, o antes de la demo |
 | **CU-18 Reenvío de Enlace de Gestión (Fase 8) — replanificado** | No se hizo. Ya estaba marcado como descartable en el plan del sprint: es el único ítem que no condiciona nada del Sprint 3 y se replanifica al Sprint 5, donde ya hay trabajo de enlaces públicos (CU-26 y CU-27) | Sprint 5 |
-| Pruebas de widget del Sprint 2 (Fase 9a) | Siguen sin escribirse: wizard del CU-13, validadores, diálogos de cerrar y cancelar, chip de estado en los cinco estados, máquina de estados del lado del cliente y mapeo de `PostgrestException`. Las 101 que hay son unitarias y de lineamiento visual | Sprint 3 |
-| El asistente del CU-13 y el ciclo de vida (Fase 6) sin ejercitar contra la app corriendo | Compilan en las tres plataformas y las pruebas unitarias pasan, pero nadie completó todavía los 4 pasos ni tocó los botones de pausar, cerrar, cancelar, renovar y editar contra una base real. Es lo primero que hay que hacer, y depende de aplicar las migraciones | Antes de la demo |
+| ~~Pruebas de widget del Sprint 2 (Fase 9a)~~ | **Saldada el 03/09.** 62 pruebas nuevas, de 101 a **163**: el asistente del CU-13 contra el árbol de widgets, los diálogos del ciclo de vida, la barra de acciones en los cinco estados, el borrador de edición del CU-15, los validadores compartidos y las fechas. Ninguna toca Supabase | ✅ |
+| El ciclo de vida (Fase 6) sin ejercitar contra una base real | Las pruebas de widget cubren la UI y la máquina de estados del lado del cliente, pero nadie tocó todavía los botones de pausar, cerrar, cancelar, renovar y editar contra Supabase. Depende de aplicar las migraciones | Antes de la demo |
 | El PATCH de edición tampoco mira `fecha_vencimiento` | Del mismo tipo que el ítem de arriba sobre el estado: la app no manda ese campo al editar (decisión del 03/09), pero la RLS no lo impide, así que un cliente que lo mandara renovaría sin gastar renovaciones. Se cierra con un trigger, como el `pedidos_guard_estado` de la 0008 | Sprint 3 |
 | Sin pruebas de widget ni de integración | Hay 18 pruebas unitarias de validadores y mensajes, más 3 de widget en `test/tema_test.dart` que cubren el lineamiento visual, más `mapa_config_test.dart`/`servicio_direcciones_test.dart` del CU-16 (101 en total). Los circuitos se verifican a mano con el guion de `ARRANQUE.md`. El wizard del CU-13 no tiene pruebas de widget todavía (ver Fase 9 del plan del sprint) | Sprint 2 |
 | Figura 3.1 del Anexo UI desactualizada | Muestra 3 campos; el alta tiene los 5 del CU-01. Hay que redibujarla antes de entregar el Anexo. | Antes de la entrega |
