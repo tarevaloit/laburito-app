@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../../../app/colores.dart';
 import '../../../../core/errors/mensajes_error.dart';
 import '../../../../core/widgets/boton_principal.dart';
-import '../../../../core/widgets/campo_texto.dart';
 import '../../../../core/widgets/marca_laburito.dart';
-import '../../../categorias/data/categorias_repository.dart';
 import '../../../perfil/data/perfil_repository.dart';
-import '../../domain/pedido_estado.dart';
 import '../controllers/crear_pedido_controller.dart';
-import '../widgets/selector_ubicacion.dart';
+import '../widgets/campos_pedido.dart';
 
 /// CU-13 — Publicar Pedido. Asistente de 4 pasos, exclusivo para cuentas
 /// Buscador: qué necesitás, dónde, fotos (opcional) y vigencia/presupuesto.
@@ -297,7 +293,7 @@ class _BarraDeAcciones extends StatelessWidget {
 // Paso 1 — Qué necesitás
 // ----------------------------------------------------------------------------
 
-class _PasoQueNecesitas extends ConsumerWidget {
+class _PasoQueNecesitas extends StatelessWidget {
   const _PasoQueNecesitas({
     required this.formKey,
     required this.estado,
@@ -308,109 +304,48 @@ class _PasoQueNecesitas extends ConsumerWidget {
   final EstadoCrearPedido estado;
   final CrearPedidoController controller;
 
-  String? _validarTitulo(String? valor) {
-    final v = valor?.trim() ?? '';
-    if (v.isEmpty) return 'Ingresá un título';
-    if (v.length < 5) return 'El título es demasiado corto (mínimo 5)';
-    if (v.length > 80) return 'El título es demasiado largo (máximo 80)';
-    return null;
-  }
-
-  String? _validarDescripcion(String? valor) {
-    final v = valor?.trim() ?? '';
-    if (v.isEmpty) return 'Contá qué necesitás';
-    if (v.length < 20) return 'Contá un poco más (mínimo 20 caracteres)';
-    if (v.length > 1000) return 'Demasiado largo (máximo 1000 caracteres)';
-    return null;
-  }
-
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final categoriasAsync = ref.watch(categoriasActivasProvider);
-
+  Widget build(BuildContext context) {
     return Form(
       key: formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            '¿Qué necesitás?',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: Colores.azul,
-            ),
-          ),
+          const _TituloDePaso('¿Qué necesitás?'),
           const SizedBox(height: 20),
-          const Padding(
-            padding: EdgeInsets.only(bottom: 6, left: 2),
-            child: Text(
-              'Categoría',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Colores.texto,
-              ),
-            ),
-          ),
-          categoriasAsync.when(
-            loading: () => const LinearProgressIndicator(),
-            error: (e, _) =>
-                const Text('No pudimos cargar las categorías.'),
-            data: (categorias) => DropdownButtonFormField<String>(
-              initialValue: estado.categoriaId,
-              hint: const Text('Elegí un oficio'),
-              items: [
-                for (final c in categorias)
-                  DropdownMenuItem(value: c.id, child: Text(c.nombre)),
-              ],
-              onChanged: controller.setCategoria,
-            ),
-          ),
-          const SizedBox(height: 16),
-          CampoTexto(
-            etiqueta: 'Título',
-            initialValue: estado.titulo,
-            ejemplo: 'Ej: Se me tapó la cocina',
-            maxLength: 80,
-            validator: _validarTitulo,
-            onChanged: controller.setTitulo,
-          ),
-          const SizedBox(height: 16),
-          CampoTexto(
-            etiqueta: 'Descripción',
-            initialValue: estado.descripcion,
-            ejemplo: 'Contá el problema con el mayor detalle posible',
-            maxLines: 4,
-            maxLength: 1000,
-            validator: _validarDescripcion,
-            onChanged: controller.setDescripcion,
-          ),
-          const SizedBox(height: 16),
-          const Padding(
-            padding: EdgeInsets.only(bottom: 6, left: 2),
-            child: Text(
-              'Urgencia',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Colores.texto,
-              ),
-            ),
-          ),
-          Wrap(
-            spacing: 8,
-            children: [
-              for (final u in PedidoUrgencia.values)
-                ChoiceChip(
-                  label: Text(u.etiqueta),
-                  selected: estado.urgencia == u,
-                  onSelected: (_) => controller.setUrgencia(u),
-                ),
-            ],
+          // Los mismos campos que usa la edición (CU-15): las validaciones
+          // viven una sola vez, en `ValidadoresPedido`.
+          CamposDatosPedido(
+            categoriaId: estado.categoriaId,
+            titulo: estado.titulo,
+            descripcion: estado.descripcion,
+            urgencia: estado.urgencia,
+            onCategoria: controller.setCategoria,
+            onTitulo: controller.setTitulo,
+            onDescripcion: controller.setDescripcion,
+            onUrgencia: controller.setUrgencia,
           ),
           const SizedBox(height: 24),
         ],
+      ),
+    );
+  }
+}
+
+/// Título de cada paso del asistente.
+class _TituloDePaso extends StatelessWidget {
+  const _TituloDePaso(this.texto);
+
+  final String texto;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      texto,
+      style: const TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        color: Colores.azul,
       ),
     );
   }
@@ -428,61 +363,14 @@ class _PasoDonde extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ubicacion = estado.ubicacion;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
-          '¿Dónde es el trabajo?',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: Colores.azul,
-          ),
-        ),
+        const _TituloDePaso('¿Dónde es el trabajo?'),
         const SizedBox(height: 20),
-        if (ubicacion != null)
-          TarjetaPanel(
-            child: Row(
-              children: [
-                const Icon(Icons.place, color: Colores.naranja),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        ubicacion.direccionTexto,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      if (ubicacion.referencia != null)
-                        Text(
-                          ubicacion.referencia!,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colores.textoSecundario,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        const SizedBox(height: 16),
-        OutlinedButton.icon(
-          icon: const Icon(Icons.map_outlined),
-          label: Text(ubicacion == null
-              ? 'Marcar ubicación en el mapa'
-              : 'Cambiar ubicación'),
-          onPressed: () async {
-            final elegida = await abrirSelectorUbicacion(
-              context,
-              inicial: ubicacion,
-            );
-            if (elegida != null) controller.setUbicacion(elegida);
-          },
+        CampoUbicacion(
+          ubicacion: estado.ubicacion,
+          onCambio: controller.setUbicacion,
         ),
       ],
     );
@@ -500,37 +388,10 @@ class _PasoFotos extends StatelessWidget {
   final CrearPedidoController controller;
 
   Future<void> _agregar(BuildContext context) async {
-    final origen = await showModalBottomSheet<ImageSource>(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_camera_outlined),
-              title: const Text('Tomar una foto'),
-              onTap: () => Navigator.pop(ctx, ImageSource.camera),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Elegir de la galería'),
-              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (origen == null) return;
+    final foto = await elegirFotoDePedido(context);
+    if (foto == null) return;
 
-    final archivo = await ImagePicker().pickImage(
-      source: origen,
-      maxWidth: 1600,
-      imageQuality: 80,
-    );
-    if (archivo == null) return;
-
-    final bytes = await archivo.readAsBytes();
-    final agregada = controller.agregarFoto(bytes, archivo.name);
+    final agregada = controller.agregarFoto(foto.bytes, foto.nombre);
     if (!agregada && context.mounted) {
       mostrarMensaje(context, 'Ya tenés el máximo de 5 fotos.');
     }
@@ -651,15 +512,6 @@ class _PasoVigencia extends StatelessWidget {
 
   static const _opcionesDias = [7, 15, 30];
 
-  String? _validarPresupuesto(String? valor) {
-    final v = valor?.trim() ?? '';
-    if (v.isEmpty) return null;
-    final numero = double.tryParse(v.replaceAll(',', '.'));
-    if (numero == null) return 'Ingresá un número válido';
-    if (numero < 0) return 'No puede ser negativo';
-    return null;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Form(
@@ -667,26 +519,9 @@ class _PasoVigencia extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'Vigencia y presupuesto',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: Colores.azul,
-            ),
-          ),
+          const _TituloDePaso('Vigencia y presupuesto'),
           const SizedBox(height: 20),
-          const Padding(
-            padding: EdgeInsets.only(bottom: 6, left: 2),
-            child: Text(
-              '¿Cuántos días querés que quede publicado?',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Colores.texto,
-              ),
-            ),
-          ),
+          const EtiquetaCampo('¿Cuántos días querés que quede publicado?'),
           Wrap(
             spacing: 8,
             children: [
@@ -699,16 +534,9 @@ class _PasoVigencia extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          CampoTexto(
-            etiqueta: 'Presupuesto estimado (opcional)',
-            initialValue: estado.presupuestoEstimado?.toString(),
-            ejemplo: 'En pesos',
-            keyboardType:
-                const TextInputType.numberWithOptions(decimal: true),
-            validator: _validarPresupuesto,
-            onChanged: (texto) => controller.setPresupuesto(
-              double.tryParse(texto.trim().replaceAll(',', '.')),
-            ),
+          CampoPresupuesto(
+            valor: estado.presupuestoEstimado,
+            onCambio: controller.setPresupuesto,
           ),
           const SizedBox(height: 24),
           const Text(

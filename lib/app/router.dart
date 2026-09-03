@@ -18,6 +18,7 @@ import '../features/home/presentation/home_screen.dart';
 import '../features/legales/presentation/texto_legal_screen.dart';
 import '../features/pedidos/presentation/screens/crear_pedido_screen.dart';
 import '../features/pedidos/presentation/screens/detalle_pedido_screen.dart';
+import '../features/pedidos/presentation/screens/editar_pedido_screen.dart';
 import '../features/perfil/presentation/screens/baja_cuenta_screen.dart';
 import '../features/perfil/presentation/screens/perfil_screen.dart';
 import '../features/verificacion/presentation/screens/carga_documentos_screen.dart';
@@ -179,6 +180,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => DetallePedidoScreen(
           id: state.pathParameters['id'] ?? '',
         ),
+        routes: [
+          GoRoute(
+            path: 'editar',
+            name: 'pedidoEditar',
+            builder: (context, state) => EditarPedidoScreen(
+              id: state.pathParameters['id'] ?? '',
+            ),
+          ),
+        ],
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

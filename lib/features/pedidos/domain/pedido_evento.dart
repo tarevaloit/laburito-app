@@ -28,6 +28,14 @@ abstract class PedidoEvento with _$PedidoEvento {
     required DateTime createdAt,
   }) = _PedidoEvento;
 
+  /// Motivo con el que la RPC `registrar_edicion_pedido` (migración 0010)
+  /// marca una edición del CU-15.
+  ///
+  /// Es una constante y no una frase suelta porque se compara por igualdad:
+  /// si el texto cambia de un lado, la cronología deja de reconocer el evento
+  /// y lo muestra como un cambio de estado que no existió.
+  static const String motivoEdicion = 'edicion';
+
   factory PedidoEvento.desdeFila(Map<String, dynamic> fila) {
     final anterior = fila['estado_anterior'] as String?;
 
@@ -46,8 +54,17 @@ abstract class PedidoEvento with _$PedidoEvento {
   /// Lo hizo el servidor y no una persona.
   bool get esAutomatico => actorId == null;
 
+  /// Una edición del CU-15, que no es un cambio de estado: la RPC deja el
+  /// evento con el mismo estado de los dos lados y el motivo [motivoEdicion].
+  bool get esEdicion =>
+      motivo == motivoEdicion && estadoAnterior == estadoNuevo;
+
   /// Línea para la cronología del pedido.
-  String get descripcion => estadoAnterior == null
-      ? 'Pasó a ${estadoNuevo.etiqueta}'
-      : 'De ${estadoAnterior!.etiqueta} a ${estadoNuevo.etiqueta}';
+  String get descripcion {
+    if (esEdicion) return 'Se editó el pedido';
+
+    return estadoAnterior == null
+        ? 'Pasó a ${estadoNuevo.etiqueta}'
+        : 'De ${estadoAnterior!.etiqueta} a ${estadoNuevo.etiqueta}';
+  }
 }

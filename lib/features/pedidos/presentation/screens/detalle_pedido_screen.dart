@@ -475,6 +475,17 @@ class BarraDeAccionesPedido extends ConsumerWidget {
     if (pedido.estado.esTerminal) return const SizedBox.shrink();
 
     final acciones = <Widget>[
+      // CU-15 — Editar: solo mientras el pedido sigue su curso. Un pedido
+      // vencido, cerrado o cancelado es historia, y la RPC de ubicación lo
+      // rechaza.
+      if (pedido.estado.esEditable)
+        _BotonAccion(
+          icono: Icons.edit_outlined,
+          texto: 'Editar',
+          cargando: false,
+          habilitado: !estado.ocupado,
+          onPressed: () => context.push('/pedidos/${pedido.id}/editar'),
+        ),
       if (pedido.estado == PedidoEstado.publicado)
         _BotonAccion(
           icono: Icons.pause_outlined,

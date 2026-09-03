@@ -1,6 +1,6 @@
 import 'dart:math';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -179,16 +179,19 @@ class PedidosRepository {
         await actualizarUbicacion(id, ubicacion);
       }
 
-      if (cambios.isEmpty) return _releer(id);
+      final pedido = cambios.isEmpty
+          ? await _releer(id)
+          : Pedido.desdeFila(
+              await _client
+                  .from('pedidos')
+                  .update(cambios)
+                  .eq('id', id)
+                  .select(_columnas)
+                  .single(),
+            );
 
-      final fila = await _client
-          .from('pedidos')
-          .update(cambios)
-          .eq('id', id)
-          .select(_columnas)
-          .single();
-
-      return Pedido.desdeFila(fila);
+      await _registrarEdicion(id);
+      return pedido;
     });
   }
 
@@ -493,6 +496,30 @@ class PedidosRepository {
   // --------------------------------------------------------------------------
   // Interno
   // --------------------------------------------------------------------------
+
+  /// CU-15 — Deja el evento de edición en `pedido_eventos`.
+  ///
+  /// Va en el repositorio y no en la pantalla porque la auditoría es una
+  /// propiedad de la operación: cualquiera que edite un pedido tiene que
+  /// dejar rastro, sin acordarse de pedirlo.
+  ///
+  /// **Un fallo acá no vuelve como error.** La edición ya se escribió y no se
+  /// puede deshacer —son dos escrituras sin transacción común, la misma razón
+  /// por la que la ubicación va primero—, así que hacerla fallar mostraría un
+  /// «no se pudo guardar» sobre datos que sí se guardaron, que es peor que un
+  /// renglón faltante en la cronología. Queda en la consola, que es donde se
+  /// mira cuando algo no cuadra.
+  Future<void> _registrarEdicion(String id) async {
+    try {
+      await _client.rpc('registrar_edicion_pedido', params: {
+        'p_pedido_id': id,
+      });
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint('registrar_edicion_pedido falló para $id · $error');
+      }
+    }
+  }
 
   Future<Pedido> _releer(String id) async {
     final pedido = await obtenerPedido(id);
