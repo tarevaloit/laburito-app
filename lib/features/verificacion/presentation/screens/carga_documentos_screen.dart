@@ -77,14 +77,41 @@ class _CargaDocumentosScreenState
     final cargadosAsync = ref.watch(documentosCargadosProvider);
     final perfil = ref.watch(perfilCompletoProvider).valueOrNull;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Verificación de identidad'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/home'),
-        ),
+    final barra = AppBar(
+      title: const Text('Verificación de identidad'),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => context.go('/home'),
       ),
+    );
+
+    // Solo los Profesionales tienen documentación que validar.
+    //
+    // Sin esta guarda, una cuenta Buscador que llegue acá —tocando el enlace,
+    // escribiendo la URL en la web— ve el formulario completo y al subir se
+    // lleva un `23503` de la clave foránea contra `profesionales`, una tabla
+    // en la que un Buscador no tiene ni tiene que tener fila. Es el mismo
+    // criterio con el que el asistente del CU-13 rechaza a los Profesionales:
+    // el rol se valida en la pantalla, porque el `redirect` de go_router
+    // necesita una respuesta sincrónica y `perfilCompletoProvider` es
+    // asíncrono.
+    if (perfil != null && !perfil.esProfesional) {
+      return Scaffold(
+        appBar: barra,
+        body: const Padding(
+          padding: EdgeInsets.all(24),
+          child: AvisoEstado.riesgo(
+            icono: Icons.info_outline,
+            titulo: 'Esta sección es para cuentas Profesional',
+            detalle: 'Con una cuenta Buscador no hace falta validar identidad: '
+                'la documentación la cargan quienes ofrecen su oficio.',
+          ),
+        ),
+      );
+    }
+
+    return Scaffold(
+      appBar: barra,
       body: cargadosAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('No pudimos cargar el estado: $e')),

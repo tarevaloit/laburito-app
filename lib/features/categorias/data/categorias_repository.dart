@@ -1,7 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/providers/supabase_providers.dart';
+
+part 'categorias_repository.freezed.dart';
+part 'categorias_repository.g.dart';
 
 /// Catálogo de oficios. Lectura pública: se consulta sin sesión durante el
 /// registro del Profesional (CU-02).
@@ -70,22 +75,19 @@ class CategoriasRepository {
   }
 }
 
-class CategoriaOficio {
-  const CategoriaOficio({
-    required this.id,
-    required this.nombre,
-    required this.slug,
-  });
-
-  final String id;
-  final String nombre;
-  final String slug;
+@freezed
+abstract class CategoriaOficio with _$CategoriaOficio {
+  const factory CategoriaOficio({
+    required String id,
+    required String nombre,
+    required String slug,
+  }) = _CategoriaOficio;
 }
 
-final categoriasRepositoryProvider = Provider<CategoriasRepository>(
-  (ref) => CategoriasRepository(ref.watch(supabaseClientProvider)),
-);
+@Riverpod(keepAlive: true)
+CategoriasRepository categoriasRepository(Ref ref) =>
+    CategoriasRepository(ref.watch(supabaseClientProvider));
 
-final categoriasActivasProvider = FutureProvider<List<CategoriaOficio>>(
-  (ref) => ref.watch(categoriasRepositoryProvider).activas(),
-);
+@Riverpod(keepAlive: true)
+Future<List<CategoriaOficio>> categoriasActivas(Ref ref) =>
+    ref.watch(categoriasRepositoryProvider).activas();

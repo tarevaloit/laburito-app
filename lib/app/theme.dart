@@ -64,12 +64,25 @@ class AppTheme {
             const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
 
-      // Acción principal: naranja, ancho completo, 52 px de alto.
+      // Acción principal: naranja, 52 px de alto.
+      //
+      // **`Size(0, alto)` y no `Size.fromHeight(alto)`.** Son distintas:
+      // `Size.fromHeight` deja el ancho en `double.infinity`, o sea que el
+      // botón *exige* ancho infinito. Adentro de una `Column` con
+      // `crossAxisAlignment: stretch` —que es como se arma cada formulario de
+      // Laburito— no se nota, porque el ancho llega fijo. Pero en un `Row`, en
+      // un `Wrap` o en las acciones de un `AlertDialog`, el ancho llega **sin
+      // acotar**, y el layout revienta con «BoxConstraints forces an infinite
+      // width» arrastrando consigo a toda la pantalla.
+      //
+      // El ancho completo lo sigue dando el contenedor (`stretch` o
+      // `Expanded`), que es de donde tiene que salir. Acá queda solo el piso de
+      // altura, que es lo que el ANEXO UI pide de verdad.
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: Colores.naranja,
           foregroundColor: Colores.textoSobreColor,
-          minimumSize: const Size.fromHeight(Medidas.altoBoton),
+          minimumSize: const Size(0, Medidas.altoBoton),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(Medidas.radio),
           ),
@@ -77,12 +90,13 @@ class AppTheme {
         ),
       ),
 
-      // Acción secundaria: mismo cuerpo, sin relleno.
+      // Acción secundaria: mismo cuerpo, sin relleno. Mismo criterio que
+      // arriba con el ancho.
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: Colores.azul,
           backgroundColor: Colores.superficie,
-          minimumSize: const Size.fromHeight(Medidas.altoBoton),
+          minimumSize: const Size(0, Medidas.altoBoton),
           side: const BorderSide(color: Colores.borde),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(Medidas.radio),

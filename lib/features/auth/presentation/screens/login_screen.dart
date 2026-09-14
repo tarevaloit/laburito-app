@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/colores.dart';
+import '../../../../core/config/superficie.dart';
 import '../../../../core/errors/mensajes_error.dart';
 import '../../../../core/utils/validadores.dart';
 import '../../../../core/widgets/boton_principal.dart';
@@ -59,11 +60,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const MarcaLaburito(
-                conNombre: false,
-                altoLogo: 76,
-                titulo: 'Bienvenido de nuevo',
-                subtitulo: 'Ingresá para recibir trabajos cerca tuyo',
+              // Sin saludo: el logotipo con el nombre y listo.
+              //
+              // La Figura 3.8 dice «Bienvenido de nuevo», pero al login llega
+              // tanto quien vuelve como quien entra por primera vez —el enlace
+              // a «Registrate» está en esta misma pantalla—, así que «de nuevo»
+              // es falso la mitad de las veces. Y «Bienvenido» a secas está en
+              // masculino: a Laura González la trataría de varón.
+              //
+              // La bajada sí cambia con la superficie: la de la Figura 3.8
+              // —«recibir trabajos»— es del Profesional, y en la web el que
+              // entra es el Buscador, que publica pedidos en vez de recibirlos.
+              MarcaLaburito(
+                altoLogo: 104,
+                subtitulo: Entorno.esWeb
+                    ? 'Ingresá para publicar tu pedido y ver quién te contactó'
+                    : 'Ingresá para recibir trabajos cerca tuyo',
               ),
               const SizedBox(height: 32),
               CampoTexto(

@@ -50,6 +50,30 @@ construir nada, así que la pantalla de alta de Buscador no se alcanza. En la we
 las dos altas muestran el selector y se puede ir de una a la otra sin perder la
 pantalla.
 
+### El login no saluda
+
+Ni «Bienvenido» ni «Bienvenido de nuevo»: el encabezado es el logotipo con el
+nombre, como en la mayoría de las apps. Dos motivos, y los dos son de fondo:
+
+1. **«De nuevo» es falso la mitad de las veces.** Al login llega tanto quien
+   vuelve como quien entra por primera vez — el enlace a «Registrate» está en
+   esa misma pantalla.
+2. **«Bienvenido» está en masculino.** A Laura González la trataría de varón, y
+   en el login todavía no se sabe nada de quien entra. Un saludo que hay que
+   adivinar es peor que no saludar.
+
+Vale para cualquier texto que se le dirija a la persona antes de conocerla.
+
+**El texto también cambia con la superficie.** El login es la misma pantalla en
+las dos, pero la bajada de la Figura 3.8 —«Ingresá para recibir trabajos cerca
+tuyo»— es del Profesional: en la web el que entra es el Buscador, que publica
+pedidos en vez de recibirlos. Cuando una pantalla se comparte, revisá que el
+texto no dé por sentado el rol.
+
+> Limitación conocida: `Entorno` lee `kIsWeb` y no se puede sustituir en una
+> prueba, así que lo específico de cada superficie se verifica a mano. Si crece,
+> conviene volverlo inyectable.
+
 ## 2. Paleta
 
 | Token | Valor | Dónde se usa |
@@ -165,6 +189,7 @@ pantallas), baja de cuenta (CU-11) y el home provisorio.
 |---|---|---|
 | PIN de 4 casilleros separados (Fig. 3.3) | Un campo centrado de 6 dígitos | El OTP de Supabase es de 6 dígitos; el campo único autocompleta desde el SMS/mail y valida solo |
 | «El PIN vence a los 10 minutos» (Fig. 3.3) | No se muestra el plazo | El vencimiento lo fija la consola de Supabase; no se anuncia un número que la app no controla |
+| «Bienvenido de nuevo» en el login (Fig. 3.8) | El logotipo con el nombre, sin saludo | «De nuevo» no aplica a quien entra por primera vez, y «Bienvenido» está en masculino. Ver «El login no saluda» |
 | Ícono de teléfono en «Ofrezco mi oficio» (Fig. 3.1) | Ícono de llave | El teléfono no comunica «ofrezco un oficio»; la llave es la metáfora del Profesional en toda la app |
 | Alta del Buscador con 3 campos (Fig. 3.1) | Los 5 del CU-01: nombre, apellido, correo, teléfono y contraseña | Decisión del 19/08: manda el CU-01. El teléfono es el dato con el que el Profesional contacta al Buscador. **La Figura 3.1 hay que redibujarla** |
 | Sin checkbox legal en el alta del Profesional (Fig. 3.9) | Lleva el mismo checkbox que el Buscador | El consentimiento de la Ley 25.326 no depende del rol |

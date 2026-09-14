@@ -41,6 +41,11 @@ class Colores {
   /// Borde de tarjetas, campos y separadores.
   static const Color borde = Color(0xFFDCE0E6);
 
+  /// Fondo tenue neutro: el estado que no es ni bueno ni malo ni pendiente.
+  /// Lo usa el chip de «Vencido», que no puede ser rojo —no es un error— ni
+  /// naranja —no hay nada que el usuario tenga que hacer ya mismo—.
+  static const Color neutroSuave = Color(0xFFEFF1F4);
+
   // ─── Texto ──────────────────────────────────────────────────────────────
   /// Texto principal. No se usa negro puro.
   static const Color texto = Color(0xFF12263F);

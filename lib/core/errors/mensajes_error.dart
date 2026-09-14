@@ -58,6 +58,15 @@ class MensajesError {
 
         case '23505':
           return 'Ese dato ya está registrado.';
+
+        // foreign_key_violation. Del lado del usuario esto nunca es un error
+        // que pueda corregir: significa que una fila que la operación da por
+        // existente no está. El caso conocido es un Profesional sin fila en
+        // `profesionales` al subir su documentación (CU-09), que repara la
+        // migración 0011.
+        case '23503':
+          return 'A tu cuenta le falta un dato para completar esta operación. '
+              'Avisale al equipo: hay que revisar tu perfil.';
       }
 
       return 'No pudimos completar la operación. Intentá nuevamente.';

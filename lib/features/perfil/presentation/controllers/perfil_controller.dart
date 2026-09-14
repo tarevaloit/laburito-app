@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../data/perfil_repository.dart';
 
+part 'perfil_controller.g.dart';
+
 /// CU-05 y CU-11.
-class PerfilController extends AsyncNotifier<void> {
+@Riverpod(keepAlive: true)
+class PerfilController extends _$PerfilController {
   @override
   FutureOr<void> build() {}
 
@@ -45,6 +48,3 @@ class PerfilController extends AsyncNotifier<void> {
   Future<bool> darDeBaja({String? motivo}) =>
       _ejecutar(() => _repo.darDeBaja(motivo: motivo));
 }
-
-final perfilControllerProvider =
-    AsyncNotifierProvider<PerfilController, void>(PerfilController.new);

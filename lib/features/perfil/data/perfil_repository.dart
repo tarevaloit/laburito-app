@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/errors/mensajes_error.dart';
@@ -8,37 +10,31 @@ import '../../../core/providers/supabase_providers.dart';
 import '../../categorias/data/categorias_repository.dart';
 import '../../verificacion/data/documentos_repository.dart';
 
-/// Vista unificada del perfil del usuario autenticado.
-class PerfilCompleto {
-  const PerfilCompleto({
-    required this.id,
-    required this.tipo,
-    required this.nombre,
-    required this.apellido,
-    required this.email,
-    required this.estado,
-    this.telefono,
-    this.avatarUrl,
-    this.dni,
-    this.descripcion,
-    this.estadoVerificacion,
-    this.saldoTokens = 0,
-    this.categorias = const [],
-  });
+part 'perfil_repository.freezed.dart';
+part 'perfil_repository.g.dart';
 
-  final String id;
-  final String tipo;
-  final String nombre;
-  final String apellido;
-  final String email;
-  final String estado;
-  final String? telefono;
-  final String? avatarUrl;
-  final String? dni;
-  final String? descripcion;
-  final String? estadoVerificacion;
-  final int saldoTokens;
-  final List<String> categorias;
+/// Vista unificada del perfil del usuario autenticado.
+@freezed
+abstract class PerfilCompleto with _$PerfilCompleto {
+  // Constructor privado: freezed lo exige para poder sumar los getters de
+  // abajo a la clase generada.
+  const PerfilCompleto._();
+
+  const factory PerfilCompleto({
+    required String id,
+    required String tipo,
+    required String nombre,
+    required String apellido,
+    required String email,
+    required String estado,
+    String? telefono,
+    String? avatarUrl,
+    String? dni,
+    String? descripcion,
+    String? estadoVerificacion,
+    @Default(0) int saldoTokens,
+    @Default(<String>[]) List<String> categorias,
+  }) = _PerfilCompleto;
 
   bool get esProfesional => tipo == 'profesional';
   bool get necesitaCargarDocumentacion =>
@@ -203,14 +199,14 @@ class PerfilRepository {
   }
 }
 
-final perfilRepositoryProvider = Provider<PerfilRepository>(
-  (ref) => PerfilRepository(
-    ref.watch(supabaseClientProvider),
-    ref.watch(categoriasRepositoryProvider),
-  ),
-);
+@Riverpod(keepAlive: true)
+PerfilRepository perfilRepository(Ref ref) => PerfilRepository(
+      ref.watch(supabaseClientProvider),
+      ref.watch(categoriasRepositoryProvider),
+    );
 
-final perfilCompletoProvider = FutureProvider<PerfilCompleto?>((ref) {
+@Riverpod(keepAlive: true)
+Future<PerfilCompleto?> perfilCompleto(Ref ref) {
   ref.watch(sesionProvider);
   return ref.watch(perfilRepositoryProvider).cargar();
-});
+}

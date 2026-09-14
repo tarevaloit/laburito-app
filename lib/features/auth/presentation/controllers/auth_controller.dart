@@ -1,13 +1,21 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../perfil/data/perfil_repository.dart';
 import '../../data/auth_repository.dart';
 
+part 'auth_controller.g.dart';
+
 /// Orquesta las operaciones de autenticación y expone su estado de carga.
 /// Cada método devuelve `true` si la operación terminó sin error.
-class AuthController extends AsyncNotifier<void> {
+///
+/// `keepAlive`: era un `AsyncNotifierProvider` a mano, que no se descarta. Con
+/// autoDispose el notificador podría morir entre el `read(...notifier)` y el
+/// `read(...).error` que las pantallas hacen justo después, y el mensaje de
+/// error se perdería.
+@Riverpod(keepAlive: true)
+class AuthController extends _$AuthController {
   @override
   FutureOr<void> build() {}
 
@@ -93,6 +101,3 @@ class AuthController extends AsyncNotifier<void> {
     ref.invalidate(perfilCompletoProvider);
   }
 }
-
-final authControllerProvider =
-    AsyncNotifierProvider<AuthController, void>(AuthController.new);

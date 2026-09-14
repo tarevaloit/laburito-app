@@ -16,6 +16,10 @@ import '../features/auth/presentation/screens/registro_screen.dart';
 import '../features/auth/presentation/screens/verificar_pin_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/legales/presentation/texto_legal_screen.dart';
+import '../features/pedidos/presentation/screens/crear_pedido_screen.dart';
+import '../features/pedidos/presentation/screens/detalle_pedido_screen.dart';
+import '../features/pedidos/presentation/screens/editar_pedido_screen.dart';
+import '../features/pedidos/presentation/screens/historial_pedidos_screen.dart';
 import '../features/perfil/presentation/screens/baja_cuenta_screen.dart';
 import '../features/perfil/presentation/screens/perfil_screen.dart';
 import '../features/verificacion/presentation/screens/carga_documentos_screen.dart';
@@ -162,6 +166,37 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/verificacion',
         name: 'verificacion',
         builder: (context, state) => const CargaDocumentosScreen(),
+      ),
+      // CU-17. Va antes que `/pedidos/nuevo` y `/pedidos/:id` porque es una
+      // ruta exacta y no compite con ellas; el orden entre esas dos sí importa.
+      GoRoute(
+        path: '/pedidos',
+        name: 'pedidos',
+        builder: (context, state) => const HistorialPedidosScreen(),
+      ),
+      GoRoute(
+        path: '/pedidos/nuevo',
+        name: 'pedidosNuevo',
+        builder: (context, state) => const CrearPedidoScreen(),
+      ),
+      // Va **después** de `/pedidos/nuevo`: go_router evalúa las rutas en el
+      // orden en que se declaran, y `:id` matchea cualquier cosa. Al revés,
+      // «nuevo» se leería como el id de un pedido.
+      GoRoute(
+        path: '/pedidos/:id',
+        name: 'pedidoDetalle',
+        builder: (context, state) => DetallePedidoScreen(
+          id: state.pathParameters['id'] ?? '',
+        ),
+        routes: [
+          GoRoute(
+            path: 'editar',
+            name: 'pedidoEditar',
+            builder: (context, state) => EditarPedidoScreen(
+              id: state.pathParameters['id'] ?? '',
+            ),
+          ),
+        ],
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

@@ -1,7 +1,7 @@
 name: laburito
 description: Plataforma geolocalizada que conecta Buscadores con Profesionales de oficios.
 publish_to: 'none'
-version: 0.1.0+1
+version: 0.2.0+2
 
 environment:
   # Flutter 3.27 es el piso real: antes de esa versión no existe
@@ -19,10 +19,40 @@ dependencies:
   image_picker: ^1.1.2
   intl: ^0.19.0
 
+  # Anotaciones del codegen. Van en `dependencies` y no en `dev_`: el código
+  # generado las importa en tiempo de ejecución.
+  riverpod_annotation: ^2.6.1
+  freezed_annotation: ^3.1.0
+
+  # CU-16 — mapa. `google_maps_flutter_web` no viene endosado por el paquete
+  # principal: hay que declararlo a mano o la Web compila y muestra un hueco.
+  google_maps_flutter: ^2.18.0
+  google_maps_flutter_web: ^0.6.3
+
+  # Posición del dispositivo y permisos, con un solo camino de código para Web
+  # (Geolocation del navegador) y Android.
+  geolocator: ^14.0.3
+
+  # Cliente HTTP. Lo usan los servicios de Places y de geocodificación inversa
+  # del CU-16, y `package:http/testing.dart` en las pruebas del repositorio.
+  # Pasó de `dev_dependencies` a acá cuando dejó de ser solo de tests.
+  http: ^1.6.0
+
+  # DOM del navegador. Solo lo importa `lib/core/mapas/sdk_mapas_web.dart`, que
+  # inyecta el `<script>` de Maps con la clave del `--dart-define` en vez de
+  # dejarla escrita en `web/index.html`.
+  web: ^1.1.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+
+  # Generadores. Después de tocar un modelo o un provider:
+  #   dart run build_runner build --delete-conflicting-outputs
+  build_runner: ^2.5.4
+  riverpod_generator: ^2.6.3
+  freezed: ^3.1.0
 
 flutter:
   uses-material-design: true

@@ -70,5 +70,15 @@
 	<string>Necesitamos la cámara para que puedas fotografiar tu documento.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Necesitamos acceder a tus fotos para subir tu documentación y tu foto de perfil.</string>
+	<!-- CU-16. Sin esta clave, iOS mata la app al pedir la ubicación en vez de
+	     mostrar el diálogo de permiso: no es un permiso denegado, es un crash. -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Usamos tu ubicación solo para centrar el mapa donde vas a publicar el pedido. Podés moverlo a mano.</string>
+	<!-- Clave de Google Maps para el SDK nativo de iOS. El valor lo pone la
+	     variable MAPS_API_KEY de ios/Flutter/Maps.xcconfig, que no se commitea;
+	     si el archivo no está, queda vacía y AppDelegate no inicializa el SDK.
+	     Es el equivalente del manifestPlaceholders de Android. -->
+	<key>GMSApiKey</key>
+	<string>$(MAPS_API_KEY)</string>
 </dict>
 </plist>

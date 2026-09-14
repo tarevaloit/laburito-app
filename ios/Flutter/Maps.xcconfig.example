@@ -1,0 +1,11 @@
+// Clave de Google Maps Platform para el SDK nativo de iOS (CU-16).
+//
+// Copiá este archivo como `Maps.xcconfig` —sin el `.example`— y pegá la clave.
+// `Maps.xcconfig` está en .gitignore: la clave nunca se commitea.
+//
+// Es la misma clave que va en:
+//   * `--dart-define=GOOGLE_MAPS_API_KEY=...` (Dart y Web)
+//   * `MAPS_API_KEY` de `android/local.properties` (Android nativo)
+//
+// Son tres caminos porque cada SDK la lee de un lugar distinto.
+MAPS_API_KEY=

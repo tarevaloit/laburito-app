@@ -1,5 +1,8 @@
-# Uncomment this line to define a global platform for your project
-# platform :ios, '13.0'
+# iOS 14 es el piso del CU-16: `google_maps_flutter_ios` declara
+# `s.platform = :ios, '14.0'` y con el 13.0 que traía el proyecto, `pod install`
+# corta con «required a higher minimum deployment target». Tiene que coincidir
+# con IPHONEOS_DEPLOYMENT_TARGET del Runner.
+platform :ios, '14.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'

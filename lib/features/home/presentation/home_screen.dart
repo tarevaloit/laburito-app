@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/colores.dart';
 import '../../../core/widgets/barra_navegacion.dart';
+import '../../../core/widgets/boton_principal.dart';
 import '../../../core/widgets/marca_laburito.dart';
 import '../../auth/presentation/controllers/auth_controller.dart';
 import '../../perfil/data/perfil_repository.dart';
@@ -100,7 +101,9 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  p.esProfesional ? 'Cuenta de Profesional' : 'Cuenta de Buscador',
+                  p.esProfesional
+                      ? 'Cuenta de Profesional'
+                      : 'Cuenta de Buscador',
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colores.textoSecundario),
                 ),
@@ -145,17 +148,26 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
+                if (!p.esProfesional) ...[
+                  BotonPrincipal(
+                    texto: 'Publicar un pedido',
+                    icono: Icons.add_circle_outline,
+                    onPressed: () => context.go('/pedidos/nuevo'),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () => context.go('/pedidos'),
+                    icon: const Icon(Icons.assignment_outlined),
+                    label: const Text('Mis pedidos'),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 OutlinedButton.icon(
                   onPressed: () => context.go('/perfil'),
                   icon: const Icon(Icons.edit_outlined),
                   label: const Text('Editar mi perfil'),
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  'El tablero de pedidos se incorpora en el Sprint 2.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colores.textoTenue, fontSize: 13),
-                ),
               ],
             ),
           );
