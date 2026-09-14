@@ -755,8 +755,11 @@ grant execute on function public.dar_de_baja_cuenta(text) to authenticated;
 --
 --   -- 9. Favorito: entra un pedido visible, no uno que el Profesional no ve.
 --   begin;
+--   -- Desde la 0013, fecha_vencimiento solo se mueve con la compuerta abierta.
+--   select set_config('app.transicion_estado', 'on', true);
 --   update public.pedidos set fecha_vencimiento = now() + interval '1 day'
---    where id = 'PEGAR_PEDIDO';          -- no toca estado: el guard de la 0008 lo deja
+--    where id = 'PEGAR_PEDIDO';
+--   select set_config('app.transicion_estado', 'off', true);
 --   set local role authenticated;
 --   select set_config('request.jwt.claims',
 --          '{"sub":"PEGAR_PROFESIONAL","role":"authenticated"}', true);

@@ -75,7 +75,7 @@ Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanific
 | CU-17 | Consultar Historial (replanificado del Sprint 2) | Frontend | 5 | ✅ | `0f6df51` |
 | T-06 | Pruebas de widget de los formularios de pedido (deuda de 7.1.7 y 7.2.3) | Técnica | 3 | ✅ | `07375ec` |
 | T-07 | Migración 0012 — esquema del Profesional, con sus políticas RLS en el mismo archivo | Backend | — | ✅ | `feat(T-07)` |
-| T-08 | Migración 0013 — deuda del Sprint 2: lectura del bucket para el Profesional y guard del PATCH de edición | Backend | 3 | ⬜ | |
+| T-08 | Migración 0013 — deuda del Sprint 2: lectura del bucket para el Profesional y guard del PATCH de edición | Backend | 3 | ✅ | `fix(T-08)` |
 | CU-07 | Configurar Zona de Cobertura | Full-stack | 5 | ⬜ | |
 | CU-12 | Editar Categorías de Oficio | Full-stack | 4 | ⬜ | |
 | CU-21 | Recibir Alerta Push (Edge Function de búsqueda por radio + integración FCM) | Backend | 14 | ⬜ | |
@@ -85,7 +85,7 @@ Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanific
 | CU-24 | Guardar Pedido (Favorito) | Full-stack | 2 | ⬜ | |
 | CU-44 | Gestionar Horarios de Atención y estado de disponibilidad | Full-stack | 5 | ⬜ | |
 | CU-06 | Cargar Portafolio | Full-stack | 5 | ⬜ | |
-| | **Total** | | **56** | **8 ejecutados** | |
+| | **Total** | | **56** | **11 ejecutados** | |
 
 **T-07 no lleva puntos**, con el mismo criterio que la T-02b del Sprint 2: no es un
 ítem del backlog sino la infraestructura que los casos de uso del PT 4.0 requieren
@@ -172,6 +172,11 @@ Dos ítems arrastrados que son condición del resto del sprint:
    disparador `BEFORE UPDATE` del mismo patrón que `pedidos_guard_estado` de la 0008:
    si el pedido no está `publicado` o `pausado`, rechaza; y `fecha_vencimiento` solo
    la mueve la función de renovación.
+
+**Hecha el 14/09 — `supabase/migrations/0013_pedidos_deuda_sprint2.sql`, aplicada y
+verificada.** Dos ampliaciones respecto de este plan: el guard protege todo el ciclo
+de vida y no solo `fecha_vencimiento` (`renovaciones = 0` era el mismo agujero), y el
+repositorio de Dart dejó de aceptar la fecha de vencimiento en la edición.
 
 ### Fase 3 — CU-07 Configurar Zona de Cobertura · **5 pts**
 

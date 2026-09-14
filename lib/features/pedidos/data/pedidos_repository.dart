@@ -140,6 +140,13 @@ class PedidosRepository {
   /// cualquier UPDATE que escriba `estado`, y el error vuelve como
   /// [CasoPedido.estadoNoModificable]. Si alguna vez aparece en pantalla, es
   /// que este mapa de cambios se llenó mal.
+  ///
+  /// La vigencia tampoco: no hay parámetro de fecha de vencimiento. Estirarla
+  /// es renovar, y eso va por [renovar], que cuenta las renovaciones. Desde la
+  /// migración 0013 el trigger `pedidos_guard_edicion` rechaza además editar un
+  /// pedido que no esté publicado o pausado ([CasoPedido.transicionInvalida])
+  /// y escribir cualquier columna del ciclo de vida
+  /// ([CasoPedido.campoNoModificable]).
   Future<Pedido> actualizarPedido(
     String id, {
     String? categoriaId,
@@ -147,7 +154,6 @@ class PedidosRepository {
     String? descripcion,
     PedidoUrgencia? urgencia,
     Ubicacion? ubicacion,
-    DateTime? fechaVencimiento,
     Object? presupuestoEstimado = _sinCambio,
   }) {
     // La ubicación no entra en este mapa: no se puede escribir un `geography`
@@ -157,8 +163,6 @@ class PedidosRepository {
       if (titulo != null) 'titulo': titulo.trim(),
       if (descripcion != null) 'descripcion': descripcion.trim(),
       if (urgencia != null) 'urgencia': urgencia.clave,
-      if (fechaVencimiento != null)
-        'fecha_vencimiento': fechaVencimiento.toUtc().toIso8601String(),
       // Sentinela: `null` es un valor legítimo acá (borrar el presupuesto),
       // así que no alcanza con preguntar si es null.
       if (!identical(presupuestoEstimado, _sinCambio))

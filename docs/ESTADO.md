@@ -387,6 +387,35 @@ sola sesión: el guion verifica que el bloqueo esté antes del conteo.
 
 Decisiones: sección 5, entradas del 14/09.
 
+### 4b.3 Fase 2 — T-08 · migración 0013, deuda del Sprint 2 · **HECHA** (3 pts)
+
+`supabase/migrations/0013_pedidos_deuda_sprint2.sql`, con el mismo método que
+la 0012: ensayo con rollback, aplicación en una transacción y guion completo
+contra la base, sin dejar datos.
+
+| Qué | Cómo |
+|---|---|
+| El Profesional firma las fotos de los pedidos que ve | «pedidos: lectura del dueño» sobre `storage.objects` se reemplaza por «pedidos: lectura si se ve el pedido»: el dueño siempre, cualquier autenticado si el pedido está publicado y vigente. Es la misma condición, escrita igual, que la política de la tabla `pedido_fotos` |
+| Guard de la edición | Trigger `pedidos_guard_edicion` `BEFORE UPDATE`, con la compuerta `app.transicion_estado` de la 0008. Sin compuerta: rechaza editar un pedido que no esté `publicado` o `pausado` (mensaje para el usuario, hint `transicion_invalida`) y escribir `fecha_vencimiento`, `renovaciones`, `fecha_publicacion`, `fecha_cierre`, `motivo_cierre` o `created_at` (centinela `CAMPO_NO_MODIFICABLE_DIRECTAMENTE`, hint `campo_no_modificable`) |
+| App | `actualizarPedido` **pierde el parámetro `fechaVencimiento`**: el ESTADO del 03/09 decía que la app no mandaba ese campo, y la pantalla no lo usaba, pero el repositorio lo aceptaba y lo ponía en el PATCH. `PedidoException` suma `CasoPedido.campoNoModificable` con mensaje propio, y `test/pedidos_errores_test.dart` tres pruebas |
+
+Lo que el guion comprobó contra la base: el orden de los triggers
+(`guard_alta`, `guard_edicion`, `guard_estado`, `registrar_evento`,
+`set_updated_at`); editar el título de un pedido publicado pasa; estirar la
+vigencia y tocar `renovaciones` dan el centinela; editar un pedido cerrado da
+«Un pedido cerrado no se puede editar»; `marcar_pedidos_vencidos`,
+`renovar_pedido` (renovaciones 1, vigencia +7 días) y `cambiar_estado_pedido`
+siguen andando; y un Profesional ve el archivo de un pedido vigente y no el de
+uno vencido.
+
+Al correrlo apareció un error **del guion, no del guard**: el bloque 4 ponía
+`renovaciones = 0` sobre un pedido que nunca se había renovado, así que no
+cambiaba nada y pasaba. Se reescribió para que no dependa del dato.
+
+Verificado además: `flutter analyze` 0 issues, `flutter test` **213 en verde**.
+El bloque 9 del guion de la 0012 movía `fecha_vencimiento` sin compuerta; se
+corrigió el comentario.
+
 ## 5. Decisiones técnicas tomadas
 
 Formato: fecha · decisión · motivo. No se borran, se agregan.
@@ -451,7 +480,7 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 03/09 | La fila de `profesionales` la repara una migración, no la app (0011) | Sobre esa tabla no hay política de INSERT para el usuario, a propósito: solo SELECT y UPDATE. El único que puede crear la fila es el trigger `handle_new_user`, que es SECURITY DEFINER. Darle al cliente permiso de INSERT para que se repare solo dejaría que cualquiera se fabrique una fila de Profesional |
 | 03/09 | `handle_new_user` pasa a ser idempotente | Corre dentro de la transacción del signUp: un DNI repetido o un reintento sobre un id que ya tenía perfil tumbaba **el alta entera** con un error de base en la cara del usuario. Con `on conflict do nothing` el alta sigue y lo que falte se completa después desde el perfil (CU-05) |
 | 03/09 | Los formularios del pedido viven en `widgets/campos_pedido.dart`, no adentro del asistente | El CU-15 pide «los mismos formularios» que el CU-13. Duplicarlos garantizaba que en algún momento el alta aceptara un título de 4 caracteres que la edición rechazara. Las reglas están una sola vez, en `ValidadoresPedido`, y son las mismas de los `check` de la tabla `pedidos` |
-| 03/09 | **La vigencia no se edita en el CU-15** | Estirar `fecha_vencimiento` con un PATCH sería una renovación sin límite, y el CU-51 permite tres. La fecha se mueve solo por `renovar_pedido`, que las cuenta. La app no manda ese campo; el servidor todavía no lo impide (deuda de la sección 6) |
+| 03/09 | **La vigencia no se edita en el CU-15** | Estirar `fecha_vencimiento` con un PATCH sería una renovación sin límite, y el CU-51 permite tres. La fecha se mueve solo por `renovar_pedido`, que las cuenta. La app no manda ese campo; el servidor todavía no lo impide (deuda de la sección 6). **Desde el 14/09 lo impide la 0013**, y el repositorio ya ni acepta el parámetro |
 | 03/09 | Las fotos de la edición se aplican al instante; el resto, al guardar | El pedido ya existe, así que subir y borrar son operaciones sobre Storage que no tienen nada que esperar. Juntarlas hasta el «Guardar» obligaría a deshacer subidas si la edición falla. La pantalla lo dice en un renglón, para que nadie espere que «descartar cambios» devuelva una foto borrada |
 | 03/09 | El evento de edición se marca con `estado_anterior = estado_nuevo` y el motivo `edicion` (migración 0010) | `pedido_eventos` solo lo escribía el trigger que dispara al cambiar el estado, y una edición no cambia el estado: quedaba sin rastro. Un Profesional que leyó el pedido ayer y lo ve distinto hoy tiene que poder verlo en la cronología. No se agrega un enum ni una columna nueva: el motivo ya existe y es texto. SECURITY DEFINER porque sobre `pedido_eventos` no hay política de INSERT, a propósito |
 | 03/09 | Un fallo al registrar la edición **no** hace fallar la edición | La edición ya se escribió y no se puede deshacer (son escrituras sin transacción común, igual que la ubicación). Mostrar «no se pudo guardar» sobre datos que sí se guardaron es peor que un renglón faltante en la cronología. Queda en la consola |
@@ -470,6 +499,11 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 14/09 | El token de FCM es único en toda la tabla; el traspaso entre cuentas lo hará una RPC | El token es de la instalación, no del usuario: si en el mismo teléfono cambia la sesión, el Profesional anterior no puede seguir recibiendo alertas. Con RLS el nuevo dueño no ve la fila vieja, así que el traspaso va en la RPC SECURITY DEFINER del CU-21 b |
 | 14/09 | Guardar o ignorar un pedido exige verlo | El `exists` sobre `pedidos` en el `with check` corre con RLS: solo entran pedidos publicados y vigentes. Sin eso, la FK permitía confirmar si un uuid de pedido existe |
 | 14/09 | La baja (CU-11) borra las filas nuevas del Profesional, no los archivos del portafolio | La fila de `profesionales` sobrevive a la baja, así que los `on delete cascade` no disparan. Los archivos los tiene que borrar el cliente por la API, como el avatar y el DNI (0004) |
+| 14/09 | El guard de la edición (0013) reusa la compuerta `app.transicion_estado` en vez de abrir una propia | Las tres funciones que la abren son exactamente las que tienen derecho a mover el ciclo de vida; todo lo que hacen con la compuerta abierta es legítimo. Una segunda compuerta obligaba a tocar esas tres funciones otra vez y a que alguien recuerde abrir las dos |
+| 14/09 | Editar un pedido terminado es un error **para el usuario**; tocar la vigencia es un **centinela** | Lo primero puede pasar con una pantalla vieja abierta, y el mensaje ya existía con el hint `transicion_invalida` de la 0009: la app lo muestra sin cambios. Lo segundo solo lo produce un bug nuestro, como el `estado` de la 0008 |
+| 14/09 | El guard protege todo el ciclo de vida, no solo `fecha_vencimiento` | El plan nombraba la fecha. Pero `renovaciones = 0` es renovar sin límite por el otro lado, y `fecha_cierre` / `motivo_cierre` / `fecha_publicacion` son historia del pedido que solo escriben las RPC |
+| 14/09 | La lectura de fotos del bucket `pedidos` se escribe **explícita**, no heredada de las RLS de `pedidos` | Al revés que en las tablas de la 0012, a propósito: la fila de `pedido_fotos` y su archivo tienen que verse con la misma regla, y la de la tabla (0006) está escrita explícita. Si `pedidos` suma una política de lectura, las dos se cambian juntas |
+| 14/09 | `actualizarPedido` deja de aceptar `fechaVencimiento` | Mismo criterio que borrar `Ubicacion.aEwkt()` el 02/09: un parámetro que el servidor rechaza siempre es una invitación a usarlo |
 | 02/09 | El botón «Mi ubicación» y las sugerencias de búsqueda van en la columna del `SelectorUbicacion`, no flotando sobre el mapa | En Web, `GoogleMap` se dibuja con `HtmlElementView`, y un widget interactivo apilado arriba necesita `pointer_interceptor` para recibir el mouse. Se resolvió con una columna —búsqueda arriba, mapa con solo el pin encima (`IgnorePointer`, no necesita recibir toques), panel de «mi ubicación»/dirección/referencia abajo— en vez de sumar otra dependencia |
 
 ## 6. Deuda técnica y pendientes conocidos
@@ -481,9 +515,10 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | ~~Providers escritos a mano~~ | **Saldada el 02/09.** Todo el proyecto pasó a `@riverpod` y `freezed`. La UI no se tocó: los nombres generados coinciden con los de antes. | ✅ |
 | ~~El estado del pedido se puede cambiar sin pasar por la RPC~~ | **Saldada el 02/09 con la migración 0008.** Trigger `pedidos_guard_estado` `BEFORE UPDATE` + compuerta `app.transicion_estado` en las tres RPC que sí pueden mover el estado. | ✅ |
 | ~~Un pedido puede nacer en un estado terminal~~ | **Saldada el 02/09 con la migración 0009.** Trigger `pedidos_guard_alta` `BEFORE INSERT`, con la misma compuerta que el de UPDATE. | ✅ |
-| El PATCH de edición no mira el estado del pedido | `actualizar_ubicacion_pedido` exige que el pedido esté `publicado` o `pausado`, pero el UPDATE de PostgREST que cambia título, descripción o presupuesto no: la RLS solo comprueba dueño. Hoy se le puede editar el título a un pedido cerrado. No molesta a nadie —el pedido ya no se lista— pero es una regla del CU-15 que vive solo en el cliente. | Sprint 3 |
-| El Profesional no puede ver las fotos de un pedido | Las políticas de Storage del bucket `pedidos` son solo del dueño, así que el CU-16 no va a poder firmar las URLs. Falta una política de SELECT para pedidos publicados vigentes, o firmarlas desde una Edge Function. | Sprint 3 (T-08, migración 0013) |
+| ~~El PATCH de edición no mira el estado del pedido~~ | **Saldada el 14/09 con la migración 0013** (`pedidos_guard_edicion`). Era: `actualizar_ubicacion_pedido` exige que el pedido esté `publicado` o `pausado`, pero el UPDATE de PostgREST que cambia título, descripción o presupuesto no: la RLS solo comprueba dueño. Hoy se le puede editar el título a un pedido cerrado. No molesta a nadie —el pedido ya no se lista— pero es una regla del CU-15 que vive solo en el cliente. | ✅ |
+| ~~El Profesional no puede ver las fotos de un pedido~~ | **Saldada el 14/09 con la migración 0013.** Era: las políticas de Storage del bucket `pedidos` son solo del dueño, así que el CU-16 no va a poder firmar las URLs. Falta una política de SELECT para pedidos publicados vigentes, o firmarlas desde una Edge Function. | ✅ |
 | **Un Profesional puede aprobarse solo y cargarse tokens** | La política «profesional propio: actualización» (0001/0002) es de fila entera, como la de `pedidos` antes de la 0008: el dueño puede escribir `estado_verificacion`, `saldo_tokens`, `calificacion_promedio` y `total_calificaciones` con un PATCH. Importa ya: el CU-21 va a notificar según la verificación, y el Sprint 4 cobra tokens. Se cierra con un trigger `BEFORE UPDATE` del patrón de `pedidos_guard_estado`, dejándole al dueño solo `descripcion`, `dni` y `disponible` | Sprint 3, antes del CU-21 |
+| Las fotos de un pedido cerrado se pueden agregar y borrar | El guard de la 0013 cubre la fila de `pedidos`, no `pedido_fotos` ni el bucket: las políticas de alta y baja de fotos (0006) solo miran dueño. La pantalla solo ofrece fotos en la edición, que ya exige publicado o pausado. Mismo tipo de regla que vivía solo en el cliente | Sprint 4 |
 | La baja no borra los archivos del portafolio | `dar_de_baja_cuenta` ya borra las filas (0012), pero `PerfilRepository._borrarArchivos` solo baja avatar y DNI. Hoy el bucket está vacío y no hay pantalla de carga | Sprint 3, con el CU-06 (Fase 9) |
 | Historial de migraciones de la CLI vacío | 0001–0012 están aplicadas pero `supabase migration list` no lo sabe, así que `supabase db push` intentaría correrlas todas otra vez. No usar `db push` hasta hacer `supabase migration repair --status applied` de las doce | Cuando se adopte `db push` |
 | ~~`flutter test` y los builds se dejan de correr fase por fase~~ | **Saldada el 03/09.** La verificación diferida se hizo entera al cerrar la Fase 6: analyze 0 issues, 101 tests en verde, y web, APK e iOS compilando. La apuesta salió bien: no había ningún error acumulado de las Fases 5 y 6 | ✅ |
@@ -491,7 +526,7 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | **CU-18 Reenvío de Enlace de Gestión (Fase 8) — replanificado** | No se hizo. Ya estaba marcado como descartable en el plan del sprint: es el único ítem que no condiciona nada del Sprint 3 y se replanifica al Sprint 5, donde ya hay trabajo de enlaces públicos (CU-26 y CU-27) | Sprint 5 |
 | ~~Pruebas de widget del Sprint 2 (Fase 9a)~~ | **Saldada el 03/09.** 62 pruebas nuevas, de 101 a **163**: el asistente del CU-13 contra el árbol de widgets, los diálogos del ciclo de vida, la barra de acciones en los cinco estados, el borrador de edición del CU-15, los validadores compartidos y las fechas. Ninguna toca Supabase | ✅ |
 | El ciclo de vida (Fase 6) sin ejercitar contra una base real | Las pruebas de widget cubren la UI y la máquina de estados del lado del cliente, pero nadie tocó todavía los botones de pausar, cerrar, cancelar, renovar y editar contra Supabase. Depende de aplicar las migraciones | Antes de la demo |
-| El PATCH de edición tampoco mira `fecha_vencimiento` | Del mismo tipo que el ítem de arriba sobre el estado: la app no manda ese campo al editar (decisión del 03/09), pero la RLS no lo impide, así que un cliente que lo mandara renovaría sin gastar renovaciones. Se cierra con un trigger, como el `pedidos_guard_estado` de la 0008 | Sprint 3 |
+| ~~El PATCH de edición tampoco mira `fecha_vencimiento`~~ | **Saldada el 14/09 con la migración 0013**, que cubre también `renovaciones`: ponerlo en 0 era el mismo agujero por el otro lado. Era: del mismo tipo que el ítem de arriba sobre el estado: la app no manda ese campo al editar (decisión del 03/09), pero la RLS no lo impide, así que un cliente que lo mandara renovaría sin gastar renovaciones. Se cierra con un trigger, como el `pedidos_guard_estado` de la 0008 | ✅ |
 | Sin pruebas de widget ni de integración | Hay 18 pruebas unitarias de validadores y mensajes, más 3 de widget en `test/tema_test.dart` que cubren el lineamiento visual, más `mapa_config_test.dart`/`servicio_direcciones_test.dart` del CU-16 (101 en total). Los circuitos se verifican a mano con el guion de `ARRANQUE.md`. El wizard del CU-13 no tiene pruebas de widget todavía (ver Fase 9 del plan del sprint) | Sprint 2 |
 | Figura 3.1 del Anexo UI desactualizada | Muestra 3 campos; el alta tiene los 5 del CU-01. Hay que redibujarla antes de entregar el Anexo. | Antes de la entrega |
 | Textos legales provisorios | `/legales/terminos` y `/legales/privacidad` describen el alcance pero no son la redacción definitiva. | Sprint 3 |
@@ -508,17 +543,13 @@ del anterior.)_
 
 ### 7.1 Sprint 3 — lo que sigue
 
-1. **Fase 2 — T-08, migración 0013** (plan, Fase 2): lectura del bucket
-   `pedidos` para el Profesional y guard del PATCH de edición (estado y
-   `fecha_vencimiento`). Mismo método que la 0012: ensayo con `rollback`,
-   aplicación en transacción y guion de aceptación contra la base.
-2. **Guard de las columnas sensibles de `profesionales`** (sección 6): un
+1. **Guard de las columnas sensibles de `profesionales`** (sección 6): un
    Profesional hoy puede aprobarse solo. Tiene que estar cerrado antes del
-   CU-21, que filtra por verificación. Si entra en la 0013 o en una
-   migración propia se decide al abrir la Fase 2.
-3. Fase 3 — CU-07 Zona de cobertura, sobre la tabla de la 0012. Le faltan a la
-   base los *computed fields* `lat`/`lng` de la zona y la RPC de guardado con
-   `public.punto()`, igual que los pedidos (decisiones del 02/09).
+   CU-21, que filtra por verificación. No entró en la 0013, que se limitó a
+   la deuda del Sprint 2; va en migración propia (la 0014).
+2. **Fase 3 — CU-07 Zona de cobertura**, sobre la tabla de la 0012. Le faltan
+   a la base los *computed fields* `lat`/`lng` de la zona y la RPC de guardado
+   con `public.punto()`, igual que los pedidos (decisiones del 02/09).
 
 ### 7.2 Arrastrado de sprints anteriores
 
