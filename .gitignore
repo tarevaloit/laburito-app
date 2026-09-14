@@ -61,3 +61,5 @@ app.*.map.json
 /android/key.properties
 # Clave de Google Maps para el SDK nativo de iOS (CU-16). El `.example` sí va.
 /ios/Flutter/Maps.xcconfig
+# Estado local de `supabase link` (ref del proyecto, versión del CLI).
+/supabase/.temp/

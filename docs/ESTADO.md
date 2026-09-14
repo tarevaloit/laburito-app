@@ -2,7 +2,7 @@
 
 > **Fuente de verdad del proyecto.** Este archivo se actualiza al cerrar cada sesión de trabajo.
 > Vive en `docs/ESTADO.md` del repo y se commitea junto con el código.
-> Última actualización: 03/09/2026
+> Última actualización: 14/09/2026
 
 ---
 
@@ -40,6 +40,7 @@ produjo una decisión técnica, va a la sección 5 de este archivo antes de cerr
 | `S1 · Perfil y cuenta` | CU-05, CU-09, CU-11 |
 | `S1 · Cierre y documentación` | Sección 7.1 del Sprint Planning, evidencias, burndown real |
 | `S2 · Pedidos` | Arranque del Sprint 2: CU-13, CU-16 y siguientes |
+| `S3 · Esquema del Profesional` | Fase 1 del Sprint 3: T-07, migración 0012 |
 
 ---
 
@@ -47,15 +48,15 @@ produjo una decisión técnica, va a la sección 5 de este archivo antes de cerr
 
 | Campo | Valor |
 |---|---|
-| Sprint en curso | **Sprint 2 — Pedidos** (PT 3.0) · rama `sprint-2` |
-| Sprint anterior | Sprint 1 — Fundaciones y Autenticación (PT 2.0) · **cerrado en código**, 35/35 pts |
-| Período | _(completar del PT 3.0)_ |
-| Entrega por BB | _(completar del PT 3.0)_ |
-| Esfuerzo planificado | _(completar del PT 3.0)_ |
-| Backlog restante | 200 pts de 235 al cierre del Sprint 1 |
-| Release objetivo | v0.2.0 — el tag `v0.1.0` cerró el Sprint 1 |
+| Sprint en curso | **Sprint 3 — Perfil del Profesional y Notificaciones** (PT 4.0) · rama `sprint-3` · plan en `docs/sprints/SPRINT-03.md` |
+| Sprint anterior | Sprint 2 — Gestión de Pedidos y Geolocalización (PT 3.0) · mergeado a `main`, tag `v0.2.0` |
+| Período | 03/09/2026 al 16/09/2026 |
+| Entrega por BB | 16/09/2026 hasta las 23:59 |
+| Esfuerzo planificado | 56 pts (45 del PT 4.0 + 5 del CU-17 replanificado + 6 de deuda) |
+| Backlog restante | 169 pts al inicio del Sprint 3 (criterio de alcance cerrado, ver plan) |
+| Release objetivo | v0.3.0 — aplicación del Profesional operativa con alertas push |
 | Repositorio | https://github.com/tarevaloit/laburito |
-| Proyecto Supabase | _(completar ref)_ |
+| Proyecto Supabase | `laburito` · ref `xbgwogitgzzxmoixqfjd` · PostgreSQL 17.6, PostGIS 3.3.7 |
 
 ## 2. Stack vigente
 
@@ -99,7 +100,7 @@ compartidos. La guía y la trazabilidad figura por figura están en `docs/UI.md`
 video de los 7 circuitos de `ARRANQUE.md`, captura del Schema Visualizer y de la
 tabla de políticas RLS, y la subida a BB.
 
-## 4. Sprint 2 — en curso (PT 3.0)
+## 4. Sprint 2 — cerrado (PT 3.0)
 
 Rama: **`sprint-2`**, salida de `main` (no del tag `v0.1.0`: main tiene 5 commits
 posteriores al tag, incluido todo el ANEXO UI y el arreglo del CU-11).
@@ -338,6 +339,54 @@ Era configuración nativa, no código: piso de iOS 14 (lo pide
 `NSLocationWhenInUseUsageDescription` —sin esa clave iOS no pide permiso: mata
 la app— y el tercer camino de la clave de Maps, `ios/Flutter/Maps.xcconfig`.
 
+## 4b. Sprint 3 — en curso (PT 4.0)
+
+Rama **`sprint-3`**, salida de `main` después del merge del Sprint 2 y del tag
+`v0.2.0`. El alcance, el orden de fases y el orden de descarte viven en
+`docs/sprints/SPRINT-03.md`; acá va solo lo que ya pasó.
+
+### 4b.1 Estado de la base al arrancar (verificado el 14/09)
+
+Consultado directo contra el proyecto con `supabase db query --linked`, no
+deducido de los archivos: **las migraciones 0001 a 0011 están aplicadas**
+(existen `registrar_edicion_pedido` de la 0010 y el `handle_new_user`
+idempotente de la 0011). Se aplicaron por el SQL Editor, así que el historial
+de migraciones de la CLI está vacío; no se reparó, para no registrar como
+aplicadas cosas que no pasaron por ahí.
+
+Datos: 3 Profesionales (uno activo y aprobado, dos dados de baja), 6 pedidos,
+ninguno vigente.
+
+### 4b.2 Fase 1 — T-07 · migración 0012, esquema del Profesional · **HECHA**
+
+`supabase/migrations/0012_profesional_esquema.sql`. Ensayada primero dentro de
+`begin … rollback` contra la base real, aplicada después en una sola
+transacción, y verificada con su guion de aceptación completo —los diez
+bloques— corrido contra la base, cada prueba de comportamiento en su propia
+transacción con rollback. No quedó ninguna fila de prueba.
+
+| Qué agrega | Para | Cómo |
+|---|---|---|
+| `es_profesional_activo()` | Todas las escrituras | SECURITY DEFINER como `es_admin()`: Profesional, cuenta `activo`, sin `deleted_at` |
+| `profesional_zona_cobertura` | CU-07 | Una por Profesional (PK = `profesional_id`), `centro extensions.geography(Point,4326)`, `radio_metros` 1 000–100 000, GiST. Solo la ven el dueño y el admin |
+| `profesional_horarios` | CU-44 | Día ISO (1 = lunes), `hora_desde < hora_hasta`, franjas superpuestas imposibles por **restricción de exclusión** |
+| `profesional_portafolio` + bucket `portafolios` privado | CU-06 | Tope de 10 con `for update` sobre la fila del Profesional **antes** de contar; la ruta tiene que empezar con la carpeta del dueño; `unique (profesional_id, orden)` diferible |
+| `profesional_dispositivos` | CU-21 | Token de FCM único en toda la tabla, plataforma `android` / `ios` / `web`. Solo el dueño |
+| `pedido_ignorado` / `pedido_favorito` | CU-23 / CU-24 | PK (profesional, pedido); el alta exige ver el pedido |
+| `dar_de_baja_cuenta()` reescrita | CU-11 | Borra la zona, los horarios, los dispositivos, el portafolio y las marcas. Deja de tocar `profesionales.ubicacion` |
+| **Borra** `profesionales.ubicacion` y `radio_cobertura_km` | — | Venían de la 0001, sin uso y en null en las tres filas |
+
+Lo que el guion comprobó contra la base: RLS activa y con políticas en las seis
+tablas; columnas viejas fuera y bucket privado; el dueño escribe y ve su zona
+y otro perfil ve 0; escribir la zona ajena da `42501`; 9–13 y 13–18 conviven y
+12–15 da `23P01`; la foto número 11 da `P0001` con hint `limite_portafolio`;
+una ruta ajena da `23514`; reordenar dos fotos en un UPDATE pasa; se guarda un
+pedido visible y se rechaza uno invisible; un Buscador no puede registrar un
+dispositivo. La prueba de concurrencia del tope no se puede hacer desde una
+sola sesión: el guion verifica que el bloqueo esté antes del conteo.
+
+Decisiones: sección 5, entradas del 14/09.
+
 ## 5. Decisiones técnicas tomadas
 
 Formato: fecha · decisión · motivo. No se borran, se agregan.
@@ -410,6 +459,17 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 03/09 | Las URLs firmadas se piden en lote con `createSignedUrlsResult` y se cachean hasta 2 minutos antes de vencer | Una página del historial son 20 portadas: firmarlas de a una son 20 viajes contra uno. El plural clásico (`createSignedUrls`) está deprecado justamente porque no distingue una ruta que no se pudo firmar de una que sí, y esa diferencia es la que decide entre mostrar la foto o el placeholder. El margen evita entregar una firma que expira mientras la imagen se descarga |
 | 03/09 | Las fechas en castellano se escriben a mano (`core/utils/fechas.dart`), sin `DateFormat` | Formatear en español obliga a inicializar los datos de locale de `intl`; si falta, la app no falla al compilar sino **al dibujar la primera fecha**, que es el peor momento posible. Hacen falta seis frases y ningún calendario. La diferencia de días se cuenta por calendario y no por múltiplos de 24 h: a las 23:00, «mañana a las 08:00» tiene que decir «vence mañana», no «vence hoy» |
 | 03/09 | El piso de iOS pasa a 14 y la clave de Maps viaja por un **tercer** camino | `google_maps_flutter_ios` declara `platform :ios, '14.0'`: con 13 no hay `pod install` que funcione. Y el SDK nativo de iOS no lee `--dart-define` ni el manifiesto de Android: lee el `Info.plist`, que toma `MAPS_API_KEY` de `ios/Flutter/Maps.xcconfig` (gitignored, con `.example` al lado). Con la clave vacía no se llama a `provideAPIKey`: con `""` el SDK aborta la app al arrancar |
+| 14/09 | **Las migraciones se aplican y se verifican desde la CLI** (`supabase db query --linked -f`), envueltas en `begin … commit` | Antes se pegaban en el SQL Editor y nadie comprobaba el resultado: el ESTADO del 03/09 decía que ninguna migración se había corrido y la base las tenía todas. Con la CLI se ensaya con `rollback`, se aplica atómica y el guion de aceptación corre contra la base real. Las pruebas de RLS bajan a `authenticated` con `set local role` y un `request.jwt.claims` falso, dentro de una transacción que termina en rollback |
+| 14/09 | La zona de cobertura va en tabla propia y **se borran** `profesionales.ubicacion` y `radio_cobertura_km` (0012) | Las columnas venían de la 0001 y nadie las usaba. Dejarlas era tener dos lugares donde vive la zona, y el emparejamiento del CU-21 terminaría leyendo el que nadie actualiza. Radio en metros, la unidad de `ST_DWithin` sobre geography |
+| 14/09 | El índice de la zona se usa filtrando primero por el radio máximo | `ST_DWithin` con el radio tomado de la fila no aprovecha el GiST: el planificador necesita un radio constante. El CU-21 filtra con `100000` (índice) y después con `radio_metros` (exacto). Un polígono de buffer indexado se descartó: es inscripto, y deja afuera pedidos que están en el borde del radio |
+| 14/09 | La zona de cobertura no la ve nadie más que el dueño y el admin | El centro aproxima el domicilio del Profesional. El emparejamiento corre con `service_role` en la Edge Function y no la necesita a través de RLS |
+| 14/09 | Los horarios no se superponen por **restricción de exclusión**, no por un trigger que cuente | Es la única regla del esquema del Profesional que no necesita bloqueo: la exclusión es atómica frente a dos inserciones simultáneas. Requiere `btree_gist` en `extensions`. Una franja no cruza medianoche; la que termina a medianoche va hasta `24:00` |
+| 14/09 | Tope del portafolio: **10 fotos**, con `for update` sobre `profesionales` antes del `count` | El plan decía «N». Mismo patrón que el tope de 5 fotos del pedido (0005). También dispara si cambia `profesional_id` |
+| 14/09 | El bucket del portafolio sigue siendo `portafolios`, pero privado | La 0001 lo creó público y sin políticas. Renombrarlo a `portafolio` dejaba un bucket huérfano; estaba vacío, así que pasarlo a privado no rompe enlaces. La lectura sigue a la del Profesional: se firma una foto cuando se ve a su dueño |
+| 14/09 | La visibilidad de horarios y portafolio se hereda con `exists` sobre `profesionales` | El `exists` corre con las RLS de quien consulta: la fila se ve exactamente cuando se ve al Profesional (dueño, admin, o aprobado y activo). No se duplica la regla de «perfil público» en cada tabla |
+| 14/09 | El token de FCM es único en toda la tabla; el traspaso entre cuentas lo hará una RPC | El token es de la instalación, no del usuario: si en el mismo teléfono cambia la sesión, el Profesional anterior no puede seguir recibiendo alertas. Con RLS el nuevo dueño no ve la fila vieja, así que el traspaso va en la RPC SECURITY DEFINER del CU-21 b |
+| 14/09 | Guardar o ignorar un pedido exige verlo | El `exists` sobre `pedidos` en el `with check` corre con RLS: solo entran pedidos publicados y vigentes. Sin eso, la FK permitía confirmar si un uuid de pedido existe |
+| 14/09 | La baja (CU-11) borra las filas nuevas del Profesional, no los archivos del portafolio | La fila de `profesionales` sobrevive a la baja, así que los `on delete cascade` no disparan. Los archivos los tiene que borrar el cliente por la API, como el avatar y el DNI (0004) |
 | 02/09 | El botón «Mi ubicación» y las sugerencias de búsqueda van en la columna del `SelectorUbicacion`, no flotando sobre el mapa | En Web, `GoogleMap` se dibuja con `HtmlElementView`, y un widget interactivo apilado arriba necesita `pointer_interceptor` para recibir el mouse. Se resolvió con una columna —búsqueda arriba, mapa con solo el pin encima (`IgnorePointer`, no necesita recibir toques), panel de «mi ubicación»/dirección/referencia abajo— en vez de sumar otra dependencia |
 
 ## 6. Deuda técnica y pendientes conocidos
@@ -422,7 +482,10 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | ~~El estado del pedido se puede cambiar sin pasar por la RPC~~ | **Saldada el 02/09 con la migración 0008.** Trigger `pedidos_guard_estado` `BEFORE UPDATE` + compuerta `app.transicion_estado` en las tres RPC que sí pueden mover el estado. | ✅ |
 | ~~Un pedido puede nacer en un estado terminal~~ | **Saldada el 02/09 con la migración 0009.** Trigger `pedidos_guard_alta` `BEFORE INSERT`, con la misma compuerta que el de UPDATE. | ✅ |
 | El PATCH de edición no mira el estado del pedido | `actualizar_ubicacion_pedido` exige que el pedido esté `publicado` o `pausado`, pero el UPDATE de PostgREST que cambia título, descripción o presupuesto no: la RLS solo comprueba dueño. Hoy se le puede editar el título a un pedido cerrado. No molesta a nadie —el pedido ya no se lista— pero es una regla del CU-15 que vive solo en el cliente. | Sprint 3 |
-| El Profesional no puede ver las fotos de un pedido | Las políticas de Storage del bucket `pedidos` son solo del dueño, así que el CU-16 no va a poder firmar las URLs. Falta una política de SELECT para pedidos publicados vigentes, o firmarlas desde una Edge Function. | Sprint 2 (con CU-16) |
+| El Profesional no puede ver las fotos de un pedido | Las políticas de Storage del bucket `pedidos` son solo del dueño, así que el CU-16 no va a poder firmar las URLs. Falta una política de SELECT para pedidos publicados vigentes, o firmarlas desde una Edge Function. | Sprint 3 (T-08, migración 0013) |
+| **Un Profesional puede aprobarse solo y cargarse tokens** | La política «profesional propio: actualización» (0001/0002) es de fila entera, como la de `pedidos` antes de la 0008: el dueño puede escribir `estado_verificacion`, `saldo_tokens`, `calificacion_promedio` y `total_calificaciones` con un PATCH. Importa ya: el CU-21 va a notificar según la verificación, y el Sprint 4 cobra tokens. Se cierra con un trigger `BEFORE UPDATE` del patrón de `pedidos_guard_estado`, dejándole al dueño solo `descripcion`, `dni` y `disponible` | Sprint 3, antes del CU-21 |
+| La baja no borra los archivos del portafolio | `dar_de_baja_cuenta` ya borra las filas (0012), pero `PerfilRepository._borrarArchivos` solo baja avatar y DNI. Hoy el bucket está vacío y no hay pantalla de carga | Sprint 3, con el CU-06 (Fase 9) |
+| Historial de migraciones de la CLI vacío | 0001–0012 están aplicadas pero `supabase migration list` no lo sabe, así que `supabase db push` intentaría correrlas todas otra vez. No usar `db push` hasta hacer `supabase migration repair --status applied` de las doce | Cuando se adopte `db push` |
 | ~~`flutter test` y los builds se dejan de correr fase por fase~~ | **Saldada el 03/09.** La verificación diferida se hizo entera al cerrar la Fase 6: analyze 0 issues, 101 tests en verde, y web, APK e iOS compilando. La apuesta salió bien: no había ningún error acumulado de las Fases 5 y 6 | ✅ |
 | ~~CU-17 Consultar Historial (Fase 7)~~ | **Hecho el 03/09.** Con los cuatro grupos y sus contadores, búsqueda por texto en el servidor, scroll infinito de 20, pull to refresh que corre el barrido de vencimientos, portadas firmadas en lote y dos estados vacíos distintos | ✅ |
 | **CU-18 Reenvío de Enlace de Gestión (Fase 8) — replanificado** | No se hizo. Ya estaba marcado como descartable en el plan del sprint: es el único ítem que no condiciona nada del Sprint 3 y se replanifica al Sprint 5, donde ya hay trabajo de enlaces públicos (CU-26 y CU-27) | Sprint 5 |
@@ -443,51 +506,33 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 _(Lo primero que hay que hacer al retomar. Está en orden: cada punto depende
 del anterior.)_
 
-El **código está completo y compila en las tres plataformas**. Lo que falta
-para levantar el proyecto no es código: es configuración de entorno y, sobre
-todo, **aplicar las migraciones**, que nunca se ejecutaron contra una base.
+### 7.1 Sprint 3 — lo que sigue
 
-### 7.1 Para que la app levante y funcione (bloqueante)
+1. **Fase 2 — T-08, migración 0013** (plan, Fase 2): lectura del bucket
+   `pedidos` para el Profesional y guard del PATCH de edición (estado y
+   `fecha_vencimiento`). Mismo método que la 0012: ensayo con `rollback`,
+   aplicación en transacción y guion de aceptación contra la base.
+2. **Guard de las columnas sensibles de `profesionales`** (sección 6): un
+   Profesional hoy puede aprobarse solo. Tiene que estar cerrado antes del
+   CU-21, que filtra por verificación. Si entra en la 0013 o en una
+   migración propia se decide al abrir la Fase 2.
+3. Fase 3 — CU-07 Zona de cobertura, sobre la tabla de la 0012. Le faltan a la
+   base los *computed fields* `lat`/`lng` de la zona y la RPC de guardado con
+   `public.punto()`, igual que los pedidos (decisiones del 02/09).
 
-1. **Aplicar las migraciones en el SQL Editor de Supabase, en orden:**
-   `0004_cu11_storage_sin_dml.sql`, `0005_pedidos.sql`, `0006_pedidos_rls.sql`,
-   `0007_pedidos_coordenadas.sql`, `0008_pedidos_guard_estado.sql`,
-   `0009_pedidos_alta_y_ubicacion.sql`, `0010_pedido_evento_edicion.sql` y
-   `0011_profesionales_faltantes.sql`. **La 0011 se puede correr sola y
-   primero**: no depende de ninguna otra y es la que destraba la carga de
-   documentación del CU-09 (el `23503` contra `profesionales`).
-   Cada una trae su guion de aceptación comentado al final: correrlo.
-   `supabase/scripts/verificar_pedidos.sql` dice cuáles están aplicadas, y su
-   bloque 8 avisa del único orden peligroso: **la 0008 aplicada a medias —el
-   trigger sí, las RPC no— deja el sistema peor que antes**, porque entonces
-   nada puede mover el estado. Sin esto, todo el Sprint 2 devuelve
-   `PGRST202: falta aplicar una migración`.
-2. **Clave de Google Maps Platform**, con Maps SDK for Android, Maps
-   JavaScript API, Places API (New) y Geocoding API habilitadas. Va por tres
-   caminos, uno por plataforma (README, sección «Clave de Google Maps»):
-   `GOOGLE_MAPS_API_KEY` del `.env` / `--dart-define` para Dart y Web,
-   `MAPS_API_KEY` en `android/local.properties` para Android, y
-   `ios/Flutter/Maps.xcconfig` (copiar del `.example`) para iOS.
-3. **Correr la app** y hacer el circuito completo contra la base: publicar un
-   pedido con foto y ubicación, y después pausar, reanudar, editar, renovar,
-   cerrar y cancelar. Es lo que nunca se ejercitó (sección 6).
-4. Si iOS vuelve a fallar después de agregar un plugin: `cd ios && pod install
-   --repo-update`. El piso es iOS 14.
+### 7.2 Arrastrado de sprints anteriores
 
-### 7.2 Antes de mostrarlo
-
-5. Aprobar a mano por SQL a un Profesional de prueba, con
-   `supabase/scripts/aprobar_profesional.sql` (CU-35 es del Sprint 6).
+4. **Circuito completo contra la base**: publicar un pedido con foto y
+   ubicación, y después pausar, reanudar, editar, renovar, cerrar y cancelar.
+   Las migraciones ya están aplicadas (verificado el 14/09); lo que falta es
+   ejercitar la app. Hay un Profesional aprobado para las pruebas del Sprint 3.
+5. `CHANGELOG.md` con `v0.1.0` y `v0.2.0`: los tags existen y están
+   pusheados, el archivo no.
 6. Del **Sprint 1** sigue pendiente el material de la entrega: el video de los
    7 circuitos de `ARRANQUE.md`, la captura del Schema Visualizer y de la
    tabla de políticas RLS, y la subida a BB.
-
-### 7.3 Cierre del sprint (Fase 9c, sin hacer)
-
-7. Merge de `sprint-2` a `main`, tag `v0.2.0` con el mensaje
-   *Sprint 2 — Gestión de Pedidos y Geolocalización (PT 3.0)*, push del tag y
-   `CHANGELOG.md` con `v0.1.0` y `v0.2.0` agrupados por caso de uso.
-   **Ningún commit del sprint está pusheado todavía.**
+7. Si iOS vuelve a fallar después de agregar un plugin: `cd ios && pod install
+   --repo-update`. El piso es iOS 14.
 
 ---
 
