@@ -518,6 +518,41 @@ clase nueva y `supabase secrets set FCM_*`.
 Verificado: `flutter analyze` 0 issues, `flutter test` **241 en verde** (10
 nuevas).
 
+### 4b.7 Fase 6 — CU-43 Tablero + CU-22 Detalle · **HECHA** (8 pts)
+
+El lado del Profesional ya tiene a dónde entrar: `/profesional/tablero`, con
+los pedidos vigentes ordenados por distancia a su zona.
+
+**Migración 0018**, dos funciones `security invoker` que leen
+`pedidos_publicos` —sin referencia de dirección y con la coordenada redondeada
+a unos cien metros—: `tablero_pedidos()` (página de 20, filtros por oficios
+propios y por guardados, descarta los ignorados, marca los guardados y trae la
+portada) y `pedido_publico()` (uno solo, con todas sus fotos). Son invoker a
+propósito: todo lo que leen ya se lo permite la RLS a quien llama, así que no
+hace falta `SECURITY DEFINER` y un error en la función no puede filtrar nada.
+
+| Archivo | Qué hace |
+|---|---|
+| `profesional/domain/pedido_tablero.dart` | El pedido ajeno: sin referencia ni coordenada exacta. `distanciaLegible` dice «En tu zona», «A 800 m» o «A 1,5 km» |
+| `profesional/data/tablero_repository.dart` | Las dos RPC. Ninguna consulta contra la tabla `pedidos` |
+| `profesional/presentation/controllers/tablero_controller.dart` | Paginado de 20 con scroll infinito y los tres filtros |
+| `profesional/presentation/screens/tablero_screen.dart` | El tablero, con tarjeta propia, dos vacíos distintos y pull to refresh |
+| `profesional/presentation/screens/detalle_pedido_publico_screen.dart` | CU-22: fotos, descripción, mini mapa y datos, sin barra de acciones |
+
+**Desvío respecto del plan.** Pedía derivar `detalle_pedido_screen` en modo
+lectura. Esa pantalla se construye sobre el modelo `Pedido`, que sale de la
+tabla y trae la ubicación exacta y la referencia: reutilizarla obligaba a que
+el Profesional leyera esa fila, que es justo lo que la vista pública evita. Se
+escribió una pantalla sobre `PedidoTablero`, que no tiene esos datos ni puede
+tenerlos, y se reutilizaron los widgets (mini mapa, URLs firmadas en lote).
+
+Verificado contra la base: el tablero trae el pedido con distancia y portada;
+la coordenada que sale tiene tres decimales; el ignorado desaparece; el filtro
+de guardados anda en los dos sentidos; sin zona configurada el tablero igual
+lista, sin distancia; el detalle de un pedido cerrado da cero filas; y un
+Buscador recibe `sin_permiso`. `flutter analyze` 0 issues, `flutter test`
+**249 en verde** (8 nuevas).
+
 ## 5. Decisiones técnicas tomadas
 
 Formato: fecha · decisión · motivo. No se borran, se agregan.
@@ -623,6 +658,10 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 16/09 | El token de FCM se registra y se da de baja por RPC, no por un upsert | El token es de la instalación, no del usuario: si en ese teléfono había iniciado sesión otro Profesional, hay que sacárselo, y su fila es invisible bajo las RLS del nuevo dueño. Solo una función SECURITY DEFINER puede hacer el traspaso (0017). La baja, en cambio, es INVOKER: borrar lo propio ya lo permite la RLS |
 | 16/09 | La baja del token va **antes** del `signOut`, y no puede romper el cierre de sesión | Después del `signOut` no hay `auth.uid()` y la baja ya no se puede hacer. Si falla, se registra en la consola y la sesión se cierra igual: quedarse adentro de la app por una fila es peor que un token de más, que además se limpia solo cuando FCM lo reporta desconocido |
 | 16/09 | `firebase_messaging` no entra hasta que exista el proyecto de Firebase; en su lugar hay una interfaz | Agregar el paquete hoy rompe el build de Android, que exige `google-services.json`. Con `ServicioPush` + `PushNoConfigurado`, todo lo demás —registro, traspaso, baja, disparo, navegación al detalle— se escribe, se prueba y se commitea igual |
+| 16/09 | El tablero ordena por distancia **en el servidor** | Ordenar en el cliente obliga a traerse todos los pedidos vigentes para saber cuáles son los veinte más cercanos. Es el mismo motivo por el que la ubicación es PostGIS y no lat/lng (02/09) |
+| 16/09 | La distancia del tablero se calcula contra la coordenada **redondeada**, y el resultado se redondea a cien metros | El tablero es para ordenar, no para llegar a la puerta: cien metros no cambian el orden de una lista. El emparejamiento del CU-21, que sí decide a quién se le avisa, usa la exacta. Y redondear el resultado evita que varias distancias exactas desde centros conocidos permitan triangular el domicilio |
+| 16/09 | El detalle del Profesional es una pantalla propia sobre `PedidoTablero`, no `detalle_pedido_screen` en modo lectura | Desvío consciente del plan: aquella pantalla se apoya en el modelo `Pedido`, que trae ubicación exacta y referencia. Reutilizarla obligaba a que el Profesional leyera la fila de `pedidos`. Los widgets sí se reutilizan |
+| 16/09 | La tarjeta del tablero no reutiliza `TarjetaPedido` del CU-17 | Aquella muestra el **estado** del pedido propio —pausado, vencido, cerrado— y en el tablero todo está publicado. Lo que importa es la distancia y el oficio |
 | 02/09 | El botón «Mi ubicación» y las sugerencias de búsqueda van en la columna del `SelectorUbicacion`, no flotando sobre el mapa | En Web, `GoogleMap` se dibuja con `HtmlElementView`, y un widget interactivo apilado arriba necesita `pointer_interceptor` para recibir el mouse. Se resolvió con una columna —búsqueda arriba, mapa con solo el pin encima (`IgnorePointer`, no necesita recibir toques), panel de «mi ubicación»/dirección/referencia abajo— en vez de sumar otra dependencia |
 
 ## 6. Deuda técnica y pendientes conocidos
@@ -636,6 +675,7 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | ~~Un pedido puede nacer en un estado terminal~~ | **Saldada el 02/09 con la migración 0009.** Trigger `pedidos_guard_alta` `BEFORE INSERT`, con la misma compuerta que el de UPDATE. | ✅ |
 | ~~El PATCH de edición no mira el estado del pedido~~ | **Saldada el 14/09 con la migración 0013** (`pedidos_guard_edicion`). Era: `actualizar_ubicacion_pedido` exige que el pedido esté `publicado` o `pausado`, pero el UPDATE de PostgREST que cambia título, descripción o presupuesto no: la RLS solo comprueba dueño. Hoy se le puede editar el título a un pedido cerrado. No molesta a nadie —el pedido ya no se lista— pero es una regla del CU-15 que vive solo en el cliente. | ✅ |
 | ~~El Profesional no puede ver las fotos de un pedido~~ | **Saldada el 14/09 con la migración 0013.** Era: las políticas de Storage del bucket `pedidos` son solo del dueño, así que el CU-16 no va a poder firmar las URLs. Falta una política de SELECT para pedidos publicados vigentes, o firmarlas desde una Edge Function. | ✅ |
+| **La vista pública no alcanza: por PostgREST se llega a la ubicación exacta** | `pedidos_publicos` esconde la referencia y redondea la coordenada, pero la política «pedidos: lectura de publicados vigentes» (0006) deja que cualquier autenticado lea la fila entera de `pedidos`, con `ubicacion` y `referencia_ubicacion`. La app nunca lo hace —el tablero y el detalle usan solo las funciones de la 0018— pero un `GET /rest/v1/pedidos` lo consigue. No se puede quitar la política sin romper la vista, que corre con `security_invoker`: la salida es una vista con barrera y `security definer`, o mover la lectura pública a una función. Es la deuda más grande que queda abierta | Sprint 4, antes de que haya contacto entre las partes |
 | **Un Profesional puede aprobarse solo y cargarse tokens** | La política «profesional propio: actualización» (0001/0002) es de fila entera, como la de `pedidos` antes de la 0008: el dueño puede escribir `estado_verificacion`, `saldo_tokens`, `calificacion_promedio` y `total_calificaciones` con un PATCH. Importa ya: el CU-21 va a notificar según la verificación, y el Sprint 4 cobra tokens. Se cierra con un trigger `BEFORE UPDATE` del patrón de `pedidos_guard_estado`, dejándole al dueño solo `descripcion`, `dni` y `disponible` | Sprint 3, antes del CU-21 |
 | Las fotos de un pedido cerrado se pueden agregar y borrar | El guard de la 0013 cubre la fila de `pedidos`, no `pedido_fotos` ni el bucket: las políticas de alta y baja de fotos (0006) solo miran dueño. La pantalla solo ofrece fotos en la edición, que ya exige publicado o pausado. Mismo tipo de regla que vivía solo en el cliente | Sprint 4 |
 | La baja no borra los archivos del portafolio | `dar_de_baja_cuenta` ya borra las filas (0012), pero `PerfilRepository._borrarArchivos` solo baja avatar y DNI. Hoy el bucket está vacío y no hay pantalla de carga | Sprint 3, con el CU-06 (Fase 9) |
@@ -662,23 +702,17 @@ del anterior.)_
 
 ### 7.1 Sprint 3 — lo que sigue
 
-1. **Firebase, del lado tuyo** (lo único que bloquea el CU-21 de punta a
-   punta): crear el proyecto, bajar `google-services.json` para Android y la
-   clave APNs para iOS, y cargar las credenciales de la cuenta de servicio con
-   `supabase secrets set FCM_PROJECT_ID=... FCM_CLIENT_EMAIL=...
-   FCM_PRIVATE_KEY=...`. Con eso entra `firebase_messaging` detrás de
-   `ServicioPush` y la alerta llega al teléfono.
-2. **Fase 6 — CU-43 Tablero + CU-22 Detalle** (8 pts): el tablero consume la
-   vista pública ordenada por distancia, y el detalle se deriva de
-   `detalle_pedido_screen` en modo lectura. La política del bucket que
-   necesitan ya está (0013).
-3. **Fase 7 — CU-23 Ignorar + CU-24 Guardar** (4 pts). La tabla de ignorados ya
-   la usa el emparejamiento.
-4. Fase 8 (CU-44) y Fase 9 (CU-06), con el orden de descarte del plan si no
-   entran. Al cerrar el CU-44 hay que **sumar el filtro por `disponible`** al
-   emparejamiento.
-5. **Guard de las columnas sensibles de `profesionales`**: un Profesional hoy
-   puede aprobarse solo (sección 6). Migración propia, después del CU-21.
+1. **Fase 7 — CU-23 Ignorar + CU-24 Guardar** (4 pts). Es lo más barato que
+   queda y el tablero ya lo tiene resuelto del lado del servidor: la 0018 ya
+   descarta los ignorados y marca los guardados, y las tablas son de la 0012.
+   Falta la acción en la tarjeta y la solapa de guardados, que ya existe como
+   filtro.
+2. **Firebase, del lado tuyo**, único bloqueante del CU-21 de punta a punta:
+   `google-services.json`, clave APNs y `supabase secrets set FCM_*`.
+3. Fase 8 (CU-44) y Fase 9 (CU-06), con el orden de descarte del plan. Al
+   cerrar el CU-44 hay que sumar el filtro por `disponible` al emparejamiento.
+4. **Las dos deudas de seguridad de la sección 6**: la ubicación exacta
+   legible por PostgREST y el Profesional que puede aprobarse solo.
 
 ### 7.2 Arrastrado de sprints anteriores
 

@@ -79,13 +79,13 @@ Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanific
 | CU-07 | Configurar Zona de Cobertura | Full-stack | 5 | ✅ | `feat(CU-07)` |
 | CU-12 | Editar Categorías de Oficio | Full-stack | 4 | ✅ | `feat(CU-12)` |
 | CU-21 | Recibir Alerta Push (Edge Function de búsqueda por radio + integración FCM) | Backend | 14 | 🟡 | `feat(CU-21)` a, b y c — falta el proyecto de Firebase |
-| CU-43 | Explorar Tablero de Pedidos | Frontend | 5 | ⬜ | |
-| CU-22 | Ver Detalle de Pedido | Frontend | 3 | ⬜ | |
+| CU-43 | Explorar Tablero de Pedidos | Frontend | 5 | ✅ | `feat(CU-43)` |
+| CU-22 | Ver Detalle de Pedido | Frontend | 3 | ✅ | `feat(CU-22)` |
 | CU-23 | Ignorar Pedido | Full-stack | 2 | ⬜ | |
 | CU-24 | Guardar Pedido (Favorito) | Full-stack | 2 | ⬜ | |
 | CU-44 | Gestionar Horarios de Atención y estado de disponibilidad | Full-stack | 5 | ⬜ | |
 | CU-06 | Cargar Portafolio | Full-stack | 5 | ⬜ | |
-| | **Total** | | **56** | **20 ejecutados + 14 en curso** | |
+| | **Total** | | **56** | **28 ejecutados + 14 en curso** | |
 
 **T-07 no lleva puntos**, con el mismo criterio que la T-02b del Sprint 2: no es un
 ítem del backlog sino la infraestructura que los casos de uso del PT 4.0 requieren
@@ -246,6 +246,13 @@ lectura: el Profesional ve las mismas secciones sin la barra de acciones del due
 con la ubicación aproximada. No se escribe una pantalla nueva.
 
 Depende de la Fase 2: sin la política extendida del bucket, las fotos no se firman.
+
+**Hecha el 16/09.** Migración **0018** (`tablero_pedidos` y `pedido_publico`, las dos
+`security invoker` sobre `pedidos_publicos`) y las dos pantallas en
+`/profesional/tablero` y `/profesional/pedidos/:id`. **Desvío:** el detalle no deriva
+de `detalle_pedido_screen`, porque aquella se apoya en el modelo `Pedido`, que trae
+la ubicación exacta y la referencia; se escribió sobre `PedidoTablero`, que no las
+tiene. Los widgets sí se reutilizan. 8 pruebas nuevas; 249 en total.
 
 ### Fase 7 — CU-23 Ignorar + CU-24 Guardar · **4 pts**
 

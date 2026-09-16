@@ -163,6 +163,12 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
                 ],
                 if (p.esProfesional) ...[
+                  BotonPrincipal(
+                    texto: 'Ver pedidos cerca mío',
+                    icono: Icons.explore_outlined,
+                    onPressed: () => context.go('/profesional/tablero'),
+                  ),
+                  const SizedBox(height: 12),
                   OutlinedButton.icon(
                     onPressed: () => context.go('/profesional/zona'),
                     icon: const Icon(Icons.travel_explore),
