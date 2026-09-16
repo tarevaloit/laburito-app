@@ -43,6 +43,16 @@ dependencies:
   # dejarla escrita en `web/index.html`.
   web: ^1.1.1
 
+  # CU-21 — notificaciones push. `lib/firebase_options.dart` y los archivos de
+  # configuración nativa (`android/app/google-services.json`,
+  # `ios/Runner/GoogleService-Info.plist`) los genera `flutterfire configure`
+  # contra el proyecto real de Firebase; los tres están en el `.gitignore`
+  # porque identifican el proyecto (ver docs/FIREBASE.md). Quien clone el
+  # repo en otra máquina tiene que correr el Paso 1 y 2 de esa guía antes de
+  # poder compilar: sin esos archivos, `lib/main.dart` no resuelve el import.
+  firebase_core: ^4.15.0
+  firebase_messaging: ^16.7.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

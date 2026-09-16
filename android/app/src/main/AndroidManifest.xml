@@ -11,6 +11,13 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAPS_API_KEY}" />
+        <!-- CU-21: canal donde caen las alertas de pedidos si no traen uno
+             propio. Lo crea MainActivity.onCreate antes de que llegue la
+             primera notificación (para entonces la app ya se abrió al menos
+             una vez, que es como se registró el token). -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="pedidos_nuevos" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -54,4 +61,7 @@
     <!-- CU-16: posición del dispositivo para «Usar mi ubicación». -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- CU-21: Android 13+ exige este permiso aparte para mostrar cualquier
+         notificación. Sin él, FCM entrega el mensaje igual pero no se ve. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 </manifest>

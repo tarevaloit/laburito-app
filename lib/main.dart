@@ -1,3 +1,5 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -5,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app/app.dart';
 import 'core/config/env.dart';
 import 'core/widgets/marca_laburito.dart';
+import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +25,15 @@ Future<void> main() async {
     url: Env.supabaseUrl,
     publishableKey: Env.supabaseAnonKey,
   );
+
+  // CU-21. Si falla —clave mal generada, sin red— `servicioPushProvider` lo
+  // nota por `Firebase.apps.isEmpty` y cae en `PushNoConfigurado`: sin push la
+  // app tiene que arrancar igual.
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  } catch (error) {
+    if (kDebugMode) debugPrint('No se pudo inicializar Firebase: $error');
+  }
 
   runApp(const ProviderScope(child: LaburitoApp()));
 }

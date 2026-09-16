@@ -108,7 +108,7 @@ fácil—. **Cambiá el nombre del archivo** por el que bajaste:
 ```bash
 cd ~/Documents/laburito && python3 - <<'PY' > /tmp/fcm.env
 import json, glob, os
-ruta = sorted(glob.glob(os.path.expanduser('~/Downloads/*firebase-adminsdk*.json')))[-1]
+ruta = sorted(glob.glob(os.path.expanduser('~/Downloads/byto-laburitoapp-2e5af-firebase-adminsdk-fbsvc-8fb192431d.json')))[-1]
 d = json.load(open(ruta))
 print('FCM_PROJECT_ID=' + d['project_id'])
 print('FCM_CLIENT_EMAIL=' + d['client_email'])
@@ -141,23 +141,36 @@ cd ~/Documents/laburito && supabase secrets list
 
 ---
 
-## Paso 5 — Avisame
+## Paso 5 — Hecho
 
-Con los pasos 1 a 4 hechos, el lado de servidor queda completo. Falta el lado
-de la app, que es **una clase y dos líneas de configuración**, y lo hago yo:
+Con los pasos 1 a 4 hechos, el lado de servidor queda completo, y esto es lo
+que se agregó del lado de la app:
 
 - `firebase_core` y `firebase_messaging` en el `pubspec.yaml`;
-- la implementación de `ServicioPush` que hoy es `PushNoConfigurado`
-  (`lib/features/notificaciones/data/servicio_push.dart`) — la interfaz ya está
-  escrita justamente para esto: pedir permiso, devolver el token, avisar cuando
-  FCM lo rota y emitir el id del pedido cuando se toca la notificación;
-- el permiso `POST_NOTIFICATIONS` del manifiesto, que Android 13+ exige;
-- el canal de notificaciones de Android y el manejo de mensajes en segundo
-  plano.
+- `ServicioPushFirebase`, la implementación real de `ServicioPush`
+  (`lib/features/notificaciones/data/servicio_push.dart`): pide permiso,
+  devuelve el token, avisa cuando FCM lo rota y emite el id del pedido cuando
+  se toca la notificación (`getInitialMessage` + `onMessageOpenedApp`).
+  `servicioPushProvider` cae en `PushNoConfigurado` si `Firebase.apps` está
+  vacío — mismo criterio de siempre: sin push la app arranca igual;
+- `Firebase.initializeApp(...)` en `lib/main.dart`, envuelto en un
+  `try/catch` por la misma razón;
+- el permiso `POST_NOTIFICATIONS` del manifiesto (Android 13+ lo exige) y el
+  `meta-data` que apunta al canal por defecto;
+- el canal de notificaciones `pedidos_nuevos`, creado en
+  `MainActivity.onCreate` (Kotlin).
 
-Nada de eso toca el resto del proyecto: el registro del dispositivo, la baja
-del token al cerrar sesión y la navegación al detalle ya están escritos y
-probados contra la interfaz.
+No hizo falta un manejador de mensajes en segundo plano: el bloque
+`notification` que manda `emparejar_pedido` alcanza para que Android e iOS lo
+muestren solos con la app cerrada, y lo único que hay que hacer al tocarla es
+navegar, que corre en el isolate principal.
+
+Nada de esto tocó el resto del proyecto: el registro del dispositivo, la baja
+del token al cerrar sesión y la navegación al detalle ya estaban escritos y
+probados contra la interfaz, y siguen pasando (`test/dispositivos_push_test.dart`).
+
+**Pendiente de correr, ni bien tengas un teléfono con Play Services a mano:**
+el Paso 6 de más abajo, para confirmar que la alerta llega de punta a punta.
 
 ---
 

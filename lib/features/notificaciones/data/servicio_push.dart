@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -7,14 +11,14 @@ part 'servicio_push.g.dart';
 /// De dónde sale el token del dispositivo y por dónde llegan las
 /// notificaciones abiertas (CU-21).
 ///
-/// Es una interfaz y no una llamada directa a `firebase_messaging` por una
-/// razón concreta: **el proyecto de Firebase todavía no existe**. Agregar el
-/// paquete hoy obliga a tener `google-services.json` en Android —sin él el
-/// build falla— y `firebase_options.dart`, que los genera FlutterFire contra
-/// un proyecto real. Con la interfaz, todo lo que está de este lado —el
-/// registro del token, la baja al cerrar sesión, la RPC de traspaso— se
-/// escribe, se prueba y se commitea igual, y el día que estén las credenciales
-/// entra una sola implementación nueva sin tocar nada más.
+/// Es una interfaz y no una llamada directa a `firebase_messaging` por lo que
+/// costó escribirla sin el proyecto de Firebase: mientras no existían
+/// `google-services.json` ni `firebase_options.dart` (los genera FlutterFire
+/// contra un proyecto real, ver `docs/FIREBASE.md`), todo lo de este lado
+/// —el registro del token, la baja al cerrar sesión, la RPC de traspaso— se
+/// escribió, se probó y se commiteó igual contra [PushNoConfigurado]. Ahora
+/// que el proyecto existe, [ServicioPushFirebase] es la implementación real y
+/// la interfaz sigue sirviendo para los tests, que no hablan con Firebase.
 abstract interface class ServicioPush {
   /// Pide el permiso del sistema. En Android 13+ y en iOS es un diálogo; en
   /// Web, el del navegador. `false` si la persona dijo que no.
@@ -52,10 +56,65 @@ class PushNoConfigurado implements ServicioPush {
   Stream<String> get pedidosAbiertos => const Stream.empty();
 }
 
-/// Se reemplaza con un `override` el día que entre `firebase_messaging`, y en
-/// los tests por una implementación de mentira.
+/// La implementación real, sobre `firebase_messaging` (CU-21, `docs/FIREBASE.md`).
+///
+/// El `pedido_id` que dispara la navegación viaja en `data`, no en
+/// `notification`: es lo que manda `enviarFcm` de la Edge Function
+/// `emparejar_pedido`, y `notification.data` no admite tipos anidados, solo
+/// strings.
+///
+/// No hace falta un `onBackgroundMessage` de Dart: el bloque `notification`
+/// del mensaje ya alcanza para que Android e iOS lo muestren solos con la app
+/// cerrada o en segundo plano. Un handler en background solo haría falta para
+/// reaccionar a un mensaje mientras nadie mira la pantalla, y acá lo único que
+/// importa es qué pasa cuando se toca — eso lo cubren `getInitialMessage` y
+/// `onMessageOpenedApp`, que corren en el isolate principal.
+class ServicioPushFirebase implements ServicioPush {
+  ServicioPushFirebase() {
+    FirebaseMessaging.onMessageOpenedApp.listen(_agregarSiTraePedido);
+    // La app puede abrirse *por* tocar la notificación estando cerrada del
+    // todo: ese caso no dispara `onMessageOpenedApp`, hay que preguntarlo.
+    _mensajeria.getInitialMessage().then((mensaje) {
+      if (mensaje != null) _agregarSiTraePedido(mensaje);
+    });
+  }
+
+  final FirebaseMessaging _mensajeria = FirebaseMessaging.instance;
+  final _pedidosAbiertos = StreamController<String>.broadcast();
+
+  void _agregarSiTraePedido(RemoteMessage mensaje) {
+    final pedidoId = mensaje.data['pedido_id'];
+    if (pedidoId is String && pedidoId.isNotEmpty) {
+      _pedidosAbiertos.add(pedidoId);
+    }
+  }
+
+  @override
+  Future<bool> pedirPermiso() async {
+    final ajustes = await _mensajeria.requestPermission();
+    return ajustes.authorizationStatus == AuthorizationStatus.authorized ||
+        ajustes.authorizationStatus == AuthorizationStatus.provisional;
+  }
+
+  @override
+  Future<String?> token() => _mensajeria.getToken();
+
+  @override
+  Stream<String> get tokenRenovado => _mensajeria.onTokenRefresh;
+
+  @override
+  Stream<String> get pedidosAbiertos => _pedidosAbiertos.stream;
+}
+
+/// Se reemplaza con un `override` en los tests por una implementación de
+/// mentira: nada de esta capa vuelve a hablar con Firebase de verdad.
+///
+/// Cae en [PushNoConfigurado] si `Firebase.initializeApp()` no corrió (o
+/// falló) en `main.dart` — mismo criterio que el resto del CU-21: sin push la
+/// app funciona igual, así que un Firebase mal configurado no puede tirar acá.
 @Riverpod(keepAlive: true)
-ServicioPush servicioPush(Ref ref) => const PushNoConfigurado();
+ServicioPush servicioPush(Ref ref) =>
+    Firebase.apps.isEmpty ? const PushNoConfigurado() : ServicioPushFirebase();
 
 /// Con qué nombre viaja la plataforma a la base. Son los tres valores que
 /// acepta el `check` de `profesional_dispositivos` (migración 0012).
