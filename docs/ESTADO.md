@@ -2,7 +2,7 @@
 
 > **Fuente de verdad del proyecto.** Este archivo se actualiza al cerrar cada sesión de trabajo.
 > Vive en `docs/ESTADO.md` del repo y se commitea junto con el código.
-> Última actualización: 14/09/2026
+> Última actualización: 16/09/2026
 
 ---
 
@@ -416,6 +416,33 @@ Verificado además: `flutter analyze` 0 issues, `flutter test` **213 en verde**.
 El bloque 9 del guion de la 0012 movía `fecha_vencimiento` sin compuerta; se
 corrigió el comentario.
 
+### 4b.4 Fase 3 — CU-07 Configurar Zona de Cobertura · **HECHA** (5 pts)
+
+Primera pantalla del lado del Profesional, y primer insumo del emparejamiento
+del CU-21: sin zona no hay contra qué comparar la ubicación de un pedido.
+
+**Migración 0014** (`0014_zona_cobertura_rpc.sql`), que es a la tabla de la
+0012 lo que la 0007 y la 0009 fueron a `pedidos`: los *computed fields* `lat` y
+`lng` para poder leer el centro —PostgREST serializa `geography` como WKB
+hexadecimal— y la RPC `guardar_zona_cobertura`, que arma el punto con
+`public.punto(lat, lng)` y valida rango y radio con mensajes propios. Es un
+upsert: la zona es una por Profesional, así que la pantalla no tiene que saber
+si ya había una. Aplicada y verificada con su guion, que incluye **la consulta
+de emparejamiento del CU-21** —filtro por el radio máximo y después exacto—
+dando 871 m contra un punto cercano.
+
+| Archivo | Qué hace |
+|---|---|
+| `features/profesional/domain/zona_cobertura.dart` | El círculo (centro + radio), los límites 1–100 km, `radioLegible` y la lectura de la fila |
+| `features/profesional/data/zona_cobertura_repository.dart` | `cargar()` y `guardar()`. No envuelve errores: los `P0001` ya los muestra `MensajesError` |
+| `features/profesional/presentation/controllers/zona_cobertura_controller.dart` | El borrador: centro, radio, si hay cambios y si se puede guardar |
+| `features/profesional/presentation/screens/zona_cobertura_screen.dart` | Mapa de solo lectura con `Circle` y marcador, deslizador de 1 a 100 km, y el botón que abre el `SelectorUbicacion` |
+| `app/router.dart` · `home_screen.dart` | Ruta `/profesional/zona` y su acceso, solo para cuentas Profesional |
+| `test/zona_cobertura_test.dart` | 13 pruebas: dominio, repositorio contra servidor falso (ida y vuelta de la coordenada) y controlador |
+
+Verificado: `flutter analyze` 0 issues, `flutter test` **226 en verde** (13
+nuevas). Los builds de las tres plataformas quedan para la Fase 10.
+
 ## 5. Decisiones técnicas tomadas
 
 Formato: fecha · decisión · motivo. No se borran, se agregan.
@@ -504,6 +531,11 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 14/09 | El guard protege todo el ciclo de vida, no solo `fecha_vencimiento` | El plan nombraba la fecha. Pero `renovaciones = 0` es renovar sin límite por el otro lado, y `fecha_cierre` / `motivo_cierre` / `fecha_publicacion` son historia del pedido que solo escriben las RPC |
 | 14/09 | La lectura de fotos del bucket `pedidos` se escribe **explícita**, no heredada de las RLS de `pedidos` | Al revés que en las tablas de la 0012, a propósito: la fila de `pedido_fotos` y su archivo tienen que verse con la misma regla, y la de la tabla (0006) está escrita explícita. Si `pedidos` suma una política de lectura, las dos se cambian juntas |
 | 14/09 | `actualizarPedido` deja de aceptar `fechaVencimiento` | Mismo criterio que borrar `Ubicacion.aEwkt()` el 02/09: un parámetro que el servidor rechaza siempre es una invitación a usarlo |
+| 16/09 | La zona reutiliza `Ubicacion` de `features/pedidos`, en vez de un tipo propio | Es el tipo que devuelve el `SelectorUbicacion`, que el CU-07 reutiliza entero. Un `CentroZona` idéntico obligaría a convertir de ida y de vuelta en cada pasada. Queda una dependencia de `profesional` hacia `pedidos`: si aparece un tercer caso de uso con mapa, `Ubicacion` se muda a `core` |
+| 16/09 | El mapa del CU-07 no se arrastra: el centro se elige siempre en el `SelectorUbicacion` | Hay un solo lugar en todo el proyecto donde se elige una ubicación, con su búsqueda de direcciones, su «usar mi ubicación» y su geocodificación inversa. El mapa de la zona dibuja el resultado y el círculo |
+| 16/09 | El zoom se calcula a partir del radio y no es una constante | El radio va de 1 a 100 km: con el zoom fijo del detalle, una zona de 50 km no entra en la pantalla y una de 1 km se ve como un punto. Cada paso de zoom duplica la escala, así que la relación es logarítmica. `zoomParaRadio` es de nivel superior para poder probarla sin levantar el widget |
+| 16/09 | `guardar_zona_cobertura` valida el radio además del `check` de la tabla | El 23514 de la restricción no dice cuál es el rango. La RPC contesta «entre 1 y 100 km», que es lo que la pantalla muestra tal cual |
+| 16/09 | La RPC comprueba `es_profesional_activo()` aunque la RLS ya lo haga | Sin eso, un Buscador recibiría un 42501 que —por la decisión del 02/09— no se le muestra a nadie. Con la comprobación, el error es una frase en castellano |
 | 02/09 | El botón «Mi ubicación» y las sugerencias de búsqueda van en la columna del `SelectorUbicacion`, no flotando sobre el mapa | En Web, `GoogleMap` se dibuja con `HtmlElementView`, y un widget interactivo apilado arriba necesita `pointer_interceptor` para recibir el mouse. Se resolvió con una columna —búsqueda arriba, mapa con solo el pin encima (`IgnorePointer`, no necesita recibir toques), panel de «mi ubicación»/dirección/referencia abajo— en vez de sumar otra dependencia |
 
 ## 6. Deuda técnica y pendientes conocidos
@@ -543,13 +575,16 @@ del anterior.)_
 
 ### 7.1 Sprint 3 — lo que sigue
 
-1. **Guard de las columnas sensibles de `profesionales`** (sección 6): un
-   Profesional hoy puede aprobarse solo. Tiene que estar cerrado antes del
-   CU-21, que filtra por verificación. No entró en la 0013, que se limitó a
-   la deuda del Sprint 2; va en migración propia (la 0014).
-2. **Fase 3 — CU-07 Zona de cobertura**, sobre la tabla de la 0012. Le faltan
-   a la base los *computed fields* `lat`/`lng` de la zona y la RPC de guardado
-   con `public.punto()`, igual que los pedidos (decisiones del 02/09).
+1. **Fase 4 — CU-12 Editar Categorías de Oficio** (4 pts): ABM sobre
+   `profesional_categorias` desde el perfil. No necesita migración: la tabla y
+   su política `for all` existen desde la 0001 (lo verificó la Fase 1). Es el
+   segundo insumo del emparejamiento.
+2. **Fase 5 — CU-21 Recibir Alerta Push** (14 pts), el ítem que no se descarta.
+   Antes de empezar hace falta el proyecto de Firebase: `google-services.json`
+   para Android y la clave APNs para iOS. Es alta de cuentas, no código.
+3. **Guard de las columnas sensibles de `profesionales`**: un Profesional hoy
+   puede aprobarse solo (sección 6). Va después del CU-21, por decisión del
+   16/09, en una migración propia.
 
 ### 7.2 Arrastrado de sprints anteriores
 

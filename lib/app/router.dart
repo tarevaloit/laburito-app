@@ -21,6 +21,7 @@ import '../features/pedidos/presentation/screens/detalle_pedido_screen.dart';
 import '../features/pedidos/presentation/screens/editar_pedido_screen.dart';
 import '../features/pedidos/presentation/screens/historial_pedidos_screen.dart';
 import '../features/perfil/presentation/screens/baja_cuenta_screen.dart';
+import '../features/profesional/presentation/screens/zona_cobertura_screen.dart';
 import '../features/perfil/presentation/screens/perfil_screen.dart';
 import '../features/verificacion/presentation/screens/carga_documentos_screen.dart';
 
@@ -161,6 +162,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const BajaCuentaScreen(),
           ),
         ],
+      ),
+      // CU-07. Va bajo /profesional porque es la primera de las pantallas de
+      // ese lado (le siguen horarios y portafolio en este mismo sprint).
+      GoRoute(
+        path: '/profesional/zona',
+        name: 'zonaCobertura',
+        builder: (context, state) => const ZonaCoberturaScreen(),
       ),
       GoRoute(
         path: '/verificacion',

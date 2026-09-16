@@ -3,7 +3,7 @@
 > Plan de ejecución del sprint. Vive en `docs/sprints/SPRINT-03.md`.
 > Se deriva del apartado 4.3 de la planificación (v1.2) y de los ajustes
 > comprometidos en el apartado 7.2.7.
-> Última actualización: 14/09/2026
+> Última actualización: 16/09/2026
 
 ---
 
@@ -76,7 +76,7 @@ Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanific
 | T-06 | Pruebas de widget de los formularios de pedido (deuda de 7.1.7 y 7.2.3) | Técnica | 3 | ✅ | `07375ec` |
 | T-07 | Migración 0012 — esquema del Profesional, con sus políticas RLS en el mismo archivo | Backend | — | ✅ | `feat(T-07)` |
 | T-08 | Migración 0013 — deuda del Sprint 2: lectura del bucket para el Profesional y guard del PATCH de edición | Backend | 3 | ✅ | `fix(T-08)` |
-| CU-07 | Configurar Zona de Cobertura | Full-stack | 5 | ⬜ | |
+| CU-07 | Configurar Zona de Cobertura | Full-stack | 5 | ✅ | `feat(CU-07)` |
 | CU-12 | Editar Categorías de Oficio | Full-stack | 4 | ⬜ | |
 | CU-21 | Recibir Alerta Push (Edge Function de búsqueda por radio + integración FCM) | Backend | 14 | ⬜ | |
 | CU-43 | Explorar Tablero de Pedidos | Frontend | 5 | ⬜ | |
@@ -85,7 +85,7 @@ Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanific
 | CU-24 | Guardar Pedido (Favorito) | Full-stack | 2 | ⬜ | |
 | CU-44 | Gestionar Horarios de Atención y estado de disponibilidad | Full-stack | 5 | ⬜ | |
 | CU-06 | Cargar Portafolio | Full-stack | 5 | ⬜ | |
-| | **Total** | | **56** | **11 ejecutados** | |
+| | **Total** | | **56** | **16 ejecutados** | |
 
 **T-07 no lleva puntos**, con el mismo criterio que la T-02b del Sprint 2: no es un
 ítem del backlog sino la infraestructura que los casos de uso del PT 4.0 requieren
@@ -187,6 +187,12 @@ centro y se mueve el mapa, que es el patrón que se comporta igual en Web y Andr
 
 Va antes que el CU-21 porque la búsqueda por radio no tiene contra qué comparar sin
 esta tabla poblada.
+
+**Hecha el 16/09.** Migración **0014** (computed fields `lat`/`lng` de la zona y la
+RPC `guardar_zona_cobertura`, un upsert), más `lib/features/profesional/` —dominio,
+repositorio, controlador y pantalla— con la ruta `/profesional/zona`. El mapa de la
+zona no se arrastra: el centro sale del `SelectorUbicacion`, que no se tocó. 13
+pruebas nuevas; 226 en total.
 
 ### Fase 4 — CU-12 Editar Categorías de Oficio · **4 pts**
 

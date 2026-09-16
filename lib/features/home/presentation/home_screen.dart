@@ -162,6 +162,14 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                 ],
+                if (p.esProfesional) ...[
+                  OutlinedButton.icon(
+                    onPressed: () => context.go('/profesional/zona'),
+                    icon: const Icon(Icons.travel_explore),
+                    label: const Text('Zona de cobertura'),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 OutlinedButton.icon(
                   onPressed: () => context.go('/perfil'),
                   icon: const Icon(Icons.edit_outlined),
