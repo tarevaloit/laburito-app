@@ -794,21 +794,30 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 _(Lo primero que hay que hacer al retomar. Está en orden: cada punto depende
 del anterior.)_
 
-### 7.1 Sprint 3 — lo que sigue
+### 7.1 Sprint 3 — cerrado; lo que sigue
 
-1. **Para la demo:** el Profesional de prueba tiene que estar **disponible**.
-   Desde la 0019 el emparejamiento filtra por ese interruptor, así que con la
-   cuenta en «no disponible» no llega ninguna alerta, y eso ahora es lo
-   correcto, no un error.
-2. **Firebase, del lado tuyo**, único bloqueante del CU-21 de punta a punta:
-   `google-services.json`, clave APNs y `supabase secrets set FCM_*`.
-3. **Fase 9 — CU-06 Cargar Portafolio** (5 pts), el último ítem de alcance.
-   Tabla, tope de 10 con bloqueo y bucket privado ya están (0012). Falta la
-   pantalla y el borrado de los archivos en la baja de cuenta (sección 6).
-4. **Las dos deudas de seguridad de la sección 6**: la ubicación exacta
-   legible por PostgREST y el Profesional que puede aprobarse solo.
-5. **Fase 10 — cierre**: los tres builds, el grep de secretos, merge a `main`,
-   tag `v0.3.0` y `CHANGELOG.md`.
+El sprint está mergeado a `main` con el tag `v0.3.0`: 42 de 56 puntos cerrados,
+14 en curso (CU-21) y ningún descarte. Verificación de la Fase 10 en 4b.11.
+
+1. **Firebase, del lado tuyo.** Es lo único que separa al CU-21 de estar
+   cerrado. El paso a paso está en **`docs/FIREBASE.md`**: crear el proyecto,
+   `flutterfire configure`, bajar la clave de la cuenta de servicio y cargarla
+   con `supabase secrets set`. Son 20 minutos y no toca código; después entra
+   `firebase_messaging` detrás de `ServicioPush`, que es una clase. iOS necesita
+   además la cuenta del Apple Developer Program y va aparte.
+2. **Para la demo:** la base quedó preparada con
+   `supabase/scripts/preparar_demo.sql` (Profesional aprobado y **disponible**,
+   zona de 20 km, 4 oficios, 6 pedidos en la calle). Es idempotente: se puede
+   correr de nuevo antes de mostrar. Si no llega ninguna alerta, lo primero que
+   hay que mirar es el interruptor de disponibilidad.
+3. **El circuito completo contra la base sigue sin ejercitarse a mano.** Es la
+   deuda más vieja: publicar con foto y ubicación, y después pausar, reanudar,
+   editar, renovar, cerrar y cancelar, desde la app.
+4. **Las dos deudas de seguridad de la sección 6**, las dos para el Sprint 4:
+   la ubicación exacta legible por PostgREST y el Profesional que puede
+   aprobarse solo.
+5. **Apartado 7.3 del documento vivo**, con su burndown: 42 cerrados, 14 en
+   curso, 0 descartados.
 
 ### 7.2 Arrastrado de sprints anteriores
 
