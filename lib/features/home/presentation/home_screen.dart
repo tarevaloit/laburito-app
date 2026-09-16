@@ -162,6 +162,32 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                 ],
+                if (p.esProfesional) ...[
+                  BotonPrincipal(
+                    texto: 'Ver pedidos cerca mío',
+                    icono: Icons.explore_outlined,
+                    onPressed: () => context.go('/profesional/tablero'),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () => context.go('/profesional/zona'),
+                    icon: const Icon(Icons.travel_explore),
+                    label: const Text('Zona de cobertura'),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () => context.go('/profesional/horarios'),
+                    icon: const Icon(Icons.schedule),
+                    label: const Text('Horarios y disponibilidad'),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () => context.go('/profesional/portafolio'),
+                    icon: const Icon(Icons.photo_library_outlined),
+                    label: const Text('Mi portafolio'),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 OutlinedButton.icon(
                   onPressed: () => context.go('/perfil'),
                   icon: const Icon(Icons.edit_outlined),

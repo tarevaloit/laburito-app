@@ -137,7 +137,7 @@ class PerfilRepository {
     }
 
     if (categorias != null) {
-      await _categorias.reemplazar(profesionalId: id, slugs: categorias);
+      await _categorias.reemplazar(slugs: categorias);
     }
   }
 
@@ -193,6 +193,23 @@ class PerfilRepository {
       await _client.storage.from('documentos').remove([
         for (final tipo in TipoDocumento.values) '$id/${tipo.clave}.jpg',
       ]);
+
+      // CU-06. Las rutas se leen de la tabla y no se listan del bucket: la
+      // tabla es la que sabe cuáles son de esta cuenta, y `dar_de_baja_cuenta`
+      // borra esas mismas filas un momento después (migración 0012).
+      final fotos = await _client
+          .from('profesional_portafolio')
+          .select('storage_path')
+          .eq('profesional_id', id);
+
+      final rutas = [
+        for (final fila in fotos as List)
+          (fila as Map<String, dynamic>)['storage_path'] as String,
+      ];
+
+      if (rutas.isNotEmpty) {
+        await _client.storage.from('portafolios').remove(rutas);
+      }
     } on Exception {
       throw const ArchivosNoEliminadosException();
     }

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../notificaciones/data/registro_push.dart';
 import '../../../perfil/data/perfil_repository.dart';
 import '../../data/auth_repository.dart';
 
@@ -97,6 +98,11 @@ class AuthController extends _$AuthController {
 
   /// CU-10 y CU-50: cierra la sesión e invalida el estado en memoria.
   Future<void> cerrarSesion() async {
+    // Primero el dispositivo, después la sesión: la baja del token necesita
+    // `auth.uid()`, así que después del signOut ya no se podría hacer y el
+    // teléfono seguiría recibiendo los pedidos de esta cuenta (CU-21).
+    await ref.read(registroPushProvider.notifier).darDeBaja();
+
     await _ejecutar(_repo.cerrarSesion);
     ref.invalidate(perfilCompletoProvider);
   }

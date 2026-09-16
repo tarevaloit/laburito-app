@@ -116,6 +116,46 @@ void main() {
     });
   });
 
+  group('guard de la edición (migración 0013)', () {
+    const centinela = 'CAMPO_NO_MODIFICABLE_DIRECTAMENTE';
+
+    test('tocar la vigencia se identifica por el hint y no muestra el centinela',
+        () {
+      final e = PedidoException.desde(pg(
+        'P0001',
+        hint: 'campo_no_modificable',
+        message: centinela,
+      ));
+
+      expect(e.caso, CasoPedido.campoNoModificable);
+      expect(e.message, isNot(contains(centinela)));
+      expect(e.message, contains('Renovar'));
+      expect(MensajesError.desde(e), isNot(contains(centinela)));
+    });
+
+    test('sin hint, se reconoce por su propio centinela y no por el de la 0008',
+        () {
+      final e = PedidoException.desde(pg('P0001', message: centinela));
+
+      expect(e.caso, CasoPedido.campoNoModificable);
+      expect(e.message, isNot(contains(centinela)));
+    });
+
+    test('editar un pedido cerrado es una transición inválida con su mensaje',
+        () {
+      // Mismo hint que `actualizar_ubicacion_pedido` de la 0009: la app ya
+      // sabía mostrarlo, el guard no le agrega un caso nuevo.
+      final e = PedidoException.desde(pg(
+        'P0001',
+        hint: 'transicion_invalida',
+        message: 'Un pedido cerrado no se puede editar',
+      ));
+
+      expect(e.caso, CasoPedido.transicionInvalida);
+      expect(e.message, 'Un pedido cerrado no se puede editar');
+    });
+  });
+
   group('errores de infraestructura', () {
     test('42501 (RLS) es sin permiso y NO filtra el texto de Postgres', () {
       final e = PedidoException.desde(pg(

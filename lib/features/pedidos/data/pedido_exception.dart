@@ -23,6 +23,14 @@ enum CasoPedido {
   /// que reintentar por el camino correcto.
   estadoNoModificable,
 
+  /// Se intentó escribir una columna del ciclo de vida —vencimiento,
+  /// renovaciones, publicación o cierre— con un UPDATE común. Lo frena el
+  /// trigger `pedidos_guard_edicion` de la migración 0013.
+  ///
+  /// Mismo carácter que [estadoNoModificable]: es un error nuestro. Ninguna
+  /// pantalla manda esas columnas.
+  campoNoModificable,
+
   /// No es suyo, no existe, o no hay sesión. Las RLS no distinguen entre «no
   /// existe» y «no te lo puedo mostrar», y está bien que no lo hagan: decirlo
   /// permitiría averiguar qué ids existen.
@@ -153,14 +161,18 @@ class PedidoException implements ErrorDeNegocio {
             'transicion_invalida' => CasoPedido.transicionInvalida,
             'limite_renovaciones' => CasoPedido.limiteRenovaciones,
             'estado_no_modificable' => CasoPedido.estadoNoModificable,
+            'campo_no_modificable' => CasoPedido.campoNoModificable,
             'sin_permiso' => CasoPedido.sinPermiso,
 
-            // Única excepción a «el texto del mensaje no se lee»: el guard de
-            // la 0008 levanta el centinela como mensaje, no como frase para el
-            // usuario. Se mira acá por si el `hint` se pierde en el camino.
-            _ => error.message.contains(_centinelaGuard)
-                ? CasoPedido.estadoNoModificable
-                : CasoPedido.desconocido,
+            // Única excepción a «el texto del mensaje no se lee»: los guards
+            // de la 0008 y la 0013 levantan un centinela como mensaje, no una
+            // frase para el usuario. Se mira acá por si el `hint` se pierde en
+            // el camino.
+            _ when error.message.contains(_centinelaGuard) =>
+              CasoPedido.estadoNoModificable,
+            _ when error.message.contains(_centinelaEdicion) =>
+              CasoPedido.campoNoModificable,
+            _ => CasoPedido.desconocido,
           },
 
         // RLS: ninguna política habilita la operación. Es lo que devuelve el
@@ -187,6 +199,12 @@ class PedidoException implements ErrorDeNegocio {
     if (caso == CasoPedido.estadoNoModificable) {
       return 'El estado del pedido no se cambia desde la edición. Usá los '
           'botones de pausar, reanudar, cerrar, cancelar o renovar.';
+    }
+
+    // Mismo criterio para el centinela de la 0013.
+    if (caso == CasoPedido.campoNoModificable) {
+      return 'La vigencia del pedido no se cambia desde la edición. Para '
+          'extenderla, usá «Renovar».';
     }
 
     if (error.code == 'P0001') return error.message;
@@ -220,6 +238,9 @@ class PedidoException implements ErrorDeNegocio {
   /// El `raise exception` del trigger `pedidos_guard_estado` (migración 0008).
   /// Es un identificador, no una frase: nunca se le muestra al usuario.
   static const String _centinelaGuard = 'ESTADO_NO_MODIFICABLE_DIRECTAMENTE';
+
+  /// El `raise exception` del trigger `pedidos_guard_edicion` (migración 0013).
+  static const String _centinelaEdicion = 'CAMPO_NO_MODIFICABLE_DIRECTAMENTE';
 
   @override
   String toString() => 'PedidoException($caso): $message';

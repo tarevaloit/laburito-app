@@ -2,7 +2,7 @@
 
 > **Fuente de verdad del proyecto.** Este archivo se actualiza al cerrar cada sesión de trabajo.
 > Vive en `docs/ESTADO.md` del repo y se commitea junto con el código.
-> Última actualización: 03/09/2026
+> Última actualización: 16/09/2026
 
 ---
 
@@ -40,6 +40,7 @@ produjo una decisión técnica, va a la sección 5 de este archivo antes de cerr
 | `S1 · Perfil y cuenta` | CU-05, CU-09, CU-11 |
 | `S1 · Cierre y documentación` | Sección 7.1 del Sprint Planning, evidencias, burndown real |
 | `S2 · Pedidos` | Arranque del Sprint 2: CU-13, CU-16 y siguientes |
+| `S3 · Esquema del Profesional` | Fase 1 del Sprint 3: T-07, migración 0012 |
 
 ---
 
@@ -47,15 +48,15 @@ produjo una decisión técnica, va a la sección 5 de este archivo antes de cerr
 
 | Campo | Valor |
 |---|---|
-| Sprint en curso | **Sprint 2 — Pedidos** (PT 3.0) · rama `sprint-2` |
-| Sprint anterior | Sprint 1 — Fundaciones y Autenticación (PT 2.0) · **cerrado en código**, 35/35 pts |
-| Período | _(completar del PT 3.0)_ |
-| Entrega por BB | _(completar del PT 3.0)_ |
-| Esfuerzo planificado | _(completar del PT 3.0)_ |
-| Backlog restante | 200 pts de 235 al cierre del Sprint 1 |
-| Release objetivo | v0.2.0 — el tag `v0.1.0` cerró el Sprint 1 |
+| Sprint en curso | **Sprint 3 — cerrado en código** (PT 4.0) · mergeado a `main`, tag `v0.3.0` · plan en `docs/sprints/SPRINT-03.md` |
+| Sprint anterior | Sprint 2 — Gestión de Pedidos y Geolocalización (PT 3.0) · 36/40 pts |
+| Período | 03/09/2026 al 16/09/2026 |
+| Entrega por BB | 16/09/2026 hasta las 23:59 |
+| Esfuerzo planificado | 56 pts (45 del PT 4.0 + 5 del CU-17 replanificado + 6 de deuda) |
+| Backlog restante | 169 pts al inicio del Sprint 3 (criterio de alcance cerrado, ver plan) |
+| Release | **v0.3.0** — 42 de 56 pts cerrados + 14 en curso (CU-21, a la espera de Firebase) |
 | Repositorio | https://github.com/tarevaloit/laburito |
-| Proyecto Supabase | _(completar ref)_ |
+| Proyecto Supabase | `laburito` · ref `xbgwogitgzzxmoixqfjd` · PostgreSQL 17.6, PostGIS 3.3.7 |
 
 ## 2. Stack vigente
 
@@ -99,7 +100,7 @@ compartidos. La guía y la trazabilidad figura por figura están en `docs/UI.md`
 video de los 7 circuitos de `ARRANQUE.md`, captura del Schema Visualizer y de la
 tabla de políticas RLS, y la subida a BB.
 
-## 4. Sprint 2 — en curso (PT 3.0)
+## 4. Sprint 2 — cerrado (PT 3.0)
 
 Rama: **`sprint-2`**, salida de `main` (no del tag `v0.1.0`: main tiene 5 commits
 posteriores al tag, incluido todo el ANEXO UI y el arreglo del CU-11).
@@ -338,6 +339,307 @@ Era configuración nativa, no código: piso de iOS 14 (lo pide
 `NSLocationWhenInUseUsageDescription` —sin esa clave iOS no pide permiso: mata
 la app— y el tercer camino de la clave de Maps, `ios/Flutter/Maps.xcconfig`.
 
+## 4b. Sprint 3 — en curso (PT 4.0)
+
+Rama **`sprint-3`**, salida de `main` después del merge del Sprint 2 y del tag
+`v0.2.0`. El alcance, el orden de fases y el orden de descarte viven en
+`docs/sprints/SPRINT-03.md`; acá va solo lo que ya pasó.
+
+### 4b.1 Estado de la base al arrancar (verificado el 14/09)
+
+Consultado directo contra el proyecto con `supabase db query --linked`, no
+deducido de los archivos: **las migraciones 0001 a 0011 están aplicadas**
+(existen `registrar_edicion_pedido` de la 0010 y el `handle_new_user`
+idempotente de la 0011). Se aplicaron por el SQL Editor, así que el historial
+de migraciones de la CLI está vacío; no se reparó, para no registrar como
+aplicadas cosas que no pasaron por ahí.
+
+Datos: 3 Profesionales (uno activo y aprobado, dos dados de baja), 6 pedidos,
+ninguno vigente.
+
+### 4b.2 Fase 1 — T-07 · migración 0012, esquema del Profesional · **HECHA**
+
+`supabase/migrations/0012_profesional_esquema.sql`. Ensayada primero dentro de
+`begin … rollback` contra la base real, aplicada después en una sola
+transacción, y verificada con su guion de aceptación completo —los diez
+bloques— corrido contra la base, cada prueba de comportamiento en su propia
+transacción con rollback. No quedó ninguna fila de prueba.
+
+| Qué agrega | Para | Cómo |
+|---|---|---|
+| `es_profesional_activo()` | Todas las escrituras | SECURITY DEFINER como `es_admin()`: Profesional, cuenta `activo`, sin `deleted_at` |
+| `profesional_zona_cobertura` | CU-07 | Una por Profesional (PK = `profesional_id`), `centro extensions.geography(Point,4326)`, `radio_metros` 1 000–100 000, GiST. Solo la ven el dueño y el admin |
+| `profesional_horarios` | CU-44 | Día ISO (1 = lunes), `hora_desde < hora_hasta`, franjas superpuestas imposibles por **restricción de exclusión** |
+| `profesional_portafolio` + bucket `portafolios` privado | CU-06 | Tope de 10 con `for update` sobre la fila del Profesional **antes** de contar; la ruta tiene que empezar con la carpeta del dueño; `unique (profesional_id, orden)` diferible |
+| `profesional_dispositivos` | CU-21 | Token de FCM único en toda la tabla, plataforma `android` / `ios` / `web`. Solo el dueño |
+| `pedido_ignorado` / `pedido_favorito` | CU-23 / CU-24 | PK (profesional, pedido); el alta exige ver el pedido |
+| `dar_de_baja_cuenta()` reescrita | CU-11 | Borra la zona, los horarios, los dispositivos, el portafolio y las marcas. Deja de tocar `profesionales.ubicacion` |
+| **Borra** `profesionales.ubicacion` y `radio_cobertura_km` | — | Venían de la 0001, sin uso y en null en las tres filas |
+
+Lo que el guion comprobó contra la base: RLS activa y con políticas en las seis
+tablas; columnas viejas fuera y bucket privado; el dueño escribe y ve su zona
+y otro perfil ve 0; escribir la zona ajena da `42501`; 9–13 y 13–18 conviven y
+12–15 da `23P01`; la foto número 11 da `P0001` con hint `limite_portafolio`;
+una ruta ajena da `23514`; reordenar dos fotos en un UPDATE pasa; se guarda un
+pedido visible y se rechaza uno invisible; un Buscador no puede registrar un
+dispositivo. La prueba de concurrencia del tope no se puede hacer desde una
+sola sesión: el guion verifica que el bloqueo esté antes del conteo.
+
+Decisiones: sección 5, entradas del 14/09.
+
+### 4b.3 Fase 2 — T-08 · migración 0013, deuda del Sprint 2 · **HECHA** (3 pts)
+
+`supabase/migrations/0013_pedidos_deuda_sprint2.sql`, con el mismo método que
+la 0012: ensayo con rollback, aplicación en una transacción y guion completo
+contra la base, sin dejar datos.
+
+| Qué | Cómo |
+|---|---|
+| El Profesional firma las fotos de los pedidos que ve | «pedidos: lectura del dueño» sobre `storage.objects` se reemplaza por «pedidos: lectura si se ve el pedido»: el dueño siempre, cualquier autenticado si el pedido está publicado y vigente. Es la misma condición, escrita igual, que la política de la tabla `pedido_fotos` |
+| Guard de la edición | Trigger `pedidos_guard_edicion` `BEFORE UPDATE`, con la compuerta `app.transicion_estado` de la 0008. Sin compuerta: rechaza editar un pedido que no esté `publicado` o `pausado` (mensaje para el usuario, hint `transicion_invalida`) y escribir `fecha_vencimiento`, `renovaciones`, `fecha_publicacion`, `fecha_cierre`, `motivo_cierre` o `created_at` (centinela `CAMPO_NO_MODIFICABLE_DIRECTAMENTE`, hint `campo_no_modificable`) |
+| App | `actualizarPedido` **pierde el parámetro `fechaVencimiento`**: el ESTADO del 03/09 decía que la app no mandaba ese campo, y la pantalla no lo usaba, pero el repositorio lo aceptaba y lo ponía en el PATCH. `PedidoException` suma `CasoPedido.campoNoModificable` con mensaje propio, y `test/pedidos_errores_test.dart` tres pruebas |
+
+Lo que el guion comprobó contra la base: el orden de los triggers
+(`guard_alta`, `guard_edicion`, `guard_estado`, `registrar_evento`,
+`set_updated_at`); editar el título de un pedido publicado pasa; estirar la
+vigencia y tocar `renovaciones` dan el centinela; editar un pedido cerrado da
+«Un pedido cerrado no se puede editar»; `marcar_pedidos_vencidos`,
+`renovar_pedido` (renovaciones 1, vigencia +7 días) y `cambiar_estado_pedido`
+siguen andando; y un Profesional ve el archivo de un pedido vigente y no el de
+uno vencido.
+
+Al correrlo apareció un error **del guion, no del guard**: el bloque 4 ponía
+`renovaciones = 0` sobre un pedido que nunca se había renovado, así que no
+cambiaba nada y pasaba. Se reescribió para que no dependa del dato.
+
+Verificado además: `flutter analyze` 0 issues, `flutter test` **213 en verde**.
+El bloque 9 del guion de la 0012 movía `fecha_vencimiento` sin compuerta; se
+corrigió el comentario.
+
+### 4b.4 Fase 3 — CU-07 Configurar Zona de Cobertura · **HECHA** (5 pts)
+
+Primera pantalla del lado del Profesional, y primer insumo del emparejamiento
+del CU-21: sin zona no hay contra qué comparar la ubicación de un pedido.
+
+**Migración 0014** (`0014_zona_cobertura_rpc.sql`), que es a la tabla de la
+0012 lo que la 0007 y la 0009 fueron a `pedidos`: los *computed fields* `lat` y
+`lng` para poder leer el centro —PostgREST serializa `geography` como WKB
+hexadecimal— y la RPC `guardar_zona_cobertura`, que arma el punto con
+`public.punto(lat, lng)` y valida rango y radio con mensajes propios. Es un
+upsert: la zona es una por Profesional, así que la pantalla no tiene que saber
+si ya había una. Aplicada y verificada con su guion, que incluye **la consulta
+de emparejamiento del CU-21** —filtro por el radio máximo y después exacto—
+dando 871 m contra un punto cercano.
+
+| Archivo | Qué hace |
+|---|---|
+| `features/profesional/domain/zona_cobertura.dart` | El círculo (centro + radio), los límites 1–100 km, `radioLegible` y la lectura de la fila |
+| `features/profesional/data/zona_cobertura_repository.dart` | `cargar()` y `guardar()`. No envuelve errores: los `P0001` ya los muestra `MensajesError` |
+| `features/profesional/presentation/controllers/zona_cobertura_controller.dart` | El borrador: centro, radio, si hay cambios y si se puede guardar |
+| `features/profesional/presentation/screens/zona_cobertura_screen.dart` | Mapa de solo lectura con `Circle` y marcador, deslizador de 1 a 100 km, y el botón que abre el `SelectorUbicacion` |
+| `app/router.dart` · `home_screen.dart` | Ruta `/profesional/zona` y su acceso, solo para cuentas Profesional |
+| `test/zona_cobertura_test.dart` | 13 pruebas: dominio, repositorio contra servidor falso (ida y vuelta de la coordenada) y controlador |
+
+Verificado: `flutter analyze` 0 issues, `flutter test` **226 en verde** (13
+nuevas). Los builds de las tres plataformas quedan para la Fase 10.
+
+### 4b.5 Fase 4 — CU-12 Editar Categorías de Oficio · **HECHA** (4 pts)
+
+La pantalla ya existía: el `SelectorOficios` vive adentro del perfil (CU-05)
+desde el Sprint 1, con su tope de 5 y sus píldoras. Lo que faltaba era el lado
+del servidor, y no era cosmético: `reemplazar` hacía un DELETE de todas las
+filas y después un INSERT de las nuevas, **sin transacción común**. Si el
+INSERT fallaba, el Profesional quedaba sin ningún oficio, y sin oficios el
+emparejamiento del CU-21 no lo elige nunca: deja de recibir alertas sin
+enterarse.
+
+**Migración 0015**: `reemplazar_categorias_oficio(p_slugs text[])`, `security
+invoker`, que hace el reemplazo en una sola transacción y agrega tres reglas
+que vivían solo en el cliente: al menos un oficio, como máximo 5, y que los
+slugs existan y estén activos (antes, un slug inventado se ignoraba en
+silencio). Devuelve los slugs que quedaron, leídos de la base. No crea ni abre
+nada: la tabla y su política `for all` son de la 0001.
+
+App: `CategoriasRepository.reemplazar` pasa a llamar la RPC y **deja de recibir
+el id del Profesional** —lo pone `auth.uid()`—, y el tope deja de estar escrito
+en dos lugares: `CategoriaOficio.maximoPorProfesional`.
+
+Correr el guion encontró dos errores, los dos míos y ninguno del diseño:
+
+| Qué apareció | Qué era |
+|---|---|
+| `' plomeria '` entraba como un oficio distinto | La normalización filtraba por `trim(s)` pero agregaba `s`. Corregido y reaplicado |
+| Los conteos del guion daban de más | La política «público: lectura de categorías del profesional» (0001) deja ver las de **todos**, así que un `count(*)` pelado suma las de los demás. El guion ahora filtra por profesional |
+
+Verificado: guion completo contra la base —incluido el bloque que prueba que
+una llamada fallida deja los oficios intactos—, `flutter analyze` 0 issues y
+`flutter test` **231 en verde** (5 nuevas).
+
+### 4b.6 Fase 5 — CU-21 Recibir Alerta Push · **hecha del lado del servidor** (14 pts)
+
+El circuito de negocio central, en tres commits como pedía el plan. Todo lo
+que no depende de Firebase está escrito, aplicado y verificado; lo que depende
+de Firebase está aislado detrás de una interfaz y entra sin tocar nada más.
+
+| Commit | Qué |
+|---|---|
+| `feat(CU-21)` a | Migración **0016** `profesionales_para_pedido()` + Edge Function `emparejar_pedido`, desplegada |
+| `feat(CU-21)` b | Migración **0017** (`registrar_dispositivo`, `dar_de_baja_dispositivo`) + `lib/features/notificaciones/` |
+| `feat(CU-21)` c | El disparo desde el alta del pedido y la apertura del detalle al tocar la notificación |
+
+**Quién recibe la alerta lo decide la base**, en `profesionales_para_pedido()`:
+zona que contiene al pedido (prefiltro por el radio máximo, que usa el índice
+GiST, y después el exacto con el radio de cada quien), oficio que coincide,
+cuenta aprobada y activa, y sin los pedidos que ese Profesional ya ignoró
+(CU-23). Lee `pedidos.ubicacion` y **no** la vista pública: su redondeo a tres
+decimales mete unos cien metros de error, que en una zona de 1 km decide mal.
+Es `SECURITY DEFINER` y solo la puede ejecutar `service_role`.
+
+La Edge Function no acepta destinatarios: recibe un id de pedido, comprueba
+que sea de quien llama —contra `buscador_id`, porque «poder ver el pedido» no
+prueba nada desde que todo autenticado ve los publicados vigentes— y manda por
+FCM HTTP v1. Sin credenciales de Firebase empareja igual y contesta
+`enviadas: 0`, que es lo que permitió probar el circuito sin el proyecto.
+
+Verificado contra la base: el caso feliz (un Profesional a 0 m, con su
+dispositivo) y los cinco motivos de exclusión —zona lejos, otro oficio, sin
+aprobar, pedido ignorado, pedido cerrado—, cada uno devolviendo cero filas;
+que un pedido inexistente sea un error y no una lista vacía; y el traspaso del
+token entre dos cuentas en el mismo teléfono. La función desplegada responde
+correctamente a las cuatro entradas inválidas (sin sesión, sin JSON, con GET,
+con la clave anónima).
+
+**Lo que falta y por qué:** el proyecto de Firebase. `firebase_messaging` no
+se agregó porque sin `google-services.json` el build de Android falla, así que
+`ServicioPush` es una interfaz con `PushNoConfigurado` como implementación:
+registra nada, no rompe nada. El día que estén las credenciales entra una sola
+clase nueva y `supabase secrets set FCM_*`.
+
+Verificado: `flutter analyze` 0 issues, `flutter test` **241 en verde** (10
+nuevas).
+
+### 4b.7 Fase 6 — CU-43 Tablero + CU-22 Detalle · **HECHA** (8 pts)
+
+El lado del Profesional ya tiene a dónde entrar: `/profesional/tablero`, con
+los pedidos vigentes ordenados por distancia a su zona.
+
+**Migración 0018**, dos funciones `security invoker` que leen
+`pedidos_publicos` —sin referencia de dirección y con la coordenada redondeada
+a unos cien metros—: `tablero_pedidos()` (página de 20, filtros por oficios
+propios y por guardados, descarta los ignorados, marca los guardados y trae la
+portada) y `pedido_publico()` (uno solo, con todas sus fotos). Son invoker a
+propósito: todo lo que leen ya se lo permite la RLS a quien llama, así que no
+hace falta `SECURITY DEFINER` y un error en la función no puede filtrar nada.
+
+| Archivo | Qué hace |
+|---|---|
+| `profesional/domain/pedido_tablero.dart` | El pedido ajeno: sin referencia ni coordenada exacta. `distanciaLegible` dice «En tu zona», «A 800 m» o «A 1,5 km» |
+| `profesional/data/tablero_repository.dart` | Las dos RPC. Ninguna consulta contra la tabla `pedidos` |
+| `profesional/presentation/controllers/tablero_controller.dart` | Paginado de 20 con scroll infinito y los tres filtros |
+| `profesional/presentation/screens/tablero_screen.dart` | El tablero, con tarjeta propia, dos vacíos distintos y pull to refresh |
+| `profesional/presentation/screens/detalle_pedido_publico_screen.dart` | CU-22: fotos, descripción, mini mapa y datos, sin barra de acciones |
+
+**Desvío respecto del plan.** Pedía derivar `detalle_pedido_screen` en modo
+lectura. Esa pantalla se construye sobre el modelo `Pedido`, que sale de la
+tabla y trae la ubicación exacta y la referencia: reutilizarla obligaba a que
+el Profesional leyera esa fila, que es justo lo que la vista pública evita. Se
+escribió una pantalla sobre `PedidoTablero`, que no tiene esos datos ni puede
+tenerlos, y se reutilizaron los widgets (mini mapa, URLs firmadas en lote).
+
+Verificado contra la base: el tablero trae el pedido con distancia y portada;
+la coordenada que sale tiene tres decimales; el ignorado desaparece; el filtro
+de guardados anda en los dos sentidos; sin zona configurada el tablero igual
+lista, sin distancia; el detalle de un pedido cerrado da cero filas; y un
+Buscador recibe `sin_permiso`. `flutter analyze` 0 issues, `flutter test`
+**249 en verde** (8 nuevas).
+
+### 4b.8 Fase 7 — CU-23 Ignorar + CU-24 Guardar · **HECHA** (4 pts)
+
+**Sin migración.** Las tablas `pedido_ignorado` y `pedido_favorito` y sus
+políticas son de la 0012, y la 0018 ya descartaba los ignorados y marcaba los
+guardados: faltaban las dos acciones y la solapa, que ya existía como filtro.
+
+Van por PostgREST y no por RPC: son un insert y un delete sobre tablas con
+clave compuesta, y las políticas dicen todo lo que hay que decir —a nombre
+propio, sobre un pedido que se pueda ver, y borrar solo lo propio—. Una función
+no agregaría ninguna regla.
+
+| Qué | Cómo |
+|---|---|
+| Guardar | Ícono de marcador en la tarjeta y botón en el detalle. Se pinta al toque y se escribe después; si falla, se revierte y se avisa |
+| Ignorar | **Quita primero de guardados** y después marca. Descartado y guardado a la vez no significa nada, y la solapa lo seguiría mostrando |
+| Deshacer | Ignorar es la única acción que hace desaparecer algo de la pantalla, así que el aviso ofrece deshacer y vuelve a pedir la página, para que el pedido reaparezca en su lugar por distancia |
+| En la solapa de guardados | Desmarcar saca el pedido de la lista en el momento |
+
+Verificado contra la base con el rol `authenticated`: guardar marca y aparece
+en la solapa; ignorar lo saca de las dos listas; deshacer lo devuelve; y un
+Buscador recibe `42501` al intentar marcar. `flutter analyze` 0 issues,
+`flutter test` **254 en verde** (5 nuevas).
+
+### 4b.9 Fase 8 — CU-44 Horarios y disponibilidad · **HECHA** (5 pts)
+
+**Migración 0019**, dos cosas:
+
+1. `reemplazar_horarios(p_franjas jsonb)`: guarda la semana entera en una sola
+   transacción, como el CU-12 con los oficios. Valida **todo antes de tocar
+   nada** —día 1 a 7, la franja termina después de empezar, hasta 3 por día— de
+   modo que una franja mal cargada no borre la semana que ya estaba. Y traduce
+   el `23P01` de la restricción de exclusión de la 0012 («conflicting key
+   value violates exclusion constraint…») a «hay dos franjas del mismo día que
+   se pisan».
+2. **El emparejamiento del CU-21 ahora mira `disponible`.** Era lo que la Fase
+   5 dejó anotado: el filtro no podía entrar antes de que existiera el
+   interruptor, porque el default es `false` y habría dejado a todos sin
+   alertas. Ahora entra, y la consecuencia es real: **quien no prenda el
+   interruptor no recibe ninguna alerta.**
+
+| Archivo | Qué hace |
+|---|---|
+| `profesional/domain/horario_atencion.dart` | La franja, con el día ISO y las horas en minutos desde la medianoche —el dominio no depende de Flutter y ordenar enteros no tiene sorpresas—. `sePisaCon` usa el mismo rango semiabierto que la base |
+| `profesional/data/horarios_repository.dart` | La RPC, el listado y el PATCH del interruptor |
+| `profesional/presentation/controllers/horarios_controller.dart` | La grilla en edición, con las mismas reglas que el servidor para no gastar un viaje en un «no» |
+| `profesional/presentation/screens/horarios_screen.dart` | `/profesional/horarios`: el interruptor arriba y los siete días abajo |
+
+Verificado contra la base: la semana se guarda y vuelve ordenada; guardar de
+nuevo reemplaza y no acumula; las franjas que se pisan, el día fuera de rango,
+la franja al revés y la cuarta del día dan los cuatro mensajes propios; una
+franja rechazada **no** borra lo que ya estaba guardado; y con `disponible` en
+false el emparejamiento devuelve cero. `flutter analyze` 0 issues,
+`flutter test` **265 en verde** (11 nuevas).
+
+### 4b.10 Fase 9 — CU-06 Cargar Portafolio · **HECHA** (5 pts)
+
+**Sin migración**: la tabla, el tope de 10 con bloqueo y el bucket privado son
+de la 0012. Faltaba la pantalla y el camino de los archivos.
+
+| Qué | Cómo |
+|---|---|
+| Subir | `image_picker` con `maxWidth: 1600` e `imageQuality: 80`, el mismo camino del CU-09 y del CU-13. La ruta es `{perfil_id}/{nombre}.jpg`, que es lo que exigen el `check` de la tabla y la política de Storage |
+| Orden de las escrituras | Primero el archivo, después la fila. Si el insert falla, se borra el archivo recién subido: un objeto que ninguna fila referencia es invisible y eterno |
+| Borrar | Primero el archivo, después la fila, por el mismo motivo |
+| Tope | 10, respetado del lado del cliente para no gastar una subida que el trigger va a rechazar igual |
+| Orden nuevo | Sigue al **mayor** orden existente, no a la cantidad: borrar una del medio deja un hueco, y `unique (profesional_id, orden)` no perdona |
+| CU-11 | La baja ahora borra también los archivos del portafolio, que era deuda de la sección 6. Las rutas salen de la tabla, no de listar el bucket |
+
+`flutter analyze` 0 issues, `flutter test` **270 en verde** (5 nuevas).
+
+### 4b.11 Fase 10 — Verificación y cierre
+
+Verificado el 16/09, todo junto:
+
+| Qué | Resultado |
+|---|---|
+| `flutter analyze` | 0 issues |
+| `flutter test` | **270 en verde** (163 al cerrar el Sprint 2) |
+| `flutter build web` | compila |
+| `flutter build apk --debug` | compila |
+| `flutter build ios --simulator --debug` | compila |
+| Grep de secretos (`eyJ`, `AIza`, `service_role`) | solo comentarios de la Edge Function que nombran el rol |
+| Migraciones | 0012 a 0019 aplicadas y verificadas contra la base, cada una con su guion |
+| Edge Function | `emparejar_pedido` desplegada y respondiendo |
+
+`CHANGELOG.md` agrupa `v0.1.0`, `v0.2.0` y `v0.3.0` por caso de uso.
+
 ## 5. Decisiones técnicas tomadas
 
 Formato: fecha · decisión · motivo. No se borran, se agregan.
@@ -402,7 +704,7 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 03/09 | La fila de `profesionales` la repara una migración, no la app (0011) | Sobre esa tabla no hay política de INSERT para el usuario, a propósito: solo SELECT y UPDATE. El único que puede crear la fila es el trigger `handle_new_user`, que es SECURITY DEFINER. Darle al cliente permiso de INSERT para que se repare solo dejaría que cualquiera se fabrique una fila de Profesional |
 | 03/09 | `handle_new_user` pasa a ser idempotente | Corre dentro de la transacción del signUp: un DNI repetido o un reintento sobre un id que ya tenía perfil tumbaba **el alta entera** con un error de base en la cara del usuario. Con `on conflict do nothing` el alta sigue y lo que falte se completa después desde el perfil (CU-05) |
 | 03/09 | Los formularios del pedido viven en `widgets/campos_pedido.dart`, no adentro del asistente | El CU-15 pide «los mismos formularios» que el CU-13. Duplicarlos garantizaba que en algún momento el alta aceptara un título de 4 caracteres que la edición rechazara. Las reglas están una sola vez, en `ValidadoresPedido`, y son las mismas de los `check` de la tabla `pedidos` |
-| 03/09 | **La vigencia no se edita en el CU-15** | Estirar `fecha_vencimiento` con un PATCH sería una renovación sin límite, y el CU-51 permite tres. La fecha se mueve solo por `renovar_pedido`, que las cuenta. La app no manda ese campo; el servidor todavía no lo impide (deuda de la sección 6) |
+| 03/09 | **La vigencia no se edita en el CU-15** | Estirar `fecha_vencimiento` con un PATCH sería una renovación sin límite, y el CU-51 permite tres. La fecha se mueve solo por `renovar_pedido`, que las cuenta. La app no manda ese campo; el servidor todavía no lo impide (deuda de la sección 6). **Desde el 14/09 lo impide la 0013**, y el repositorio ya ni acepta el parámetro |
 | 03/09 | Las fotos de la edición se aplican al instante; el resto, al guardar | El pedido ya existe, así que subir y borrar son operaciones sobre Storage que no tienen nada que esperar. Juntarlas hasta el «Guardar» obligaría a deshacer subidas si la edición falla. La pantalla lo dice en un renglón, para que nadie espere que «descartar cambios» devuelva una foto borrada |
 | 03/09 | El evento de edición se marca con `estado_anterior = estado_nuevo` y el motivo `edicion` (migración 0010) | `pedido_eventos` solo lo escribía el trigger que dispara al cambiar el estado, y una edición no cambia el estado: quedaba sin rastro. Un Profesional que leyó el pedido ayer y lo ve distinto hoy tiene que poder verlo en la cronología. No se agrega un enum ni una columna nueva: el motivo ya existe y es texto. SECURITY DEFINER porque sobre `pedido_eventos` no hay política de INSERT, a propósito |
 | 03/09 | Un fallo al registrar la edición **no** hace fallar la edición | La edición ya se escribió y no se puede deshacer (son escrituras sin transacción común, igual que la ubicación). Mostrar «no se pudo guardar» sobre datos que sí se guardaron es peor que un renglón faltante en la cronología. Queda en la consola |
@@ -410,6 +712,50 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 03/09 | Las URLs firmadas se piden en lote con `createSignedUrlsResult` y se cachean hasta 2 minutos antes de vencer | Una página del historial son 20 portadas: firmarlas de a una son 20 viajes contra uno. El plural clásico (`createSignedUrls`) está deprecado justamente porque no distingue una ruta que no se pudo firmar de una que sí, y esa diferencia es la que decide entre mostrar la foto o el placeholder. El margen evita entregar una firma que expira mientras la imagen se descarga |
 | 03/09 | Las fechas en castellano se escriben a mano (`core/utils/fechas.dart`), sin `DateFormat` | Formatear en español obliga a inicializar los datos de locale de `intl`; si falta, la app no falla al compilar sino **al dibujar la primera fecha**, que es el peor momento posible. Hacen falta seis frases y ningún calendario. La diferencia de días se cuenta por calendario y no por múltiplos de 24 h: a las 23:00, «mañana a las 08:00» tiene que decir «vence mañana», no «vence hoy» |
 | 03/09 | El piso de iOS pasa a 14 y la clave de Maps viaja por un **tercer** camino | `google_maps_flutter_ios` declara `platform :ios, '14.0'`: con 13 no hay `pod install` que funcione. Y el SDK nativo de iOS no lee `--dart-define` ni el manifiesto de Android: lee el `Info.plist`, que toma `MAPS_API_KEY` de `ios/Flutter/Maps.xcconfig` (gitignored, con `.example` al lado). Con la clave vacía no se llama a `provideAPIKey`: con `""` el SDK aborta la app al arrancar |
+| 14/09 | **Las migraciones se aplican y se verifican desde la CLI** (`supabase db query --linked -f`), envueltas en `begin … commit` | Antes se pegaban en el SQL Editor y nadie comprobaba el resultado: el ESTADO del 03/09 decía que ninguna migración se había corrido y la base las tenía todas. Con la CLI se ensaya con `rollback`, se aplica atómica y el guion de aceptación corre contra la base real. Las pruebas de RLS bajan a `authenticated` con `set local role` y un `request.jwt.claims` falso, dentro de una transacción que termina en rollback |
+| 14/09 | La zona de cobertura va en tabla propia y **se borran** `profesionales.ubicacion` y `radio_cobertura_km` (0012) | Las columnas venían de la 0001 y nadie las usaba. Dejarlas era tener dos lugares donde vive la zona, y el emparejamiento del CU-21 terminaría leyendo el que nadie actualiza. Radio en metros, la unidad de `ST_DWithin` sobre geography |
+| 14/09 | El índice de la zona se usa filtrando primero por el radio máximo | `ST_DWithin` con el radio tomado de la fila no aprovecha el GiST: el planificador necesita un radio constante. El CU-21 filtra con `100000` (índice) y después con `radio_metros` (exacto). Un polígono de buffer indexado se descartó: es inscripto, y deja afuera pedidos que están en el borde del radio |
+| 14/09 | La zona de cobertura no la ve nadie más que el dueño y el admin | El centro aproxima el domicilio del Profesional. El emparejamiento corre con `service_role` en la Edge Function y no la necesita a través de RLS |
+| 14/09 | Los horarios no se superponen por **restricción de exclusión**, no por un trigger que cuente | Es la única regla del esquema del Profesional que no necesita bloqueo: la exclusión es atómica frente a dos inserciones simultáneas. Requiere `btree_gist` en `extensions`. Una franja no cruza medianoche; la que termina a medianoche va hasta `24:00` |
+| 14/09 | Tope del portafolio: **10 fotos**, con `for update` sobre `profesionales` antes del `count` | El plan decía «N». Mismo patrón que el tope de 5 fotos del pedido (0005). También dispara si cambia `profesional_id` |
+| 14/09 | El bucket del portafolio sigue siendo `portafolios`, pero privado | La 0001 lo creó público y sin políticas. Renombrarlo a `portafolio` dejaba un bucket huérfano; estaba vacío, así que pasarlo a privado no rompe enlaces. La lectura sigue a la del Profesional: se firma una foto cuando se ve a su dueño |
+| 14/09 | La visibilidad de horarios y portafolio se hereda con `exists` sobre `profesionales` | El `exists` corre con las RLS de quien consulta: la fila se ve exactamente cuando se ve al Profesional (dueño, admin, o aprobado y activo). No se duplica la regla de «perfil público» en cada tabla |
+| 14/09 | El token de FCM es único en toda la tabla; el traspaso entre cuentas lo hará una RPC | El token es de la instalación, no del usuario: si en el mismo teléfono cambia la sesión, el Profesional anterior no puede seguir recibiendo alertas. Con RLS el nuevo dueño no ve la fila vieja, así que el traspaso va en la RPC SECURITY DEFINER del CU-21 b |
+| 14/09 | Guardar o ignorar un pedido exige verlo | El `exists` sobre `pedidos` en el `with check` corre con RLS: solo entran pedidos publicados y vigentes. Sin eso, la FK permitía confirmar si un uuid de pedido existe |
+| 14/09 | La baja (CU-11) borra las filas nuevas del Profesional, no los archivos del portafolio | La fila de `profesionales` sobrevive a la baja, así que los `on delete cascade` no disparan. Los archivos los tiene que borrar el cliente por la API, como el avatar y el DNI (0004) |
+| 14/09 | El guard de la edición (0013) reusa la compuerta `app.transicion_estado` en vez de abrir una propia | Las tres funciones que la abren son exactamente las que tienen derecho a mover el ciclo de vida; todo lo que hacen con la compuerta abierta es legítimo. Una segunda compuerta obligaba a tocar esas tres funciones otra vez y a que alguien recuerde abrir las dos |
+| 14/09 | Editar un pedido terminado es un error **para el usuario**; tocar la vigencia es un **centinela** | Lo primero puede pasar con una pantalla vieja abierta, y el mensaje ya existía con el hint `transicion_invalida` de la 0009: la app lo muestra sin cambios. Lo segundo solo lo produce un bug nuestro, como el `estado` de la 0008 |
+| 14/09 | El guard protege todo el ciclo de vida, no solo `fecha_vencimiento` | El plan nombraba la fecha. Pero `renovaciones = 0` es renovar sin límite por el otro lado, y `fecha_cierre` / `motivo_cierre` / `fecha_publicacion` son historia del pedido que solo escriben las RPC |
+| 14/09 | La lectura de fotos del bucket `pedidos` se escribe **explícita**, no heredada de las RLS de `pedidos` | Al revés que en las tablas de la 0012, a propósito: la fila de `pedido_fotos` y su archivo tienen que verse con la misma regla, y la de la tabla (0006) está escrita explícita. Si `pedidos` suma una política de lectura, las dos se cambian juntas |
+| 14/09 | `actualizarPedido` deja de aceptar `fechaVencimiento` | Mismo criterio que borrar `Ubicacion.aEwkt()` el 02/09: un parámetro que el servidor rechaza siempre es una invitación a usarlo |
+| 16/09 | La zona reutiliza `Ubicacion` de `features/pedidos`, en vez de un tipo propio | Es el tipo que devuelve el `SelectorUbicacion`, que el CU-07 reutiliza entero. Un `CentroZona` idéntico obligaría a convertir de ida y de vuelta en cada pasada. Queda una dependencia de `profesional` hacia `pedidos`: si aparece un tercer caso de uso con mapa, `Ubicacion` se muda a `core` |
+| 16/09 | El mapa del CU-07 no se arrastra: el centro se elige siempre en el `SelectorUbicacion` | Hay un solo lugar en todo el proyecto donde se elige una ubicación, con su búsqueda de direcciones, su «usar mi ubicación» y su geocodificación inversa. El mapa de la zona dibuja el resultado y el círculo |
+| 16/09 | El zoom se calcula a partir del radio y no es una constante | El radio va de 1 a 100 km: con el zoom fijo del detalle, una zona de 50 km no entra en la pantalla y una de 1 km se ve como un punto. Cada paso de zoom duplica la escala, así que la relación es logarítmica. `zoomParaRadio` es de nivel superior para poder probarla sin levantar el widget |
+| 16/09 | `guardar_zona_cobertura` valida el radio además del `check` de la tabla | El 23514 de la restricción no dice cuál es el rango. La RPC contesta «entre 1 y 100 km», que es lo que la pantalla muestra tal cual |
+| 16/09 | La RPC comprueba `es_profesional_activo()` aunque la RLS ya lo haga | Sin eso, un Buscador recibiría un 42501 que —por la decisión del 02/09— no se le muestra a nadie. Con la comprobación, el error es una frase en castellano |
+| 16/09 | El reemplazo de oficios pasa a una RPC transaccional (0015) | Eran un DELETE y un INSERT sueltos: una falla en el medio dejaba al Profesional sin oficios, y eso con el CU-21 significa no recibir ninguna alerta. Es la misma regla que el alta del pedido de la 0009: lo que el usuario piensa como una sola operación tiene que ser una sola del lado del servidor |
+| 16/09 | El borrado de la RPC es selectivo: `delete ... not in (los nuevos)` + `insert ... on conflict do nothing` | Un borrar todo e insertar todo pierde el `created_at` de los oficios que el Profesional venía teniendo, que es el dato con el que se puede saber desde cuándo ofrece cada uno |
+| 16/09 | El tope de 5 oficios vive en `CategoriaOficio.maximoPorProfesional` y en la RPC | Estaba escrito en la pantalla y como valor por defecto del selector. Ahora la pantalla lee la constante y el servidor rechaza lo que la UI no debería haber dejado armar. La prueba que los ata está en `test/categorias_oficio_test.dart` |
+| 16/09 | `reemplazar` deja de recibir el id del Profesional | Lo toma `auth.uid()` adentro de la RPC: sin id en el payload no hay forma de pedirle al servidor que le edite los oficios a otro, y la pantalla no tiene que acordarse de pasar el suyo |
+| 16/09 | **`revoke ... from public` no revoca nada en Supabase** | Los privilegios por defecto del proyecto dan `EXECUTE` **explícito** a `anon` y `authenticated` sobre cada función nueva, y un revoke a `public` no toca los grants explícitos. Todas las migraciones anteriores usaban ese idioma creyendo que cerraba la puerta; no tiene consecuencias ahí porque esas funciones empiezan comprobando `auth.uid()`, pero `profesionales_para_pedido` no podía depender de eso: devuelve dónde hay Profesionales. Se revoca a `public, anon, authenticated` y se comprueba mirando `proacl` |
+| 16/09 | La regla de «a quién se le avisa» vive en la base, no en la Edge Function | El filtro es `ST_DWithin` contra un índice GiST: traerse todas las zonas a Deno para compararlas a mano es lo que la decisión del 02/09 —PostGIS en vez de lat/lng— buscaba evitar. Además queda en un archivo versionado y con guion de aceptación |
+| 16/09 | ~~El emparejamiento todavía no filtra por `disponible`~~ → **filtra desde la 0019** | Su default es `false`, así que el filtro no podía entrar antes que el interruptor del CU-44: habría dejado a todos sin alertas. Con la Fase 8 hecha, entra. Consecuencia a tener presente en la demo: **quien no prenda el interruptor no recibe nada** |
+| 16/09 | La Edge Function comprueba `buscador_id`, no «si puede ver el pedido» | Desde la 0006 cualquier autenticado ve los pedidos publicados vigentes, así que leerlo con la sesión de quien llama no prueba que sea suyo. Se lee con `service_role` y se compara el id a mano |
+| 16/09 | Un fallo al notificar no hace fallar la publicación del pedido | El pedido ya está publicado y es lo que la persona pidió; que la alerta no salga es un problema nuestro que ella no puede corregir reintentando el formulario. Y el Profesional ve el pedido igual entrando al tablero: la alerta acelera, no habilita |
+| 16/09 | El token de FCM se registra y se da de baja por RPC, no por un upsert | El token es de la instalación, no del usuario: si en ese teléfono había iniciado sesión otro Profesional, hay que sacárselo, y su fila es invisible bajo las RLS del nuevo dueño. Solo una función SECURITY DEFINER puede hacer el traspaso (0017). La baja, en cambio, es INVOKER: borrar lo propio ya lo permite la RLS |
+| 16/09 | La baja del token va **antes** del `signOut`, y no puede romper el cierre de sesión | Después del `signOut` no hay `auth.uid()` y la baja ya no se puede hacer. Si falla, se registra en la consola y la sesión se cierra igual: quedarse adentro de la app por una fila es peor que un token de más, que además se limpia solo cuando FCM lo reporta desconocido |
+| 16/09 | `firebase_messaging` no entra hasta que exista el proyecto de Firebase; en su lugar hay una interfaz | Agregar el paquete hoy rompe el build de Android, que exige `google-services.json`. Con `ServicioPush` + `PushNoConfigurado`, todo lo demás —registro, traspaso, baja, disparo, navegación al detalle— se escribe, se prueba y se commitea igual |
+| 16/09 | El tablero ordena por distancia **en el servidor** | Ordenar en el cliente obliga a traerse todos los pedidos vigentes para saber cuáles son los veinte más cercanos. Es el mismo motivo por el que la ubicación es PostGIS y no lat/lng (02/09) |
+| 16/09 | La distancia del tablero se calcula contra la coordenada **redondeada**, y el resultado se redondea a cien metros | El tablero es para ordenar, no para llegar a la puerta: cien metros no cambian el orden de una lista. El emparejamiento del CU-21, que sí decide a quién se le avisa, usa la exacta. Y redondear el resultado evita que varias distancias exactas desde centros conocidos permitan triangular el domicilio |
+| 16/09 | El detalle del Profesional es una pantalla propia sobre `PedidoTablero`, no `detalle_pedido_screen` en modo lectura | Desvío consciente del plan: aquella pantalla se apoya en el modelo `Pedido`, que trae ubicación exacta y referencia. Reutilizarla obligaba a que el Profesional leyera la fila de `pedidos`. Los widgets sí se reutilizan |
+| 16/09 | La tarjeta del tablero no reutiliza `TarjetaPedido` del CU-17 | Aquella muestra el **estado** del pedido propio —pausado, vencido, cerrado— y en el tablero todo está publicado. Lo que importa es la distancia y el oficio |
+| 16/09 | Ignorar un pedido lo quita de guardados | Un pedido descartado y marcado como interesante a la vez es un estado que no significa nada, y la solapa de guardados lo seguiría mostrando después de haberlo sacado del tablero. El orden importa: primero el delete del favorito, después el insert del ignorado |
+| 16/09 | Guardar se pinta antes de que conteste el servidor; ignorar también, pero con deshacer | Son marcas chicas: esperar medio segundo a que el ícono cambie se siente roto. Si la escritura falla se revierte y se avisa. Ignorar además hace desaparecer algo de la pantalla, así que el aviso ofrece «Deshacer»: un toque mal dado no puede costar un trabajo que no se vuelve a ver nunca |
+| 16/09 | Las marcas van por PostgREST, no por RPC | Son un insert y un delete sobre tablas con clave compuesta, y las políticas de la 0012 ya expresan la regla entera. Una función sería una capa que no agrega nada |
+| 16/09 | El interruptor de disponibilidad se guarda solo; la grilla de horarios espera el botón | Es una decisión de un bit que se toma al empezar o terminar la jornada: hacerla pasar por «Guardar» son dos toques para algo que tiene que ser uno. La grilla se edita de a varias franjas, y guardar en cada toque llenaría la base de semanas a medio armar |
+| 16/09 | **Los horarios no filtran el emparejamiento; la disponibilidad sí** | Un pedido publicado a las 23:00 le sirve igual al que atiende de 9 a 18: lo ve a la mañana y lo toma. Descartarlo por la hora de publicación sería perder trabajo por nada. Los horarios son información del perfil, que el Buscador mira antes de contactar (Sprint 5) |
+| 16/09 | Las horas viajan como minutos desde la medianoche, no como `TimeOfDay` | El dominio no puede depender de Flutter, y comparar y ordenar enteros no tiene sorpresas. La medianoche del final es 1440 («24:00»), que es lo que acepta `time` en Postgres: «22 a 00» es una franja de dos horas, no una de menos cero |
+| 16/09 | La validación de los horarios está en los dos lados, y es la misma | El cliente rechaza superposición y tope por día para no gastar un viaje en un «no»; el servidor los rechaza igual porque el cliente no es una fuente confiable. Lo que no se duplica es el mensaje: los del servidor son los que se muestran cuando llegan |
 | 02/09 | El botón «Mi ubicación» y las sugerencias de búsqueda van en la columna del `SelectorUbicacion`, no flotando sobre el mapa | En Web, `GoogleMap` se dibuja con `HtmlElementView`, y un widget interactivo apilado arriba necesita `pointer_interceptor` para recibir el mouse. Se resolvió con una columna —búsqueda arriba, mapa con solo el pin encima (`IgnorePointer`, no necesita recibir toques), panel de «mi ubicación»/dirección/referencia abajo— en vez de sumar otra dependencia |
 
 ## 6. Deuda técnica y pendientes conocidos
@@ -421,14 +767,19 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | ~~Providers escritos a mano~~ | **Saldada el 02/09.** Todo el proyecto pasó a `@riverpod` y `freezed`. La UI no se tocó: los nombres generados coinciden con los de antes. | ✅ |
 | ~~El estado del pedido se puede cambiar sin pasar por la RPC~~ | **Saldada el 02/09 con la migración 0008.** Trigger `pedidos_guard_estado` `BEFORE UPDATE` + compuerta `app.transicion_estado` en las tres RPC que sí pueden mover el estado. | ✅ |
 | ~~Un pedido puede nacer en un estado terminal~~ | **Saldada el 02/09 con la migración 0009.** Trigger `pedidos_guard_alta` `BEFORE INSERT`, con la misma compuerta que el de UPDATE. | ✅ |
-| El PATCH de edición no mira el estado del pedido | `actualizar_ubicacion_pedido` exige que el pedido esté `publicado` o `pausado`, pero el UPDATE de PostgREST que cambia título, descripción o presupuesto no: la RLS solo comprueba dueño. Hoy se le puede editar el título a un pedido cerrado. No molesta a nadie —el pedido ya no se lista— pero es una regla del CU-15 que vive solo en el cliente. | Sprint 3 |
-| El Profesional no puede ver las fotos de un pedido | Las políticas de Storage del bucket `pedidos` son solo del dueño, así que el CU-16 no va a poder firmar las URLs. Falta una política de SELECT para pedidos publicados vigentes, o firmarlas desde una Edge Function. | Sprint 2 (con CU-16) |
+| ~~El PATCH de edición no mira el estado del pedido~~ | **Saldada el 14/09 con la migración 0013** (`pedidos_guard_edicion`). Era: `actualizar_ubicacion_pedido` exige que el pedido esté `publicado` o `pausado`, pero el UPDATE de PostgREST que cambia título, descripción o presupuesto no: la RLS solo comprueba dueño. Hoy se le puede editar el título a un pedido cerrado. No molesta a nadie —el pedido ya no se lista— pero es una regla del CU-15 que vive solo en el cliente. | ✅ |
+| ~~El Profesional no puede ver las fotos de un pedido~~ | **Saldada el 14/09 con la migración 0013.** Era: las políticas de Storage del bucket `pedidos` son solo del dueño, así que el CU-16 no va a poder firmar las URLs. Falta una política de SELECT para pedidos publicados vigentes, o firmarlas desde una Edge Function. | ✅ |
+| **La vista pública no alcanza: por PostgREST se llega a la ubicación exacta** | `pedidos_publicos` esconde la referencia y redondea la coordenada, pero la política «pedidos: lectura de publicados vigentes» (0006) deja que cualquier autenticado lea la fila entera de `pedidos`, con `ubicacion` y `referencia_ubicacion`. La app nunca lo hace —el tablero y el detalle usan solo las funciones de la 0018— pero un `GET /rest/v1/pedidos` lo consigue. No se puede quitar la política sin romper la vista, que corre con `security_invoker`: la salida es una vista con barrera y `security definer`, o mover la lectura pública a una función. Es la deuda más grande que queda abierta | Sprint 4, antes de que haya contacto entre las partes |
+| **Un Profesional puede aprobarse solo y cargarse tokens** | La política «profesional propio: actualización» (0001/0002) es de fila entera, como la de `pedidos` antes de la 0008: el dueño puede escribir `estado_verificacion`, `saldo_tokens`, `calificacion_promedio` y `total_calificaciones` con un PATCH. Importa ya: el CU-21 va a notificar según la verificación, y el Sprint 4 cobra tokens. Se cierra con un trigger `BEFORE UPDATE` del patrón de `pedidos_guard_estado`, dejándole al dueño solo `descripcion`, `dni` y `disponible` | Sprint 3, antes del CU-21 |
+| Las fotos de un pedido cerrado se pueden agregar y borrar | El guard de la 0013 cubre la fila de `pedidos`, no `pedido_fotos` ni el bucket: las políticas de alta y baja de fotos (0006) solo miran dueño. La pantalla solo ofrece fotos en la edición, que ya exige publicado o pausado. Mismo tipo de regla que vivía solo en el cliente | Sprint 4 |
+| ~~La baja no borra los archivos del portafolio~~ | **Saldada el 16/09 con el CU-06.** `PerfilRepository._borrarArchivos` lee las rutas de `profesional_portafolio` y las borra por la API de Storage antes de llamar a la RPC | ✅ |
+| Historial de migraciones de la CLI vacío | 0001–0012 están aplicadas pero `supabase migration list` no lo sabe, así que `supabase db push` intentaría correrlas todas otra vez. No usar `db push` hasta hacer `supabase migration repair --status applied` de las doce | Cuando se adopte `db push` |
 | ~~`flutter test` y los builds se dejan de correr fase por fase~~ | **Saldada el 03/09.** La verificación diferida se hizo entera al cerrar la Fase 6: analyze 0 issues, 101 tests en verde, y web, APK e iOS compilando. La apuesta salió bien: no había ningún error acumulado de las Fases 5 y 6 | ✅ |
 | ~~CU-17 Consultar Historial (Fase 7)~~ | **Hecho el 03/09.** Con los cuatro grupos y sus contadores, búsqueda por texto en el servidor, scroll infinito de 20, pull to refresh que corre el barrido de vencimientos, portadas firmadas en lote y dos estados vacíos distintos | ✅ |
 | **CU-18 Reenvío de Enlace de Gestión (Fase 8) — replanificado** | No se hizo. Ya estaba marcado como descartable en el plan del sprint: es el único ítem que no condiciona nada del Sprint 3 y se replanifica al Sprint 5, donde ya hay trabajo de enlaces públicos (CU-26 y CU-27) | Sprint 5 |
 | ~~Pruebas de widget del Sprint 2 (Fase 9a)~~ | **Saldada el 03/09.** 62 pruebas nuevas, de 101 a **163**: el asistente del CU-13 contra el árbol de widgets, los diálogos del ciclo de vida, la barra de acciones en los cinco estados, el borrador de edición del CU-15, los validadores compartidos y las fechas. Ninguna toca Supabase | ✅ |
 | El ciclo de vida (Fase 6) sin ejercitar contra una base real | Las pruebas de widget cubren la UI y la máquina de estados del lado del cliente, pero nadie tocó todavía los botones de pausar, cerrar, cancelar, renovar y editar contra Supabase. Depende de aplicar las migraciones | Antes de la demo |
-| El PATCH de edición tampoco mira `fecha_vencimiento` | Del mismo tipo que el ítem de arriba sobre el estado: la app no manda ese campo al editar (decisión del 03/09), pero la RLS no lo impide, así que un cliente que lo mandara renovaría sin gastar renovaciones. Se cierra con un trigger, como el `pedidos_guard_estado` de la 0008 | Sprint 3 |
+| ~~El PATCH de edición tampoco mira `fecha_vencimiento`~~ | **Saldada el 14/09 con la migración 0013**, que cubre también `renovaciones`: ponerlo en 0 era el mismo agujero por el otro lado. Era: del mismo tipo que el ítem de arriba sobre el estado: la app no manda ese campo al editar (decisión del 03/09), pero la RLS no lo impide, así que un cliente que lo mandara renovaría sin gastar renovaciones. Se cierra con un trigger, como el `pedidos_guard_estado` de la 0008 | ✅ |
 | Sin pruebas de widget ni de integración | Hay 18 pruebas unitarias de validadores y mensajes, más 3 de widget en `test/tema_test.dart` que cubren el lineamiento visual, más `mapa_config_test.dart`/`servicio_direcciones_test.dart` del CU-16 (101 en total). Los circuitos se verifican a mano con el guion de `ARRANQUE.md`. El wizard del CU-13 no tiene pruebas de widget todavía (ver Fase 9 del plan del sprint) | Sprint 2 |
 | Figura 3.1 del Anexo UI desactualizada | Muestra 3 campos; el alta tiene los 5 del CU-01. Hay que redibujarla antes de entregar el Anexo. | Antes de la entrega |
 | Textos legales provisorios | `/legales/terminos` y `/legales/privacidad` describen el alcance pero no son la redacción definitiva. | Sprint 3 |
@@ -443,51 +794,35 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 _(Lo primero que hay que hacer al retomar. Está en orden: cada punto depende
 del anterior.)_
 
-El **código está completo y compila en las tres plataformas**. Lo que falta
-para levantar el proyecto no es código: es configuración de entorno y, sobre
-todo, **aplicar las migraciones**, que nunca se ejecutaron contra una base.
+### 7.1 Sprint 3 — lo que sigue
 
-### 7.1 Para que la app levante y funcione (bloqueante)
+1. **Para la demo:** el Profesional de prueba tiene que estar **disponible**.
+   Desde la 0019 el emparejamiento filtra por ese interruptor, así que con la
+   cuenta en «no disponible» no llega ninguna alerta, y eso ahora es lo
+   correcto, no un error.
+2. **Firebase, del lado tuyo**, único bloqueante del CU-21 de punta a punta:
+   `google-services.json`, clave APNs y `supabase secrets set FCM_*`.
+3. **Fase 9 — CU-06 Cargar Portafolio** (5 pts), el último ítem de alcance.
+   Tabla, tope de 10 con bloqueo y bucket privado ya están (0012). Falta la
+   pantalla y el borrado de los archivos en la baja de cuenta (sección 6).
+4. **Las dos deudas de seguridad de la sección 6**: la ubicación exacta
+   legible por PostgREST y el Profesional que puede aprobarse solo.
+5. **Fase 10 — cierre**: los tres builds, el grep de secretos, merge a `main`,
+   tag `v0.3.0` y `CHANGELOG.md`.
 
-1. **Aplicar las migraciones en el SQL Editor de Supabase, en orden:**
-   `0004_cu11_storage_sin_dml.sql`, `0005_pedidos.sql`, `0006_pedidos_rls.sql`,
-   `0007_pedidos_coordenadas.sql`, `0008_pedidos_guard_estado.sql`,
-   `0009_pedidos_alta_y_ubicacion.sql`, `0010_pedido_evento_edicion.sql` y
-   `0011_profesionales_faltantes.sql`. **La 0011 se puede correr sola y
-   primero**: no depende de ninguna otra y es la que destraba la carga de
-   documentación del CU-09 (el `23503` contra `profesionales`).
-   Cada una trae su guion de aceptación comentado al final: correrlo.
-   `supabase/scripts/verificar_pedidos.sql` dice cuáles están aplicadas, y su
-   bloque 8 avisa del único orden peligroso: **la 0008 aplicada a medias —el
-   trigger sí, las RPC no— deja el sistema peor que antes**, porque entonces
-   nada puede mover el estado. Sin esto, todo el Sprint 2 devuelve
-   `PGRST202: falta aplicar una migración`.
-2. **Clave de Google Maps Platform**, con Maps SDK for Android, Maps
-   JavaScript API, Places API (New) y Geocoding API habilitadas. Va por tres
-   caminos, uno por plataforma (README, sección «Clave de Google Maps»):
-   `GOOGLE_MAPS_API_KEY` del `.env` / `--dart-define` para Dart y Web,
-   `MAPS_API_KEY` en `android/local.properties` para Android, y
-   `ios/Flutter/Maps.xcconfig` (copiar del `.example`) para iOS.
-3. **Correr la app** y hacer el circuito completo contra la base: publicar un
-   pedido con foto y ubicación, y después pausar, reanudar, editar, renovar,
-   cerrar y cancelar. Es lo que nunca se ejercitó (sección 6).
-4. Si iOS vuelve a fallar después de agregar un plugin: `cd ios && pod install
-   --repo-update`. El piso es iOS 14.
+### 7.2 Arrastrado de sprints anteriores
 
-### 7.2 Antes de mostrarlo
-
-5. Aprobar a mano por SQL a un Profesional de prueba, con
-   `supabase/scripts/aprobar_profesional.sql` (CU-35 es del Sprint 6).
+4. **Circuito completo contra la base**: publicar un pedido con foto y
+   ubicación, y después pausar, reanudar, editar, renovar, cerrar y cancelar.
+   Las migraciones ya están aplicadas (verificado el 14/09); lo que falta es
+   ejercitar la app. Hay un Profesional aprobado para las pruebas del Sprint 3.
+5. `CHANGELOG.md` con `v0.1.0` y `v0.2.0`: los tags existen y están
+   pusheados, el archivo no.
 6. Del **Sprint 1** sigue pendiente el material de la entrega: el video de los
    7 circuitos de `ARRANQUE.md`, la captura del Schema Visualizer y de la
    tabla de políticas RLS, y la subida a BB.
-
-### 7.3 Cierre del sprint (Fase 9c, sin hacer)
-
-7. Merge de `sprint-2` a `main`, tag `v0.2.0` con el mensaje
-   *Sprint 2 — Gestión de Pedidos y Geolocalización (PT 3.0)*, push del tag y
-   `CHANGELOG.md` con `v0.1.0` y `v0.2.0` agrupados por caso de uso.
-   **Ningún commit del sprint está pusheado todavía.**
+7. Si iOS vuelve a fallar después de agregar un plugin: `cd ios && pod install
+   --repo-update`. El piso es iOS 14.
 
 ---
 
