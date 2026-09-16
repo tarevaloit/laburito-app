@@ -576,6 +576,37 @@ en la solapa; ignorar lo saca de las dos listas; deshacer lo devuelve; y un
 Buscador recibe `42501` al intentar marcar. `flutter analyze` 0 issues,
 `flutter test` **254 en verde** (5 nuevas).
 
+### 4b.9 Fase 8 — CU-44 Horarios y disponibilidad · **HECHA** (5 pts)
+
+**Migración 0019**, dos cosas:
+
+1. `reemplazar_horarios(p_franjas jsonb)`: guarda la semana entera en una sola
+   transacción, como el CU-12 con los oficios. Valida **todo antes de tocar
+   nada** —día 1 a 7, la franja termina después de empezar, hasta 3 por día— de
+   modo que una franja mal cargada no borre la semana que ya estaba. Y traduce
+   el `23P01` de la restricción de exclusión de la 0012 («conflicting key
+   value violates exclusion constraint…») a «hay dos franjas del mismo día que
+   se pisan».
+2. **El emparejamiento del CU-21 ahora mira `disponible`.** Era lo que la Fase
+   5 dejó anotado: el filtro no podía entrar antes de que existiera el
+   interruptor, porque el default es `false` y habría dejado a todos sin
+   alertas. Ahora entra, y la consecuencia es real: **quien no prenda el
+   interruptor no recibe ninguna alerta.**
+
+| Archivo | Qué hace |
+|---|---|
+| `profesional/domain/horario_atencion.dart` | La franja, con el día ISO y las horas en minutos desde la medianoche —el dominio no depende de Flutter y ordenar enteros no tiene sorpresas—. `sePisaCon` usa el mismo rango semiabierto que la base |
+| `profesional/data/horarios_repository.dart` | La RPC, el listado y el PATCH del interruptor |
+| `profesional/presentation/controllers/horarios_controller.dart` | La grilla en edición, con las mismas reglas que el servidor para no gastar un viaje en un «no» |
+| `profesional/presentation/screens/horarios_screen.dart` | `/profesional/horarios`: el interruptor arriba y los siete días abajo |
+
+Verificado contra la base: la semana se guarda y vuelve ordenada; guardar de
+nuevo reemplaza y no acumula; las franjas que se pisan, el día fuera de rango,
+la franja al revés y la cuarta del día dan los cuatro mensajes propios; una
+franja rechazada **no** borra lo que ya estaba guardado; y con `disponible` en
+false el emparejamiento devuelve cero. `flutter analyze` 0 issues,
+`flutter test` **265 en verde** (11 nuevas).
+
 ## 5. Decisiones técnicas tomadas
 
 Formato: fecha · decisión · motivo. No se borran, se agregan.
@@ -675,7 +706,7 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 16/09 | `reemplazar` deja de recibir el id del Profesional | Lo toma `auth.uid()` adentro de la RPC: sin id en el payload no hay forma de pedirle al servidor que le edite los oficios a otro, y la pantalla no tiene que acordarse de pasar el suyo |
 | 16/09 | **`revoke ... from public` no revoca nada en Supabase** | Los privilegios por defecto del proyecto dan `EXECUTE` **explícito** a `anon` y `authenticated` sobre cada función nueva, y un revoke a `public` no toca los grants explícitos. Todas las migraciones anteriores usaban ese idioma creyendo que cerraba la puerta; no tiene consecuencias ahí porque esas funciones empiezan comprobando `auth.uid()`, pero `profesionales_para_pedido` no podía depender de eso: devuelve dónde hay Profesionales. Se revoca a `public, anon, authenticated` y se comprueba mirando `proacl` |
 | 16/09 | La regla de «a quién se le avisa» vive en la base, no en la Edge Function | El filtro es `ST_DWithin` contra un índice GiST: traerse todas las zonas a Deno para compararlas a mano es lo que la decisión del 02/09 —PostGIS en vez de lat/lng— buscaba evitar. Además queda en un archivo versionado y con guion de aceptación |
-| 16/09 | El emparejamiento **todavía no filtra por `disponible`** (CU-44) | Su default es `false` y no hay pantalla que lo encienda: filtrar hoy dejaría a todo el mundo sin alertas. El filtro entra junto con el interruptor, en la Fase 8 |
+| 16/09 | ~~El emparejamiento todavía no filtra por `disponible`~~ → **filtra desde la 0019** | Su default es `false`, así que el filtro no podía entrar antes que el interruptor del CU-44: habría dejado a todos sin alertas. Con la Fase 8 hecha, entra. Consecuencia a tener presente en la demo: **quien no prenda el interruptor no recibe nada** |
 | 16/09 | La Edge Function comprueba `buscador_id`, no «si puede ver el pedido» | Desde la 0006 cualquier autenticado ve los pedidos publicados vigentes, así que leerlo con la sesión de quien llama no prueba que sea suyo. Se lee con `service_role` y se compara el id a mano |
 | 16/09 | Un fallo al notificar no hace fallar la publicación del pedido | El pedido ya está publicado y es lo que la persona pidió; que la alerta no salga es un problema nuestro que ella no puede corregir reintentando el formulario. Y el Profesional ve el pedido igual entrando al tablero: la alerta acelera, no habilita |
 | 16/09 | El token de FCM se registra y se da de baja por RPC, no por un upsert | El token es de la instalación, no del usuario: si en ese teléfono había iniciado sesión otro Profesional, hay que sacárselo, y su fila es invisible bajo las RLS del nuevo dueño. Solo una función SECURITY DEFINER puede hacer el traspaso (0017). La baja, en cambio, es INVOKER: borrar lo propio ya lo permite la RLS |
@@ -688,6 +719,10 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 16/09 | Ignorar un pedido lo quita de guardados | Un pedido descartado y marcado como interesante a la vez es un estado que no significa nada, y la solapa de guardados lo seguiría mostrando después de haberlo sacado del tablero. El orden importa: primero el delete del favorito, después el insert del ignorado |
 | 16/09 | Guardar se pinta antes de que conteste el servidor; ignorar también, pero con deshacer | Son marcas chicas: esperar medio segundo a que el ícono cambie se siente roto. Si la escritura falla se revierte y se avisa. Ignorar además hace desaparecer algo de la pantalla, así que el aviso ofrece «Deshacer»: un toque mal dado no puede costar un trabajo que no se vuelve a ver nunca |
 | 16/09 | Las marcas van por PostgREST, no por RPC | Son un insert y un delete sobre tablas con clave compuesta, y las políticas de la 0012 ya expresan la regla entera. Una función sería una capa que no agrega nada |
+| 16/09 | El interruptor de disponibilidad se guarda solo; la grilla de horarios espera el botón | Es una decisión de un bit que se toma al empezar o terminar la jornada: hacerla pasar por «Guardar» son dos toques para algo que tiene que ser uno. La grilla se edita de a varias franjas, y guardar en cada toque llenaría la base de semanas a medio armar |
+| 16/09 | **Los horarios no filtran el emparejamiento; la disponibilidad sí** | Un pedido publicado a las 23:00 le sirve igual al que atiende de 9 a 18: lo ve a la mañana y lo toma. Descartarlo por la hora de publicación sería perder trabajo por nada. Los horarios son información del perfil, que el Buscador mira antes de contactar (Sprint 5) |
+| 16/09 | Las horas viajan como minutos desde la medianoche, no como `TimeOfDay` | El dominio no puede depender de Flutter, y comparar y ordenar enteros no tiene sorpresas. La medianoche del final es 1440 («24:00»), que es lo que acepta `time` en Postgres: «22 a 00» es una franja de dos horas, no una de menos cero |
+| 16/09 | La validación de los horarios está en los dos lados, y es la misma | El cliente rechaza superposición y tope por día para no gastar un viaje en un «no»; el servidor los rechaza igual porque el cliente no es una fuente confiable. Lo que no se duplica es el mensaje: los del servidor son los que se muestran cuando llegan |
 | 02/09 | El botón «Mi ubicación» y las sugerencias de búsqueda van en la columna del `SelectorUbicacion`, no flotando sobre el mapa | En Web, `GoogleMap` se dibuja con `HtmlElementView`, y un widget interactivo apilado arriba necesita `pointer_interceptor` para recibir el mouse. Se resolvió con una columna —búsqueda arriba, mapa con solo el pin encima (`IgnorePointer`, no necesita recibir toques), panel de «mi ubicación»/dirección/referencia abajo— en vez de sumar otra dependencia |
 
 ## 6. Deuda técnica y pendientes conocidos
@@ -728,14 +763,15 @@ del anterior.)_
 
 ### 7.1 Sprint 3 — lo que sigue
 
-1. **Firebase, del lado tuyo**, único bloqueante del CU-21 de punta a punta:
+1. **Para la demo:** el Profesional de prueba tiene que estar **disponible**.
+   Desde la 0019 el emparejamiento filtra por ese interruptor, así que con la
+   cuenta en «no disponible» no llega ninguna alerta, y eso ahora es lo
+   correcto, no un error.
+2. **Firebase, del lado tuyo**, único bloqueante del CU-21 de punta a punta:
    `google-services.json`, clave APNs y `supabase secrets set FCM_*`.
-2. **Fase 8 — CU-44 Horarios y disponibilidad** (5 pts). La tabla es de la 0012
-   y la restricción de exclusión ya impide franjas superpuestas. Al cerrarlo
-   hay que **sumar el filtro por `disponible`** al emparejamiento de la 0016.
-3. **Fase 9 — CU-06 Cargar Portafolio** (5 pts). Tabla, tope de 10 con bloqueo
-   y bucket privado ya están (0012). Falta la pantalla y el borrado de los
-   archivos en la baja de cuenta (sección 6).
+3. **Fase 9 — CU-06 Cargar Portafolio** (5 pts), el último ítem de alcance.
+   Tabla, tope de 10 con bloqueo y bucket privado ya están (0012). Falta la
+   pantalla y el borrado de los archivos en la baja de cuenta (sección 6).
 4. **Las dos deudas de seguridad de la sección 6**: la ubicación exacta
    legible por PostgREST y el Profesional que puede aprobarse solo.
 5. **Fase 10 — cierre**: los tres builds, el grep de secretos, merge a `main`,

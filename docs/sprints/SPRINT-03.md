@@ -83,9 +83,9 @@ Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanific
 | CU-22 | Ver Detalle de Pedido | Frontend | 3 | ✅ | `feat(CU-22)` |
 | CU-23 | Ignorar Pedido | Full-stack | 2 | ✅ | `feat(CU-23)` |
 | CU-24 | Guardar Pedido (Favorito) | Full-stack | 2 | ✅ | `feat(CU-23)` |
-| CU-44 | Gestionar Horarios de Atención y estado de disponibilidad | Full-stack | 5 | ⬜ | |
+| CU-44 | Gestionar Horarios de Atención y estado de disponibilidad | Full-stack | 5 | ✅ | `feat(CU-44)` |
 | CU-06 | Cargar Portafolio | Full-stack | 5 | ⬜ | |
-| | **Total** | | **56** | **32 ejecutados + 14 en curso** | |
+| | **Total** | | **56** | **37 ejecutados + 14 en curso** | |
 
 **T-07 no lleva puntos**, con el mismo criterio que la T-02b del Sprint 2: no es un
 ítem del backlog sino la infraestructura que los casos de uso del PT 4.0 requieren
@@ -267,6 +267,14 @@ guardados y ofrece deshacer. 5 pruebas nuevas; 254 en total.
 
 Franjas por día más el interruptor de disponibilidad. El estado de disponibilidad
 filtra el emparejamiento del CU-21: un Profesional no disponible no recibe alerta.
+
+**Hecha el 16/09.** Migración **0019**: `reemplazar_horarios` guarda la semana entera
+en una transacción, valida todo antes de tocar nada y traduce el `23P01` de la
+restricción de exclusión; y `profesionales_para_pedido` pasa a filtrar por
+`disponible`, que es lo que la Fase 5 había dejado anotado. Pantalla en
+`/profesional/horarios`. **Los horarios no filtran el emparejamiento** —un pedido de
+las 23:00 le sirve igual a quien atiende de 9 a 18—: son información del perfil.
+11 pruebas nuevas; 265 en total.
 
 ### Fase 9 — CU-06 Cargar Portafolio · **5 pts**
 

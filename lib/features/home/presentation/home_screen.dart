@@ -175,6 +175,12 @@ class HomeScreen extends ConsumerWidget {
                     label: const Text('Zona de cobertura'),
                   ),
                   const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () => context.go('/profesional/horarios'),
+                    icon: const Icon(Icons.schedule),
+                    label: const Text('Horarios y disponibilidad'),
+                  ),
+                  const SizedBox(height: 12),
                 ],
                 OutlinedButton.icon(
                   onPressed: () => context.go('/perfil'),

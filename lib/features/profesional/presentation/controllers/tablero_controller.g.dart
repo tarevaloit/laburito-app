@@ -6,7 +6,7 @@ part of 'tablero_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$tableroHash() => r'bc7dd86172fc5ef0e4b14e58378501ecb7fc599a';
+String _$tableroHash() => r'636550dd8611b2dd97afb33d8087cc5a6a1bb81b';
 
 /// CU-43 — Explorar Tablero de Pedidos.
 ///

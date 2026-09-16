@@ -22,6 +22,7 @@ import '../features/pedidos/presentation/screens/editar_pedido_screen.dart';
 import '../features/pedidos/presentation/screens/historial_pedidos_screen.dart';
 import '../features/perfil/presentation/screens/baja_cuenta_screen.dart';
 import '../features/profesional/presentation/screens/detalle_pedido_publico_screen.dart';
+import '../features/profesional/presentation/screens/horarios_screen.dart';
 import '../features/profesional/presentation/screens/tablero_screen.dart';
 import '../features/profesional/presentation/screens/zona_cobertura_screen.dart';
 import '../features/perfil/presentation/screens/perfil_screen.dart';
@@ -175,6 +176,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       // CU-43 y CU-22. El tablero es el home del Profesional; el detalle va
       // bajo /profesional para no confundirse con /pedidos/:id, que es el del
       // Buscador dueño y muestra la barra de acciones.
+      // CU-44.
+      GoRoute(
+        path: '/profesional/horarios',
+        name: 'horarios',
+        builder: (context, state) => const HorariosScreen(),
+      ),
       GoRoute(
         path: '/profesional/tablero',
         name: 'tablero',
