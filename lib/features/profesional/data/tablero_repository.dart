@@ -51,6 +51,65 @@ class TableroRepository {
 
     return PedidoTablero.desdeFila(lista.first as Map<String, dynamic>);
   }
+
+  // --------------------------------------------------------------------------
+  // CU-23 Ignorar · CU-24 Guardar
+  // --------------------------------------------------------------------------
+  //
+  // Van por PostgREST y no por RPC: son un insert y un delete sobre tablas con
+  // clave compuesta (profesional, pedido), y las políticas de la 0012 ya dicen
+  // todo lo que hay que decir —solo a nombre propio, solo sobre un pedido que
+  // se pueda ver, y borrar solo lo propio—. Una función no agregaría ninguna
+  // regla que la RLS no tenga.
+
+  /// CU-23 — Sacar el pedido del tablero de este Profesional.
+  ///
+  /// Ignorar también lo quita de guardados: tener un pedido descartado y
+  /// marcado como interesante a la vez es un estado que no significa nada, y
+  /// la solapa de guardados lo seguiría mostrando después de haberlo sacado.
+  Future<void> ignorar(String pedidoId) async {
+    await _client.from('pedido_favorito').delete().match({
+      'profesional_id': _uid,
+      'pedido_id': pedidoId,
+    });
+
+    await _client.from('pedido_ignorado').upsert({
+      'profesional_id': _uid,
+      'pedido_id': pedidoId,
+    });
+  }
+
+  /// Deshacer, para el «Deshacer» del aviso: ignorar es la única acción del
+  /// tablero que hace desaparecer algo de la pantalla.
+  Future<void> dejarDeIgnorar(String pedidoId) async {
+    await _client.from('pedido_ignorado').delete().match({
+      'profesional_id': _uid,
+      'pedido_id': pedidoId,
+    });
+  }
+
+  /// CU-24 — Guardar o dejar de guardar.
+  Future<void> guardar(String pedidoId, {required bool guardado}) async {
+    if (guardado) {
+      await _client.from('pedido_favorito').upsert({
+        'profesional_id': _uid,
+        'pedido_id': pedidoId,
+      });
+    } else {
+      await _client.from('pedido_favorito').delete().match({
+        'profesional_id': _uid,
+        'pedido_id': pedidoId,
+      });
+    }
+  }
+
+  String get _uid {
+    final id = _client.auth.currentUser?.id;
+    if (id == null) {
+      throw StateError('No hay sesión activa');
+    }
+    return id;
+  }
 }
 
 @Riverpod(keepAlive: true)

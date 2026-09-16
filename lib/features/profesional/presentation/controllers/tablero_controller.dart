@@ -119,6 +119,94 @@ class Tablero extends _$Tablero {
     }
   }
 
+  /// CU-24 — Guardar o dejar de guardar, con la lista actualizada al toque.
+  ///
+  /// Se pinta primero y se escribe después: la marca es una operación chica y
+  /// esperar medio segundo a que el servidor conteste para que el ícono cambie
+  /// se siente roto. Si falla, se revierte y se avisa.
+  Future<void> alternarGuardado(String pedidoId) async {
+    final actual = state.valueOrNull;
+    if (actual == null) return;
+
+    final pedido = actual.pedidos.firstWhere((p) => p.id == pedidoId);
+    final guardado = !pedido.guardado;
+
+    state = AsyncData(_conPedido(actual, pedido.copyWith(guardado: guardado)));
+
+    try {
+      await ref
+          .read(tableroRepositoryProvider)
+          .guardar(pedidoId, guardado: guardado);
+
+      // En la solapa de guardados, dejar de guardar saca el pedido de la lista.
+      if (!guardado && actual.filtro == FiltroTablero.guardados) {
+        final conActual = state.valueOrNull;
+        if (conActual != null) {
+          state = AsyncData(conActual.copyWith(
+            pedidos: [
+              for (final p in conActual.pedidos)
+                if (p.id != pedidoId) p,
+            ],
+          ));
+        }
+      }
+    } on Object catch (error) {
+      state = AsyncData(
+        _conPedido(actual, pedido).copyWith(error: MensajesError.desde(error)),
+      );
+    }
+  }
+
+  /// CU-23 — Ignorar: el pedido sale del tablero de este Profesional y deja de
+  /// contar para sus alertas (el emparejamiento de la 0016 lo descarta).
+  ///
+  /// Devuelve `true` si salió bien, para que la pantalla ofrezca deshacer.
+  Future<bool> ignorar(String pedidoId) async {
+    final actual = state.valueOrNull;
+    if (actual == null) return false;
+
+    state = AsyncData(actual.copyWith(
+      pedidos: [
+        for (final p in actual.pedidos)
+          if (p.id != pedidoId) p,
+      ],
+      error: null,
+    ));
+
+    try {
+      await ref.read(tableroRepositoryProvider).ignorar(pedidoId);
+      return true;
+    } on Object catch (error) {
+      state = AsyncData(actual.copyWith(error: MensajesError.desde(error)));
+      return false;
+    }
+  }
+
+  /// El «Deshacer» del aviso. Vuelve a pedir la página: el pedido tiene que
+  /// reaparecer en su lugar por distancia, no al final de la lista.
+  Future<void> dejarDeIgnorar(String pedidoId) async {
+    try {
+      await ref.read(tableroRepositoryProvider).dejarDeIgnorar(pedidoId);
+    } on Object catch (error) {
+      final actual = state.valueOrNull;
+      if (actual != null) {
+        state = AsyncData(actual.copyWith(error: MensajesError.desde(error)));
+      }
+      return;
+    }
+
+    await refrescar();
+  }
+
+  EstadoTablero _conPedido(EstadoTablero estado, PedidoTablero pedido) =>
+      estado.copyWith(
+        pedidos: [
+          for (final p in estado.pedidos)
+            if (p.id == pedido.id) pedido else p,
+        ],
+        error: null,
+      );
+
   Future<void> refrescar() async {
     final filtro = state.valueOrNull?.filtro ?? FiltroTablero.misOficios;
     state = const AsyncLoading();

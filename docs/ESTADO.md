@@ -553,6 +553,29 @@ lista, sin distancia; el detalle de un pedido cerrado da cero filas; y un
 Buscador recibe `sin_permiso`. `flutter analyze` 0 issues, `flutter test`
 **249 en verde** (8 nuevas).
 
+### 4b.8 Fase 7 — CU-23 Ignorar + CU-24 Guardar · **HECHA** (4 pts)
+
+**Sin migración.** Las tablas `pedido_ignorado` y `pedido_favorito` y sus
+políticas son de la 0012, y la 0018 ya descartaba los ignorados y marcaba los
+guardados: faltaban las dos acciones y la solapa, que ya existía como filtro.
+
+Van por PostgREST y no por RPC: son un insert y un delete sobre tablas con
+clave compuesta, y las políticas dicen todo lo que hay que decir —a nombre
+propio, sobre un pedido que se pueda ver, y borrar solo lo propio—. Una función
+no agregaría ninguna regla.
+
+| Qué | Cómo |
+|---|---|
+| Guardar | Ícono de marcador en la tarjeta y botón en el detalle. Se pinta al toque y se escribe después; si falla, se revierte y se avisa |
+| Ignorar | **Quita primero de guardados** y después marca. Descartado y guardado a la vez no significa nada, y la solapa lo seguiría mostrando |
+| Deshacer | Ignorar es la única acción que hace desaparecer algo de la pantalla, así que el aviso ofrece deshacer y vuelve a pedir la página, para que el pedido reaparezca en su lugar por distancia |
+| En la solapa de guardados | Desmarcar saca el pedido de la lista en el momento |
+
+Verificado contra la base con el rol `authenticated`: guardar marca y aparece
+en la solapa; ignorar lo saca de las dos listas; deshacer lo devuelve; y un
+Buscador recibe `42501` al intentar marcar. `flutter analyze` 0 issues,
+`flutter test` **254 en verde** (5 nuevas).
+
 ## 5. Decisiones técnicas tomadas
 
 Formato: fecha · decisión · motivo. No se borran, se agregan.
@@ -662,6 +685,9 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 16/09 | La distancia del tablero se calcula contra la coordenada **redondeada**, y el resultado se redondea a cien metros | El tablero es para ordenar, no para llegar a la puerta: cien metros no cambian el orden de una lista. El emparejamiento del CU-21, que sí decide a quién se le avisa, usa la exacta. Y redondear el resultado evita que varias distancias exactas desde centros conocidos permitan triangular el domicilio |
 | 16/09 | El detalle del Profesional es una pantalla propia sobre `PedidoTablero`, no `detalle_pedido_screen` en modo lectura | Desvío consciente del plan: aquella pantalla se apoya en el modelo `Pedido`, que trae ubicación exacta y referencia. Reutilizarla obligaba a que el Profesional leyera la fila de `pedidos`. Los widgets sí se reutilizan |
 | 16/09 | La tarjeta del tablero no reutiliza `TarjetaPedido` del CU-17 | Aquella muestra el **estado** del pedido propio —pausado, vencido, cerrado— y en el tablero todo está publicado. Lo que importa es la distancia y el oficio |
+| 16/09 | Ignorar un pedido lo quita de guardados | Un pedido descartado y marcado como interesante a la vez es un estado que no significa nada, y la solapa de guardados lo seguiría mostrando después de haberlo sacado del tablero. El orden importa: primero el delete del favorito, después el insert del ignorado |
+| 16/09 | Guardar se pinta antes de que conteste el servidor; ignorar también, pero con deshacer | Son marcas chicas: esperar medio segundo a que el ícono cambie se siente roto. Si la escritura falla se revierte y se avisa. Ignorar además hace desaparecer algo de la pantalla, así que el aviso ofrece «Deshacer»: un toque mal dado no puede costar un trabajo que no se vuelve a ver nunca |
+| 16/09 | Las marcas van por PostgREST, no por RPC | Son un insert y un delete sobre tablas con clave compuesta, y las políticas de la 0012 ya expresan la regla entera. Una función sería una capa que no agrega nada |
 | 02/09 | El botón «Mi ubicación» y las sugerencias de búsqueda van en la columna del `SelectorUbicacion`, no flotando sobre el mapa | En Web, `GoogleMap` se dibuja con `HtmlElementView`, y un widget interactivo apilado arriba necesita `pointer_interceptor` para recibir el mouse. Se resolvió con una columna —búsqueda arriba, mapa con solo el pin encima (`IgnorePointer`, no necesita recibir toques), panel de «mi ubicación»/dirección/referencia abajo— en vez de sumar otra dependencia |
 
 ## 6. Deuda técnica y pendientes conocidos
@@ -702,17 +728,18 @@ del anterior.)_
 
 ### 7.1 Sprint 3 — lo que sigue
 
-1. **Fase 7 — CU-23 Ignorar + CU-24 Guardar** (4 pts). Es lo más barato que
-   queda y el tablero ya lo tiene resuelto del lado del servidor: la 0018 ya
-   descarta los ignorados y marca los guardados, y las tablas son de la 0012.
-   Falta la acción en la tarjeta y la solapa de guardados, que ya existe como
-   filtro.
-2. **Firebase, del lado tuyo**, único bloqueante del CU-21 de punta a punta:
+1. **Firebase, del lado tuyo**, único bloqueante del CU-21 de punta a punta:
    `google-services.json`, clave APNs y `supabase secrets set FCM_*`.
-3. Fase 8 (CU-44) y Fase 9 (CU-06), con el orden de descarte del plan. Al
-   cerrar el CU-44 hay que sumar el filtro por `disponible` al emparejamiento.
+2. **Fase 8 — CU-44 Horarios y disponibilidad** (5 pts). La tabla es de la 0012
+   y la restricción de exclusión ya impide franjas superpuestas. Al cerrarlo
+   hay que **sumar el filtro por `disponible`** al emparejamiento de la 0016.
+3. **Fase 9 — CU-06 Cargar Portafolio** (5 pts). Tabla, tope de 10 con bloqueo
+   y bucket privado ya están (0012). Falta la pantalla y el borrado de los
+   archivos en la baja de cuenta (sección 6).
 4. **Las dos deudas de seguridad de la sección 6**: la ubicación exacta
    legible por PostgREST y el Profesional que puede aprobarse solo.
+5. **Fase 10 — cierre**: los tres builds, el grep de secretos, merge a `main`,
+   tag `v0.3.0` y `CHANGELOG.md`.
 
 ### 7.2 Arrastrado de sprints anteriores
 

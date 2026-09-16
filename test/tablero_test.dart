@@ -56,6 +56,22 @@ void main() {
         httpClient: MockClient(servidor.responder),
       );
 
+      // Las marcas del CU-23 y del CU-24 escriben `profesional_id` con el id
+      // de la sesión, así que el cliente de prueba necesita una.
+      await client.auth.setInitialSession(jsonEncode({
+        'access_token': 'token-de-mentira',
+        'token_type': 'bearer',
+        'refresh_token': 'refresh-de-mentira',
+        'expires_in': 3600,
+        'user': {
+          'id': '44444444-4444-4444-8444-444444444444',
+          'app_metadata': <String, dynamic>{},
+          'user_metadata': <String, dynamic>{},
+          'aud': 'authenticated',
+          'created_at': '2026-09-01T10:00:00Z',
+        },
+      }));
+
       container = ProviderContainer(
         overrides: [
           tableroRepositoryProvider.overrideWithValue(
@@ -121,6 +137,84 @@ void main() {
       expect(servidor.ultimosParams['p_desplazamiento'], 0);
     });
 
+    test('guardar se pinta al toque y escribe el favorito', () async {
+      servidor.cantidad = 3;
+      await container.read(tableroProvider.future);
+
+      final id = container.read(tableroProvider).value!.pedidos.first.id;
+      await container.read(tableroProvider.notifier).alternarGuardado(id);
+
+      expect(
+        container.read(tableroProvider).value!.pedidos.first.guardado,
+        isTrue,
+      );
+      expect(servidor.llamadas, contains('POST /rest/v1/pedido_favorito'));
+    });
+
+    test('ignorar saca el pedido de la lista y lo quita de guardados primero',
+        () async {
+      servidor.cantidad = 3;
+      await container.read(tableroProvider.future);
+
+      final id = container.read(tableroProvider).value!.pedidos.first.id;
+      final ok = await container.read(tableroProvider.notifier).ignorar(id);
+
+      expect(ok, isTrue);
+      expect(container.read(tableroProvider).value!.pedidos, hasLength(2));
+      expect(
+        servidor.llamadas,
+        containsAllInOrder([
+          'DELETE /rest/v1/pedido_favorito',
+          'POST /rest/v1/pedido_ignorado',
+        ]),
+        reason: 'un pedido descartado y marcado como interesante a la vez no '
+            'significa nada, y la solapa de guardados lo seguiría mostrando',
+      );
+    });
+
+    test('si ignorar falla, el pedido vuelve a la lista', () async {
+      servidor.cantidad = 3;
+      await container.read(tableroProvider.future);
+
+      final id = container.read(tableroProvider).value!.pedidos.first.id;
+      servidor.fallarEscrituras = true;
+      final ok = await container.read(tableroProvider.notifier).ignorar(id);
+
+      expect(ok, isFalse);
+      expect(container.read(tableroProvider).value!.pedidos, hasLength(3));
+      expect(container.read(tableroProvider).value!.error, isNotNull);
+    });
+
+    test('deshacer borra la marca y vuelve a pedir la página', () async {
+      servidor.cantidad = 3;
+      await container.read(tableroProvider.future);
+
+      final id = container.read(tableroProvider).value!.pedidos.first.id;
+      await container.read(tableroProvider.notifier).ignorar(id);
+      await container.read(tableroProvider.notifier).dejarDeIgnorar(id);
+
+      expect(servidor.llamadas, contains('DELETE /rest/v1/pedido_ignorado'));
+      expect(
+        container.read(tableroProvider).value!.pedidos,
+        hasLength(3),
+        reason: 'el pedido vuelve a su lugar por distancia, no al final',
+      );
+    });
+
+    test('en la solapa de guardados, desmarcar saca el pedido de la lista',
+        () async {
+      servidor.cantidad = 3;
+      await container.read(tableroProvider.future);
+      await container
+          .read(tableroProvider.notifier)
+          .cambiarFiltro(FiltroTablero.guardados);
+
+      final id = container.read(tableroProvider).value!.pedidos.first.id;
+      await container.read(tableroProvider.notifier).alternarGuardado(id);
+
+      expect(container.read(tableroProvider).value!.pedidos, hasLength(2));
+    });
+
     test('el detalle de un pedido que ya no está devuelve null, no un error',
         () async {
       servidor.detalleVacio = true;
@@ -158,14 +252,35 @@ class _ServidorFalso {
   Map<String, dynamic> ultimosParams = const {};
   int cantidad = 0;
   bool detalleVacio = false;
+  bool fallarEscrituras = false;
 
   Future<http.Response> responder(http.Request pedido) async {
+    // Las marcas del CU-23 y del CU-24 no son RPC: son un insert y un delete
+    // sobre las tablas de la 0012, así que acá se las reconoce por la ruta.
+    if (pedido.url.path.startsWith('/rest/v1/pedido_')) {
+      llamadas.add('${pedido.method} ${pedido.url.path}');
+
+      return http.Response(
+        fallarEscrituras ? jsonEncode({'message': 'no'}) : '[]',
+        fallarEscrituras ? 400 : 201,
+        headers: {'content-type': 'application/json'},
+        request: pedido,
+      );
+    }
+
     llamadas.add(pedido.url.path);
     ultimosParams = jsonDecode(pedido.body) as Map<String, dynamic>;
 
+    // En la solapa de guardados, todo lo que vuelve está guardado: es lo que
+    // hace `tablero_pedidos()` con `p_solo_guardados`.
+    final guardados = ultimosParams['p_solo_guardados'] == true;
+
     final cuerpo = pedido.url.path == '/rest/v1/rpc/pedido_publico'
         ? (detalleVacio ? <dynamic>[] : [_fila('detalle')])
-        : [for (var i = 0; i < cantidad; i++) _fila('pedido-$i')];
+        : [
+            for (var i = 0; i < cantidad; i++)
+              {..._fila('pedido-$i'), 'guardado': guardados},
+          ];
 
     return http.Response(
       jsonEncode(cuerpo),

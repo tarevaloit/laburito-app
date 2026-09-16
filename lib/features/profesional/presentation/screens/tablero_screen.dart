@@ -113,6 +113,8 @@ class _TableroScreenState extends ConsumerState<TableroScreen> {
                           pedido: pedido,
                           onTap: () =>
                               context.push('/profesional/pedidos/${pedido.id}'),
+                          onGuardar: () => controlador.alternarGuardado(pedido.id),
+                          onIgnorar: () => _ignorar(pedido),
                         ),
                       );
                     },
@@ -121,6 +123,27 @@ class _TableroScreenState extends ConsumerState<TableroScreen> {
         ),
       ],
     );
+  }
+
+  /// CU-23. Ignorar es la única acción que hace desaparecer algo de la
+  /// pantalla, así que ofrece deshacer: un toque mal dado no puede costar un
+  /// trabajo que no se vuelve a ver nunca más.
+  Future<void> _ignorar(PedidoTablero pedido) async {
+    final controlador = ref.read(tableroProvider.notifier);
+    final ok = await controlador.ignorar(pedido.id);
+    if (!mounted || !ok) return;
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('Ya no te vamos a mostrar «${pedido.titulo}».'),
+          action: SnackBarAction(
+            label: 'Deshacer',
+            onPressed: () => controlador.dejarDeIgnorar(pedido.id),
+          ),
+        ),
+      );
   }
 
   Widget _filtros(EstadoTablero estado, Tablero controlador) {
@@ -212,10 +235,17 @@ class _TableroScreenState extends ConsumerState<TableroScreen> {
 /// todos los pedidos están publicados. Lo que importa es otra cosa: a qué
 /// distancia está y de qué oficio es.
 class _TarjetaTablero extends ConsumerWidget {
-  const _TarjetaTablero({required this.pedido, required this.onTap});
+  const _TarjetaTablero({
+    required this.pedido,
+    required this.onTap,
+    required this.onGuardar,
+    required this.onIgnorar,
+  });
 
   final PedidoTablero pedido;
   final VoidCallback onTap;
+  final VoidCallback onGuardar;
+  final VoidCallback onIgnorar;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -251,9 +281,33 @@ class _TarjetaTablero extends ConsumerWidget {
                             ),
                           ),
                         ),
-                        if (pedido.guardado)
-                          const Icon(Icons.bookmark,
-                              size: 18, color: Colores.naranja),
+                        // CU-24. El ícono lleno dice «guardado» sin leer nada.
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          tooltip: pedido.guardado
+                              ? 'Quitar de guardados'
+                              : 'Guardar pedido',
+                          icon: Icon(
+                            pedido.guardado
+                                ? Icons.bookmark
+                                : Icons.bookmark_border,
+                            size: 20,
+                            color: pedido.guardado
+                                ? Colores.naranja
+                                : Colores.textoTenue,
+                          ),
+                          onPressed: onGuardar,
+                        ),
+                        // CU-23. Gris y sin relleno: descartar no es una acción
+                        // destructiva —el pedido sigue existiendo para todos
+                        // los demás— y además se puede deshacer.
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          tooltip: 'No me interesa',
+                          icon: const Icon(Icons.visibility_off_outlined,
+                              size: 20, color: Colores.textoTenue),
+                          onPressed: onIgnorar,
+                        ),
                       ],
                     ),
                     const SizedBox(height: 4),

@@ -81,11 +81,11 @@ Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanific
 | CU-21 | Recibir Alerta Push (Edge Function de búsqueda por radio + integración FCM) | Backend | 14 | 🟡 | `feat(CU-21)` a, b y c — falta el proyecto de Firebase |
 | CU-43 | Explorar Tablero de Pedidos | Frontend | 5 | ✅ | `feat(CU-43)` |
 | CU-22 | Ver Detalle de Pedido | Frontend | 3 | ✅ | `feat(CU-22)` |
-| CU-23 | Ignorar Pedido | Full-stack | 2 | ⬜ | |
-| CU-24 | Guardar Pedido (Favorito) | Full-stack | 2 | ⬜ | |
+| CU-23 | Ignorar Pedido | Full-stack | 2 | ✅ | `feat(CU-23)` |
+| CU-24 | Guardar Pedido (Favorito) | Full-stack | 2 | ✅ | `feat(CU-23)` |
 | CU-44 | Gestionar Horarios de Atención y estado de disponibilidad | Full-stack | 5 | ⬜ | |
 | CU-06 | Cargar Portafolio | Full-stack | 5 | ⬜ | |
-| | **Total** | | **56** | **28 ejecutados + 14 en curso** | |
+| | **Total** | | **56** | **32 ejecutados + 14 en curso** | |
 
 **T-07 no lleva puntos**, con el mismo criterio que la T-02b del Sprint 2: no es un
 ítem del backlog sino la infraestructura que los casos de uso del PT 4.0 requieren
@@ -259,6 +259,10 @@ tiene. Los widgets sí se reutilizan. 8 pruebas nuevas; 249 en total.
 Dos acciones sobre la tarjeta del tablero y dos filtros. Ignorar saca el pedido del
 tablero de ese Profesional; guardar lo suma a una solapa de favoritos.
 
+**Hecha el 16/09, sin migración**: las tablas y sus políticas son de la 0012 y la
+0018 ya descartaba los ignorados y marcaba los guardados. Ignorar quita primero de
+guardados y ofrece deshacer. 5 pruebas nuevas; 254 en total.
+
 ### Fase 8 — CU-44 Horarios y disponibilidad · **5 pts**
 
 Franjas por día más el interruptor de disponibilidad. El estado de disponibilidad
@@ -316,6 +320,14 @@ Se reemplaza por dos controles sobre el tramo que resta:
 |---|---|---|
 | Al cerrar la Fase 5 | El CU-21 está encaminado de punta a punta, aunque sea con un dispositivo | Se activa el descarte del CU-06 |
 | Al cerrar la Fase 7 | 45 de los 56 puntos cerrados | Se activa el descarte del CU-44 |
+
+**Contraste al cerrar la Fase 7 (16/09):** 32 puntos cerrados y 14 en curso —el
+CU-21, completo salvo lo que depende del proyecto de Firebase—. Contra los 45
+esperados, faltan 13: son exactamente el CU-44 (5), el CU-06 (5) y los 3 del CU-21
+que no se pueden dar por cerrados sin haber visto llegar una notificación. El
+descarte previsto era el CU-44; queda a decisión de la reunión, porque el sprint
+llegó a su fecha de entrega con el circuito de negocio armado de punta a punta del
+lado del servidor.
 
 ---
 
