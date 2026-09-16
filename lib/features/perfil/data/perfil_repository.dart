@@ -137,7 +137,7 @@ class PerfilRepository {
     }
 
     if (categorias != null) {
-      await _categorias.reemplazar(profesionalId: id, slugs: categorias);
+      await _categorias.reemplazar(slugs: categorias);
     }
   }
 

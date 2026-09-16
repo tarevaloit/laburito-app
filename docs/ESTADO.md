@@ -443,6 +443,38 @@ dando 871 m contra un punto cercano.
 Verificado: `flutter analyze` 0 issues, `flutter test` **226 en verde** (13
 nuevas). Los builds de las tres plataformas quedan para la Fase 10.
 
+### 4b.5 Fase 4 — CU-12 Editar Categorías de Oficio · **HECHA** (4 pts)
+
+La pantalla ya existía: el `SelectorOficios` vive adentro del perfil (CU-05)
+desde el Sprint 1, con su tope de 5 y sus píldoras. Lo que faltaba era el lado
+del servidor, y no era cosmético: `reemplazar` hacía un DELETE de todas las
+filas y después un INSERT de las nuevas, **sin transacción común**. Si el
+INSERT fallaba, el Profesional quedaba sin ningún oficio, y sin oficios el
+emparejamiento del CU-21 no lo elige nunca: deja de recibir alertas sin
+enterarse.
+
+**Migración 0015**: `reemplazar_categorias_oficio(p_slugs text[])`, `security
+invoker`, que hace el reemplazo en una sola transacción y agrega tres reglas
+que vivían solo en el cliente: al menos un oficio, como máximo 5, y que los
+slugs existan y estén activos (antes, un slug inventado se ignoraba en
+silencio). Devuelve los slugs que quedaron, leídos de la base. No crea ni abre
+nada: la tabla y su política `for all` son de la 0001.
+
+App: `CategoriasRepository.reemplazar` pasa a llamar la RPC y **deja de recibir
+el id del Profesional** —lo pone `auth.uid()`—, y el tope deja de estar escrito
+en dos lugares: `CategoriaOficio.maximoPorProfesional`.
+
+Correr el guion encontró dos errores, los dos míos y ninguno del diseño:
+
+| Qué apareció | Qué era |
+|---|---|
+| `' plomeria '` entraba como un oficio distinto | La normalización filtraba por `trim(s)` pero agregaba `s`. Corregido y reaplicado |
+| Los conteos del guion daban de más | La política «público: lectura de categorías del profesional» (0001) deja ver las de **todos**, así que un `count(*)` pelado suma las de los demás. El guion ahora filtra por profesional |
+
+Verificado: guion completo contra la base —incluido el bloque que prueba que
+una llamada fallida deja los oficios intactos—, `flutter analyze` 0 issues y
+`flutter test` **231 en verde** (5 nuevas).
+
 ## 5. Decisiones técnicas tomadas
 
 Formato: fecha · decisión · motivo. No se borran, se agregan.
@@ -536,6 +568,10 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 16/09 | El zoom se calcula a partir del radio y no es una constante | El radio va de 1 a 100 km: con el zoom fijo del detalle, una zona de 50 km no entra en la pantalla y una de 1 km se ve como un punto. Cada paso de zoom duplica la escala, así que la relación es logarítmica. `zoomParaRadio` es de nivel superior para poder probarla sin levantar el widget |
 | 16/09 | `guardar_zona_cobertura` valida el radio además del `check` de la tabla | El 23514 de la restricción no dice cuál es el rango. La RPC contesta «entre 1 y 100 km», que es lo que la pantalla muestra tal cual |
 | 16/09 | La RPC comprueba `es_profesional_activo()` aunque la RLS ya lo haga | Sin eso, un Buscador recibiría un 42501 que —por la decisión del 02/09— no se le muestra a nadie. Con la comprobación, el error es una frase en castellano |
+| 16/09 | El reemplazo de oficios pasa a una RPC transaccional (0015) | Eran un DELETE y un INSERT sueltos: una falla en el medio dejaba al Profesional sin oficios, y eso con el CU-21 significa no recibir ninguna alerta. Es la misma regla que el alta del pedido de la 0009: lo que el usuario piensa como una sola operación tiene que ser una sola del lado del servidor |
+| 16/09 | El borrado de la RPC es selectivo: `delete ... not in (los nuevos)` + `insert ... on conflict do nothing` | Un borrar todo e insertar todo pierde el `created_at` de los oficios que el Profesional venía teniendo, que es el dato con el que se puede saber desde cuándo ofrece cada uno |
+| 16/09 | El tope de 5 oficios vive en `CategoriaOficio.maximoPorProfesional` y en la RPC | Estaba escrito en la pantalla y como valor por defecto del selector. Ahora la pantalla lee la constante y el servidor rechaza lo que la UI no debería haber dejado armar. La prueba que los ata está en `test/categorias_oficio_test.dart` |
+| 16/09 | `reemplazar` deja de recibir el id del Profesional | Lo toma `auth.uid()` adentro de la RPC: sin id en el payload no hay forma de pedirle al servidor que le edite los oficios a otro, y la pantalla no tiene que acordarse de pasar el suyo |
 | 02/09 | El botón «Mi ubicación» y las sugerencias de búsqueda van en la columna del `SelectorUbicacion`, no flotando sobre el mapa | En Web, `GoogleMap` se dibuja con `HtmlElementView`, y un widget interactivo apilado arriba necesita `pointer_interceptor` para recibir el mouse. Se resolvió con una columna —búsqueda arriba, mapa con solo el pin encima (`IgnorePointer`, no necesita recibir toques), panel de «mi ubicación»/dirección/referencia abajo— en vez de sumar otra dependencia |
 
 ## 6. Deuda técnica y pendientes conocidos
@@ -575,16 +611,21 @@ del anterior.)_
 
 ### 7.1 Sprint 3 — lo que sigue
 
-1. **Fase 4 — CU-12 Editar Categorías de Oficio** (4 pts): ABM sobre
-   `profesional_categorias` desde el perfil. No necesita migración: la tabla y
-   su política `for all` existen desde la 0001 (lo verificó la Fase 1). Es el
-   segundo insumo del emparejamiento.
-2. **Fase 5 — CU-21 Recibir Alerta Push** (14 pts), el ítem que no se descarta.
-   Antes de empezar hace falta el proyecto de Firebase: `google-services.json`
-   para Android y la clave APNs para iOS. Es alta de cuentas, no código.
-3. **Guard de las columnas sensibles de `profesionales`**: un Profesional hoy
+1. **Fase 5 — CU-21 Recibir Alerta Push** (14 pts), el ítem que no se descarta
+   y el que sostiene el circuito de negocio. Sus dos insumos ya están: la zona
+   (CU-07) y las categorías (CU-12). Se parte en tres commits: Edge Function
+   `emparejar_pedido` —que consulta con `service_role` **contra la columna de
+   ubicación exacta**, no contra la vista pública, cuyo redondeo a tres
+   decimales metería un error de unos cien metros—, registro del token de FCM
+   por dispositivo, y disparo desde el alta del pedido.
+   **Bloqueante de tu lado:** proyecto de Firebase, `google-services.json` para
+   Android y clave APNs para iOS.
+2. **Guard de las columnas sensibles de `profesionales`**: un Profesional hoy
    puede aprobarse solo (sección 6). Va después del CU-21, por decisión del
    16/09, en una migración propia.
+3. Fases 6 a 9: tablero (CU-43), detalle (CU-22), ignorar y guardar (CU-23 /
+   CU-24), horarios (CU-44) y portafolio (CU-06), con el orden de descarte del
+   plan si no entran.
 
 ### 7.2 Arrastrado de sprints anteriores
 

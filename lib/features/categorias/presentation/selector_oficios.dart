@@ -15,7 +15,7 @@ class SelectorOficios extends ConsumerWidget {
     required this.elegidas,
     required this.onCambio,
     this.habilitado = true,
-    this.maximo = 5,
+    this.maximo = CategoriaOficio.maximoPorProfesional,
   });
 
   /// Slugs elegidos. El widget no guarda estado propio.

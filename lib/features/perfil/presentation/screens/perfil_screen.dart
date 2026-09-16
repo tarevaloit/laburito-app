@@ -10,6 +10,7 @@ import '../../../../core/widgets/barra_navegacion.dart';
 import '../../../../core/widgets/boton_principal.dart';
 import '../../../../core/widgets/campo_texto.dart';
 import '../../../../core/widgets/marca_laburito.dart';
+import '../../../categorias/data/categorias_repository.dart';
 import '../../../categorias/presentation/selector_oficios.dart';
 import '../../data/perfil_repository.dart';
 import '../controllers/perfil_controller.dart';
@@ -31,7 +32,7 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
   final Set<String> _categorias = {};
 
   bool _inicializado = false;
-  static const int _maxCategorias = 5;
+  static const int _maxCategorias = CategoriaOficio.maximoPorProfesional;
 
   @override
   void dispose() {
