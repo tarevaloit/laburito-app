@@ -296,6 +296,24 @@ los archivos del portafolio. 5 pruebas nuevas; 270 en total.
 4. Actualizar `docs/ESTADO.md` y `docs/UI.md`.
 5. Apartado 7.3 del documento vivo, con su burndown.
 
+**Hecha el 16/09.** `flutter analyze` 0 issues, `flutter test` **270 en verde**, y los
+tres builds —web, APK e iOS simulador— compilando. El grep de secretos solo trae
+comentarios de la Edge Function que nombran el rol. `CHANGELOG.md` con las tres
+versiones agrupadas por caso de uso. Merge a `main` y tag `v0.3.0`.
+
+### Cierre del sprint: 42 de 56 puntos
+
+| Estado | Pts | Ítems |
+|---|---|---|
+| Cerrados | **42** | CU-17, T-06, T-07, T-08, CU-07, CU-12, CU-43, CU-22, CU-23, CU-24, CU-44, CU-06 |
+| En curso | **14** | CU-21 — servidor completo y verificado; falta el proyecto de Firebase para que la notificación llegue al teléfono |
+| Descartados | 0 | El orden de descarte (CU-06 primero, después CU-44) **no se activó**: los dos entraron |
+
+El CU-21 no se cuenta como cerrado a propósito: el emparejamiento está escrito,
+aplicado y probado contra la base, y la Edge Function está desplegada, pero nadie vio
+todavía llegar una notificación a un teléfono. Contarlo sería repetir el error que la
+retrospectiva del Sprint 2 marcó sobre dar por hecho lo que no se ejercitó.
+
 ---
 
 ## 4. Orden de descarte

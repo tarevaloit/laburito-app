@@ -48,13 +48,13 @@ produjo una decisión técnica, va a la sección 5 de este archivo antes de cerr
 
 | Campo | Valor |
 |---|---|
-| Sprint en curso | **Sprint 3 — Perfil del Profesional y Notificaciones** (PT 4.0) · rama `sprint-3` · plan en `docs/sprints/SPRINT-03.md` |
-| Sprint anterior | Sprint 2 — Gestión de Pedidos y Geolocalización (PT 3.0) · mergeado a `main`, tag `v0.2.0` |
+| Sprint en curso | **Sprint 3 — cerrado en código** (PT 4.0) · mergeado a `main`, tag `v0.3.0` · plan en `docs/sprints/SPRINT-03.md` |
+| Sprint anterior | Sprint 2 — Gestión de Pedidos y Geolocalización (PT 3.0) · 36/40 pts |
 | Período | 03/09/2026 al 16/09/2026 |
 | Entrega por BB | 16/09/2026 hasta las 23:59 |
 | Esfuerzo planificado | 56 pts (45 del PT 4.0 + 5 del CU-17 replanificado + 6 de deuda) |
 | Backlog restante | 169 pts al inicio del Sprint 3 (criterio de alcance cerrado, ver plan) |
-| Release objetivo | v0.3.0 — aplicación del Profesional operativa con alertas push |
+| Release | **v0.3.0** — 42 de 56 pts cerrados + 14 en curso (CU-21, a la espera de Firebase) |
 | Repositorio | https://github.com/tarevaloit/laburito |
 | Proyecto Supabase | `laburito` · ref `xbgwogitgzzxmoixqfjd` · PostgreSQL 17.6, PostGIS 3.3.7 |
 
@@ -622,6 +622,23 @@ de la 0012. Faltaba la pantalla y el camino de los archivos.
 | CU-11 | La baja ahora borra también los archivos del portafolio, que era deuda de la sección 6. Las rutas salen de la tabla, no de listar el bucket |
 
 `flutter analyze` 0 issues, `flutter test` **270 en verde** (5 nuevas).
+
+### 4b.11 Fase 10 — Verificación y cierre
+
+Verificado el 16/09, todo junto:
+
+| Qué | Resultado |
+|---|---|
+| `flutter analyze` | 0 issues |
+| `flutter test` | **270 en verde** (163 al cerrar el Sprint 2) |
+| `flutter build web` | compila |
+| `flutter build apk --debug` | compila |
+| `flutter build ios --simulator --debug` | compila |
+| Grep de secretos (`eyJ`, `AIza`, `service_role`) | solo comentarios de la Edge Function que nombran el rol |
+| Migraciones | 0012 a 0019 aplicadas y verificadas contra la base, cada una con su guion |
+| Edge Function | `emparejar_pedido` desplegada y respondiendo |
+
+`CHANGELOG.md` agrupa `v0.1.0`, `v0.2.0` y `v0.3.0` por caso de uso.
 
 ## 5. Decisiones técnicas tomadas
 
