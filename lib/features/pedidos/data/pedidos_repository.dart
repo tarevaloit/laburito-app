@@ -126,8 +126,37 @@ class PedidosRepository {
           .select(_columnas)
           .single();
 
-      return Pedido.desdeFila(fila);
+      final pedido = Pedido.desdeFila(fila);
+      await _avisarAProfesionales(pedido.id);
+      return pedido;
     });
+  }
+
+  /// CU-21 — Dispara la alerta de un pedido recién publicado.
+  ///
+  /// Solo manda el id. **A quién se le avisa lo decide el servidor**: la Edge
+  /// Function `emparejar_pedido` pide la lista a
+  /// `profesionales_para_pedido()` (migración 0016), que lee la ubicación
+  /// exacta y cruza zona, oficio y estado de la cuenta. Un cliente que
+  /// eligiera destinatarios podría decidir no avisarle a nadie, o avisarles a
+  /// todos.
+  ///
+  /// **Un fallo acá no hace fallar la publicación.** El pedido ya está
+  /// publicado, que es lo que la persona pidió; que la notificación no salga
+  /// es un problema nuestro y no algo que ella pueda corregir reintentando el
+  /// formulario. Además el Profesional ve el pedido igual al entrar al tablero
+  /// (CU-43): la alerta acelera, no habilita.
+  Future<void> _avisarAProfesionales(String pedidoId) async {
+    try {
+      await _client.functions.invoke(
+        'emparejar_pedido',
+        body: {'pedido_id': pedidoId},
+      );
+    } on Object catch (error) {
+      if (kDebugMode) {
+        debugPrint('No se pudo emparejar el pedido $pedidoId: $error');
+      }
+    }
   }
 
   /// Edita los campos que el Buscador puede cambiar. Solo se mandan los que

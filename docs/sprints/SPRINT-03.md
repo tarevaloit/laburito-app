@@ -78,14 +78,14 @@ Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanific
 | T-08 | Migración 0013 — deuda del Sprint 2: lectura del bucket para el Profesional y guard del PATCH de edición | Backend | 3 | ✅ | `fix(T-08)` |
 | CU-07 | Configurar Zona de Cobertura | Full-stack | 5 | ✅ | `feat(CU-07)` |
 | CU-12 | Editar Categorías de Oficio | Full-stack | 4 | ✅ | `feat(CU-12)` |
-| CU-21 | Recibir Alerta Push (Edge Function de búsqueda por radio + integración FCM) | Backend | 14 | ⬜ | |
+| CU-21 | Recibir Alerta Push (Edge Function de búsqueda por radio + integración FCM) | Backend | 14 | 🟡 | `feat(CU-21)` a, b y c — falta el proyecto de Firebase |
 | CU-43 | Explorar Tablero de Pedidos | Frontend | 5 | ⬜ | |
 | CU-22 | Ver Detalle de Pedido | Frontend | 3 | ⬜ | |
 | CU-23 | Ignorar Pedido | Full-stack | 2 | ⬜ | |
 | CU-24 | Guardar Pedido (Favorito) | Full-stack | 2 | ⬜ | |
 | CU-44 | Gestionar Horarios de Atención y estado de disponibilidad | Full-stack | 5 | ⬜ | |
 | CU-06 | Cargar Portafolio | Full-stack | 5 | ⬜ | |
-| | **Total** | | **56** | **20 ejecutados** | |
+| | **Total** | | **56** | **20 ejecutados + 14 en curso** | |
 
 **T-07 no lleva puntos**, con el mismo criterio que la T-02b del Sprint 2: no es un
 ítem del backlog sino la infraestructura que los casos de uso del PT 4.0 requieren
@@ -226,6 +226,17 @@ emparejamiento. Es una de las dos condiciones que el apartado 7.2.7 dejó abiert
 
 El disparo va desde el servidor y no desde el cliente: un cliente que decide a quién
 notificar es un cliente que puede decidir no notificar a nadie, o notificar a todos.
+
+**Hecha el 16/09 en sus tres commits, salvo lo que depende de Firebase.** Migración
+**0016** (`profesionales_para_pedido`, SECURITY DEFINER y solo para `service_role`),
+Edge Function `emparejar_pedido` desplegada, migración **0017** (registro y baja del
+token, con el traspaso entre cuentas) y `lib/features/notificaciones/`. El disparo
+sale del alta del pedido y manda solo el id.
+
+`firebase_messaging` no entró: sin `google-services.json` el build de Android falla.
+Está aislado detrás de `ServicioPush`, así que entra una sola clase cuando existan
+las credenciales. El emparejamiento **todavía no filtra por `disponible`** (CU-44):
+su default es `false` y filtrar hoy dejaría a todos sin alertas.
 
 ### Fase 6 — CU-43 Explorar Tablero + CU-22 Ver Detalle · **8 pts**
 

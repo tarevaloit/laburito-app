@@ -475,6 +475,49 @@ Verificado: guion completo contra la base —incluido el bloque que prueba que
 una llamada fallida deja los oficios intactos—, `flutter analyze` 0 issues y
 `flutter test` **231 en verde** (5 nuevas).
 
+### 4b.6 Fase 5 — CU-21 Recibir Alerta Push · **hecha del lado del servidor** (14 pts)
+
+El circuito de negocio central, en tres commits como pedía el plan. Todo lo
+que no depende de Firebase está escrito, aplicado y verificado; lo que depende
+de Firebase está aislado detrás de una interfaz y entra sin tocar nada más.
+
+| Commit | Qué |
+|---|---|
+| `feat(CU-21)` a | Migración **0016** `profesionales_para_pedido()` + Edge Function `emparejar_pedido`, desplegada |
+| `feat(CU-21)` b | Migración **0017** (`registrar_dispositivo`, `dar_de_baja_dispositivo`) + `lib/features/notificaciones/` |
+| `feat(CU-21)` c | El disparo desde el alta del pedido y la apertura del detalle al tocar la notificación |
+
+**Quién recibe la alerta lo decide la base**, en `profesionales_para_pedido()`:
+zona que contiene al pedido (prefiltro por el radio máximo, que usa el índice
+GiST, y después el exacto con el radio de cada quien), oficio que coincide,
+cuenta aprobada y activa, y sin los pedidos que ese Profesional ya ignoró
+(CU-23). Lee `pedidos.ubicacion` y **no** la vista pública: su redondeo a tres
+decimales mete unos cien metros de error, que en una zona de 1 km decide mal.
+Es `SECURITY DEFINER` y solo la puede ejecutar `service_role`.
+
+La Edge Function no acepta destinatarios: recibe un id de pedido, comprueba
+que sea de quien llama —contra `buscador_id`, porque «poder ver el pedido» no
+prueba nada desde que todo autenticado ve los publicados vigentes— y manda por
+FCM HTTP v1. Sin credenciales de Firebase empareja igual y contesta
+`enviadas: 0`, que es lo que permitió probar el circuito sin el proyecto.
+
+Verificado contra la base: el caso feliz (un Profesional a 0 m, con su
+dispositivo) y los cinco motivos de exclusión —zona lejos, otro oficio, sin
+aprobar, pedido ignorado, pedido cerrado—, cada uno devolviendo cero filas;
+que un pedido inexistente sea un error y no una lista vacía; y el traspaso del
+token entre dos cuentas en el mismo teléfono. La función desplegada responde
+correctamente a las cuatro entradas inválidas (sin sesión, sin JSON, con GET,
+con la clave anónima).
+
+**Lo que falta y por qué:** el proyecto de Firebase. `firebase_messaging` no
+se agregó porque sin `google-services.json` el build de Android falla, así que
+`ServicioPush` es una interfaz con `PushNoConfigurado` como implementación:
+registra nada, no rompe nada. El día que estén las credenciales entra una sola
+clase nueva y `supabase secrets set FCM_*`.
+
+Verificado: `flutter analyze` 0 issues, `flutter test` **241 en verde** (10
+nuevas).
+
 ## 5. Decisiones técnicas tomadas
 
 Formato: fecha · decisión · motivo. No se borran, se agregan.
@@ -572,6 +615,14 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 16/09 | El borrado de la RPC es selectivo: `delete ... not in (los nuevos)` + `insert ... on conflict do nothing` | Un borrar todo e insertar todo pierde el `created_at` de los oficios que el Profesional venía teniendo, que es el dato con el que se puede saber desde cuándo ofrece cada uno |
 | 16/09 | El tope de 5 oficios vive en `CategoriaOficio.maximoPorProfesional` y en la RPC | Estaba escrito en la pantalla y como valor por defecto del selector. Ahora la pantalla lee la constante y el servidor rechaza lo que la UI no debería haber dejado armar. La prueba que los ata está en `test/categorias_oficio_test.dart` |
 | 16/09 | `reemplazar` deja de recibir el id del Profesional | Lo toma `auth.uid()` adentro de la RPC: sin id en el payload no hay forma de pedirle al servidor que le edite los oficios a otro, y la pantalla no tiene que acordarse de pasar el suyo |
+| 16/09 | **`revoke ... from public` no revoca nada en Supabase** | Los privilegios por defecto del proyecto dan `EXECUTE` **explícito** a `anon` y `authenticated` sobre cada función nueva, y un revoke a `public` no toca los grants explícitos. Todas las migraciones anteriores usaban ese idioma creyendo que cerraba la puerta; no tiene consecuencias ahí porque esas funciones empiezan comprobando `auth.uid()`, pero `profesionales_para_pedido` no podía depender de eso: devuelve dónde hay Profesionales. Se revoca a `public, anon, authenticated` y se comprueba mirando `proacl` |
+| 16/09 | La regla de «a quién se le avisa» vive en la base, no en la Edge Function | El filtro es `ST_DWithin` contra un índice GiST: traerse todas las zonas a Deno para compararlas a mano es lo que la decisión del 02/09 —PostGIS en vez de lat/lng— buscaba evitar. Además queda en un archivo versionado y con guion de aceptación |
+| 16/09 | El emparejamiento **todavía no filtra por `disponible`** (CU-44) | Su default es `false` y no hay pantalla que lo encienda: filtrar hoy dejaría a todo el mundo sin alertas. El filtro entra junto con el interruptor, en la Fase 8 |
+| 16/09 | La Edge Function comprueba `buscador_id`, no «si puede ver el pedido» | Desde la 0006 cualquier autenticado ve los pedidos publicados vigentes, así que leerlo con la sesión de quien llama no prueba que sea suyo. Se lee con `service_role` y se compara el id a mano |
+| 16/09 | Un fallo al notificar no hace fallar la publicación del pedido | El pedido ya está publicado y es lo que la persona pidió; que la alerta no salga es un problema nuestro que ella no puede corregir reintentando el formulario. Y el Profesional ve el pedido igual entrando al tablero: la alerta acelera, no habilita |
+| 16/09 | El token de FCM se registra y se da de baja por RPC, no por un upsert | El token es de la instalación, no del usuario: si en ese teléfono había iniciado sesión otro Profesional, hay que sacárselo, y su fila es invisible bajo las RLS del nuevo dueño. Solo una función SECURITY DEFINER puede hacer el traspaso (0017). La baja, en cambio, es INVOKER: borrar lo propio ya lo permite la RLS |
+| 16/09 | La baja del token va **antes** del `signOut`, y no puede romper el cierre de sesión | Después del `signOut` no hay `auth.uid()` y la baja ya no se puede hacer. Si falla, se registra en la consola y la sesión se cierra igual: quedarse adentro de la app por una fila es peor que un token de más, que además se limpia solo cuando FCM lo reporta desconocido |
+| 16/09 | `firebase_messaging` no entra hasta que exista el proyecto de Firebase; en su lugar hay una interfaz | Agregar el paquete hoy rompe el build de Android, que exige `google-services.json`. Con `ServicioPush` + `PushNoConfigurado`, todo lo demás —registro, traspaso, baja, disparo, navegación al detalle— se escribe, se prueba y se commitea igual |
 | 02/09 | El botón «Mi ubicación» y las sugerencias de búsqueda van en la columna del `SelectorUbicacion`, no flotando sobre el mapa | En Web, `GoogleMap` se dibuja con `HtmlElementView`, y un widget interactivo apilado arriba necesita `pointer_interceptor` para recibir el mouse. Se resolvió con una columna —búsqueda arriba, mapa con solo el pin encima (`IgnorePointer`, no necesita recibir toques), panel de «mi ubicación»/dirección/referencia abajo— en vez de sumar otra dependencia |
 
 ## 6. Deuda técnica y pendientes conocidos
@@ -611,21 +662,23 @@ del anterior.)_
 
 ### 7.1 Sprint 3 — lo que sigue
 
-1. **Fase 5 — CU-21 Recibir Alerta Push** (14 pts), el ítem que no se descarta
-   y el que sostiene el circuito de negocio. Sus dos insumos ya están: la zona
-   (CU-07) y las categorías (CU-12). Se parte en tres commits: Edge Function
-   `emparejar_pedido` —que consulta con `service_role` **contra la columna de
-   ubicación exacta**, no contra la vista pública, cuyo redondeo a tres
-   decimales metería un error de unos cien metros—, registro del token de FCM
-   por dispositivo, y disparo desde el alta del pedido.
-   **Bloqueante de tu lado:** proyecto de Firebase, `google-services.json` para
-   Android y clave APNs para iOS.
-2. **Guard de las columnas sensibles de `profesionales`**: un Profesional hoy
-   puede aprobarse solo (sección 6). Va después del CU-21, por decisión del
-   16/09, en una migración propia.
-3. Fases 6 a 9: tablero (CU-43), detalle (CU-22), ignorar y guardar (CU-23 /
-   CU-24), horarios (CU-44) y portafolio (CU-06), con el orden de descarte del
-   plan si no entran.
+1. **Firebase, del lado tuyo** (lo único que bloquea el CU-21 de punta a
+   punta): crear el proyecto, bajar `google-services.json` para Android y la
+   clave APNs para iOS, y cargar las credenciales de la cuenta de servicio con
+   `supabase secrets set FCM_PROJECT_ID=... FCM_CLIENT_EMAIL=...
+   FCM_PRIVATE_KEY=...`. Con eso entra `firebase_messaging` detrás de
+   `ServicioPush` y la alerta llega al teléfono.
+2. **Fase 6 — CU-43 Tablero + CU-22 Detalle** (8 pts): el tablero consume la
+   vista pública ordenada por distancia, y el detalle se deriva de
+   `detalle_pedido_screen` en modo lectura. La política del bucket que
+   necesitan ya está (0013).
+3. **Fase 7 — CU-23 Ignorar + CU-24 Guardar** (4 pts). La tabla de ignorados ya
+   la usa el emparejamiento.
+4. Fase 8 (CU-44) y Fase 9 (CU-06), con el orden de descarte del plan si no
+   entran. Al cerrar el CU-44 hay que **sumar el filtro por `disponible`** al
+   emparejamiento.
+5. **Guard de las columnas sensibles de `profesionales`**: un Profesional hoy
+   puede aprobarse solo (sección 6). Migración propia, después del CU-21.
 
 ### 7.2 Arrastrado de sprints anteriores
 
