@@ -607,6 +607,22 @@ franja rechazada **no** borra lo que ya estaba guardado; y con `disponible` en
 false el emparejamiento devuelve cero. `flutter analyze` 0 issues,
 `flutter test` **265 en verde** (11 nuevas).
 
+### 4b.10 Fase 9 — CU-06 Cargar Portafolio · **HECHA** (5 pts)
+
+**Sin migración**: la tabla, el tope de 10 con bloqueo y el bucket privado son
+de la 0012. Faltaba la pantalla y el camino de los archivos.
+
+| Qué | Cómo |
+|---|---|
+| Subir | `image_picker` con `maxWidth: 1600` e `imageQuality: 80`, el mismo camino del CU-09 y del CU-13. La ruta es `{perfil_id}/{nombre}.jpg`, que es lo que exigen el `check` de la tabla y la política de Storage |
+| Orden de las escrituras | Primero el archivo, después la fila. Si el insert falla, se borra el archivo recién subido: un objeto que ninguna fila referencia es invisible y eterno |
+| Borrar | Primero el archivo, después la fila, por el mismo motivo |
+| Tope | 10, respetado del lado del cliente para no gastar una subida que el trigger va a rechazar igual |
+| Orden nuevo | Sigue al **mayor** orden existente, no a la cantidad: borrar una del medio deja un hueco, y `unique (profesional_id, orden)` no perdona |
+| CU-11 | La baja ahora borra también los archivos del portafolio, que era deuda de la sección 6. Las rutas salen de la tabla, no de listar el bucket |
+
+`flutter analyze` 0 issues, `flutter test` **270 en verde** (5 nuevas).
+
 ## 5. Decisiones técnicas tomadas
 
 Formato: fecha · decisión · motivo. No se borran, se agregan.
@@ -739,7 +755,7 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | **La vista pública no alcanza: por PostgREST se llega a la ubicación exacta** | `pedidos_publicos` esconde la referencia y redondea la coordenada, pero la política «pedidos: lectura de publicados vigentes» (0006) deja que cualquier autenticado lea la fila entera de `pedidos`, con `ubicacion` y `referencia_ubicacion`. La app nunca lo hace —el tablero y el detalle usan solo las funciones de la 0018— pero un `GET /rest/v1/pedidos` lo consigue. No se puede quitar la política sin romper la vista, que corre con `security_invoker`: la salida es una vista con barrera y `security definer`, o mover la lectura pública a una función. Es la deuda más grande que queda abierta | Sprint 4, antes de que haya contacto entre las partes |
 | **Un Profesional puede aprobarse solo y cargarse tokens** | La política «profesional propio: actualización» (0001/0002) es de fila entera, como la de `pedidos` antes de la 0008: el dueño puede escribir `estado_verificacion`, `saldo_tokens`, `calificacion_promedio` y `total_calificaciones` con un PATCH. Importa ya: el CU-21 va a notificar según la verificación, y el Sprint 4 cobra tokens. Se cierra con un trigger `BEFORE UPDATE` del patrón de `pedidos_guard_estado`, dejándole al dueño solo `descripcion`, `dni` y `disponible` | Sprint 3, antes del CU-21 |
 | Las fotos de un pedido cerrado se pueden agregar y borrar | El guard de la 0013 cubre la fila de `pedidos`, no `pedido_fotos` ni el bucket: las políticas de alta y baja de fotos (0006) solo miran dueño. La pantalla solo ofrece fotos en la edición, que ya exige publicado o pausado. Mismo tipo de regla que vivía solo en el cliente | Sprint 4 |
-| La baja no borra los archivos del portafolio | `dar_de_baja_cuenta` ya borra las filas (0012), pero `PerfilRepository._borrarArchivos` solo baja avatar y DNI. Hoy el bucket está vacío y no hay pantalla de carga | Sprint 3, con el CU-06 (Fase 9) |
+| ~~La baja no borra los archivos del portafolio~~ | **Saldada el 16/09 con el CU-06.** `PerfilRepository._borrarArchivos` lee las rutas de `profesional_portafolio` y las borra por la API de Storage antes de llamar a la RPC | ✅ |
 | Historial de migraciones de la CLI vacío | 0001–0012 están aplicadas pero `supabase migration list` no lo sabe, así que `supabase db push` intentaría correrlas todas otra vez. No usar `db push` hasta hacer `supabase migration repair --status applied` de las doce | Cuando se adopte `db push` |
 | ~~`flutter test` y los builds se dejan de correr fase por fase~~ | **Saldada el 03/09.** La verificación diferida se hizo entera al cerrar la Fase 6: analyze 0 issues, 101 tests en verde, y web, APK e iOS compilando. La apuesta salió bien: no había ningún error acumulado de las Fases 5 y 6 | ✅ |
 | ~~CU-17 Consultar Historial (Fase 7)~~ | **Hecho el 03/09.** Con los cuatro grupos y sus contadores, búsqueda por texto en el servidor, scroll infinito de 20, pull to refresh que corre el barrido de vencimientos, portadas firmadas en lote y dos estados vacíos distintos | ✅ |

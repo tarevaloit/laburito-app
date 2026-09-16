@@ -181,6 +181,12 @@ class HomeScreen extends ConsumerWidget {
                     label: const Text('Horarios y disponibilidad'),
                   ),
                   const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () => context.go('/profesional/portafolio'),
+                    icon: const Icon(Icons.photo_library_outlined),
+                    label: const Text('Mi portafolio'),
+                  ),
+                  const SizedBox(height: 12),
                 ],
                 OutlinedButton.icon(
                   onPressed: () => context.go('/perfil'),

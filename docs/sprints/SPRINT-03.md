@@ -84,8 +84,8 @@ Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanific
 | CU-23 | Ignorar Pedido | Full-stack | 2 | ✅ | `feat(CU-23)` |
 | CU-24 | Guardar Pedido (Favorito) | Full-stack | 2 | ✅ | `feat(CU-23)` |
 | CU-44 | Gestionar Horarios de Atención y estado de disponibilidad | Full-stack | 5 | ✅ | `feat(CU-44)` |
-| CU-06 | Cargar Portafolio | Full-stack | 5 | ⬜ | |
-| | **Total** | | **56** | **37 ejecutados + 14 en curso** | |
+| CU-06 | Cargar Portafolio | Full-stack | 5 | ✅ | `feat(CU-06)` |
+| | **Total** | | **56** | **42 ejecutados + 14 en curso** | |
 
 **T-07 no lleva puntos**, con el mismo criterio que la T-02b del Sprint 2: no es un
 ítem del backlog sino la infraestructura que los casos de uso del PT 4.0 requieren
@@ -281,6 +281,12 @@ las 23:00 le sirve igual a quien atiende de 9 a 18—: son información del perf
 Carga de hasta N fotos con el mismo camino de código de bytes del CU-09 y del CU-13
 (`maxWidth: 1600`, `imageQuality: 80`), bucket privado y URLs firmadas en lote con
 `UrlsFirmadas`.
+
+**Hecha el 16/09, sin migración** (tabla, tope de 10 con bloqueo y bucket privado son
+de la 0012). N quedó en **10**. Pantalla en `/profesional/portafolio`. El archivo se
+sube antes de insertar la fila y se borra si el insert falla; al eliminar, primero el
+archivo. De paso se saldó la deuda del CU-11: la baja de cuenta ahora borra también
+los archivos del portafolio. 5 pruebas nuevas; 270 en total.
 
 ### Fase 10 — Verificación y cierre
 
