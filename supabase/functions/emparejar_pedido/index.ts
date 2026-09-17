@@ -43,13 +43,38 @@ const FCM_PROJECT_ID = Deno.env.get('FCM_PROJECT_ID');
 const FCM_CLIENT_EMAIL = Deno.env.get('FCM_CLIENT_EMAIL');
 const FCM_PRIVATE_KEY = Deno.env.get('FCM_PRIVATE_KEY');
 
+// CORS. Desde la web —donde publica el Buscador— `functions.invoke` es un
+// `fetch` del navegador con cabeceras propias (`authorization`, `apikey`,
+// `x-client-info`), así que antes del POST el navegador manda un `OPTIONS` de
+// verificación. Si ese `OPTIONS` no vuelve con estas cabeceras, el POST no sale
+// nunca: la primera versión contestaba 405 a todo lo que no fuera POST y la
+// alerta no se disparaba desde la web, en silencio, porque la app no hace
+// fallar la publicación por esto.
+//
+// El origen es `*` a propósito: la función no usa cookies —la identidad viaja
+// en el `Authorization`, que el navegador no manda solo— y lo que la protege es
+// la verificación del dueño del pedido, no el origen.
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Max-Age': '86400',
+};
+
 const json = (cuerpo: unknown, status = 200) =>
   new Response(JSON.stringify(cuerpo), {
     status,
-    headers: { 'content-type': 'application/json' },
+    headers: { ...CORS, 'content-type': 'application/json' },
   });
 
 Deno.serve(async (req) => {
+  // La verificación de CORS va antes que todo lo demás: no trae cuerpo ni
+  // sesión, y no tiene que tenerlos.
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: CORS });
+  }
+
   if (req.method !== 'POST') return json({ error: 'Usá POST' }, 405);
 
   const autorizacion = req.headers.get('Authorization') ?? '';
