@@ -52,7 +52,14 @@ class _TableroScreenState extends ConsumerState<TableroScreen> {
     final tableroAsync = ref.watch(tableroProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Pedidos cerca tuyo')),
+      appBar: AppBar(
+        title: const Text('Pedidos cerca tuyo'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/home'),
+        ),
+      ),
       body: perfilAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) =>

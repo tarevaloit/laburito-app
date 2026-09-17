@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../app/colores.dart';
 import '../../../../core/widgets/boton_principal.dart';
@@ -35,7 +36,14 @@ class HorariosScreen extends ConsumerWidget {
     });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Horarios y disponibilidad')),
+      appBar: AppBar(
+        title: const Text('Horarios y disponibilidad'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/home'),
+        ),
+      ),
       body: perfilAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) =>

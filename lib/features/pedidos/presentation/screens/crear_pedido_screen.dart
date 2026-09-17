@@ -117,13 +117,27 @@ class _CrearPedidoScreenState extends ConsumerState<CrearPedidoScreen> {
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, _) => Scaffold(
-        appBar: AppBar(title: const Text('Publicar pedido')),
+        appBar: AppBar(
+          title: const Text('Publicar pedido'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () =>
+                context.canPop() ? context.pop() : context.go('/home'),
+          ),
+        ),
         body: const Center(child: Text('No pudimos cargar tu perfil.')),
       ),
       data: (perfil) {
         if (perfil == null || perfil.esProfesional) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Publicar pedido')),
+            appBar: AppBar(
+              title: const Text('Publicar pedido'),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () =>
+                    context.canPop() ? context.pop() : context.go('/home'),
+              ),
+            ),
             body: const Padding(
               padding: EdgeInsets.all(24),
               child: AvisoEstado.riesgo(

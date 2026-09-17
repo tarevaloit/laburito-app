@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../app/colores.dart';
@@ -110,7 +111,16 @@ class _ZonaCoberturaScreenState extends ConsumerState<ZonaCoberturaScreen> {
     });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Zona de cobertura')),
+      appBar: AppBar(
+        title: const Text('Zona de cobertura'),
+        // Se llega acá con `context.go` desde el home: sin nada que
+        // desapilar, la flecha de Material no aparece sola.
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/home'),
+        ),
+      ),
       body: perfilAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) =>

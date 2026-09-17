@@ -52,7 +52,7 @@ class BarraNavegacion extends StatelessWidget {
 
     switch (destino) {
       case SeccionApp.tablero:
-        context.go('/home');
+        context.go('/profesional/tablero');
       case SeccionApp.perfil:
         context.go('/perfil');
       case SeccionApp.billetera:
