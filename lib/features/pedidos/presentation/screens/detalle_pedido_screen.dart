@@ -6,6 +6,7 @@ import '../../../../app/colores.dart';
 import '../../../../core/errors/mensajes_error.dart';
 import '../../../../core/utils/fechas.dart';
 import '../../../../core/widgets/marca_laburito.dart';
+import '../../../perfil/data/perfil_repository.dart';
 import '../../data/pedido_exception.dart';
 import '../../data/pedidos_repository.dart';
 import '../../domain/pedido.dart';
@@ -31,6 +32,19 @@ class DetallePedidoScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Esta pantalla es la del **dueño**. Un Profesional que llega acá —un
+    // enlace viejo, una notificación de antes del arreglo— se reenvía a su
+    // detalle (CU-22), que no trae la dirección exacta ni la referencia. Se
+    // comprueba antes de pedir el pedido: la RLS le dejaría leer la fila
+    // entera (deuda de la sección 6 del ESTADO), y eso es lo que se evita.
+    final perfil = ref.watch(perfilCompletoProvider).valueOrNull;
+    if (perfil != null && perfil.esProfesional) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) context.go('/profesional/pedidos/$id');
+      });
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     final pedidoAsync = ref.watch(pedidoProvider(id));
 
     // Los errores de las acciones se avisan una sola vez, acá: cada botón se

@@ -7,6 +7,7 @@ import '../../../../core/errors/mensajes_error.dart';
 import '../../../../core/widgets/boton_principal.dart';
 import '../../../../core/widgets/campo_texto.dart';
 import '../../../../core/widgets/marca_laburito.dart';
+import '../../../perfil/data/perfil_repository.dart';
 import '../../data/urls_firmadas.dart';
 import '../../domain/pedido_estado.dart';
 import '../controllers/historial_pedidos_controller.dart';
@@ -58,6 +59,37 @@ class _HistorialPedidosScreenState
 
   @override
   Widget build(BuildContext context) {
+    // «Mis pedidos» es del Buscador. Un Profesional no tiene pedidos propios:
+    // tiene el tablero. Mismo criterio que el asistente del CU-13, que valida
+    // el rol adentro de la pantalla porque el `redirect` del router no puede
+    // leer el perfil de forma síncrona (decisión del 03/09).
+    final perfil = ref.watch(perfilCompletoProvider).valueOrNull;
+    if (perfil != null && perfil.esProfesional) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Mis pedidos')),
+        body: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const AvisoEstado.riesgo(
+                icono: Icons.info_outline,
+                titulo: 'Esta sección es para cuentas Buscador',
+                detalle: 'Con una cuenta Profesional no se publican pedidos: '
+                    'se responde a los que publican otros.',
+              ),
+              const SizedBox(height: 16),
+              BotonPrincipal(
+                texto: 'Ver pedidos cerca mío',
+                icono: Icons.explore_outlined,
+                onPressed: () => context.go('/profesional/tablero'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final async = ref.watch(historialPedidosProvider);
     final controlador = ref.read(historialPedidosProvider.notifier);
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/notificaciones/data/registro_push.dart';
 import '../features/notificaciones/data/servicio_push.dart';
+import '../features/notificaciones/presentation/abrir_pedido_de_alerta.dart';
 import 'router.dart';
 import 'theme.dart';
 
@@ -29,7 +30,7 @@ class LaburitoApp extends ConsumerWidget {
     ref.listen(pedidosAbiertosProvider, (_, siguiente) {
       final pedidoId = siguiente.valueOrNull;
       if (pedidoId != null && pedidoId.isNotEmpty) {
-        router.go('/pedidos/$pedidoId');
+        abrirPedidoDeAlerta(router, pedidoId);
       }
     });
 
@@ -48,7 +49,8 @@ class LaburitoApp extends ConsumerWidget {
               ? null
               : SnackBarAction(
                   label: 'Ver',
-                  onPressed: () => router.go('/pedidos/${aviso.pedidoId}'),
+                  onPressed: () =>
+                      abrirPedidoDeAlerta(router, aviso.pedidoId!),
                 ),
         ));
     });

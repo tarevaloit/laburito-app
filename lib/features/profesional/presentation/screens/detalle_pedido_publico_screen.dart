@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../app/colores.dart';
 import '../../../../core/errors/mensajes_error.dart';
@@ -36,7 +37,19 @@ class DetallePedidoPublicoScreen extends ConsumerWidget {
     final pedidoAsync = ref.watch(pedidoPublicoProvider(id));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Detalle del pedido')),
+      appBar: AppBar(
+        title: const Text('Detalle del pedido'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          // Sin nada que desapilar —se entró por un enlace o la app se abrió
+          // desde la notificación— se vuelve al tablero, que es de donde se
+          // llega a un pedido ajeno. Nunca a «Mis pedidos»: esa pantalla es
+          // del Buscador.
+          onPressed: () => context.canPop()
+              ? context.pop()
+              : context.go('/profesional/tablero'),
+        ),
+      ),
       body: pedidoAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Padding(
