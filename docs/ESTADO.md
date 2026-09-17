@@ -48,13 +48,13 @@ produjo una decisión técnica, va a la sección 5 de este archivo antes de cerr
 
 | Campo | Valor |
 |---|---|
-| Sprint en curso | **Sprint 3 — cerrado en código** (PT 4.0) · mergeado a `main`, tag `v0.3.0` · plan en `docs/sprints/SPRINT-03.md` |
-| Sprint anterior | Sprint 2 — Gestión de Pedidos y Geolocalización (PT 3.0) · 36/40 pts |
+| Sprint en curso | **Sprint 4 — Monetización** (PT 5.0) · por planificar · 17/09 al 30/09 |
+| Sprint anterior | **Sprint 3 — cerrado, 56/56 pts** (PT 4.0) · tags `v0.3.0` y `v0.3.1` · cierre en `docs/sprints/SPRINT-03-cierre.md` |
 | Período | 03/09/2026 al 16/09/2026 |
 | Entrega por BB | 16/09/2026 hasta las 23:59 |
 | Esfuerzo planificado | 56 pts (45 del PT 4.0 + 5 del CU-17 replanificado + 6 de deuda) |
 | Backlog restante | 169 pts al inicio del Sprint 3 (criterio de alcance cerrado, ver plan) |
-| Release | **v0.3.0** — 42 de 56 pts cerrados + 14 en curso (CU-21, a la espera de Firebase) |
+| Release | **v0.3.1** · remanente del backlog: **119 pts** (49,4 % de avance acumulado, 51,1 % planificado) |
 | Repositorio | https://github.com/tarevaloit/laburito |
 | Proyecto Supabase | `laburito` · ref `xbgwogitgzzxmoixqfjd` · PostgreSQL 17.6, PostGIS 3.3.7 |
 
@@ -118,14 +118,16 @@ Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanific
 | CU-20 | Pausar Publicación (y reanudarla) | 3 | ✅ | Fig. 3.4 |
 | CU-29 | Cerrar Pedido | 3 | ✅ | Fig. 3.4 |
 | CU-51 | Renovar Pedido Vencido | 3 | ✅ | — |
-| CU-17 | Consultar Historial de pedidos | 5 | ✅ | Fig. 3.5 |
+| CU-17 | Consultar Historial de pedidos | 5 | ⏭️ | Fig. 3.5 |
 | CU-18 | Solicitar Reenvío de Enlace de Gestión | 4 | ⏭️ | — |
-| | **Total** | **40** | **36 ejecutados** | |
+| | **Total** | **40** | **31 ejecutados** | |
 
-Los 4 puntos que faltan son el CU-18, que ya estaba marcado como descartable
-en el plan del sprint: es el único ítem que no condiciona nada del Sprint 3 y
-se replanifica al Sprint 5, donde ya hay trabajo de enlaces públicos (CU-26 y
-CU-27).
+**Corregido el 16/09.** Esta tabla decía «36 ejecutados», contando el CU-17 dentro
+del Sprint 2. El documento entregado (apartado 7.2) lo registra como **no
+ejecutado y replanificado al Sprint 3**, donde efectivamente se cerró y se contó
+(`0f6df51`). Manda el documento: el Sprint 2 cerró **31 de 40**, con el CU-17
+replanificado al Sprint 3 y el CU-18 al Sprint 5, donde ya hay trabajo de enlaces
+públicos (CU-26 y CU-27).
 
 > **Faltan nombres y puntos.** Los únicos títulos que se pueden sostener con una
 > fuente del repo son los que aparecen en el ANEXO UI (CU-13, CU-17, CU-20/29).
@@ -475,7 +477,7 @@ Verificado: guion completo contra la base —incluido el bloque que prueba que
 una llamada fallida deja los oficios intactos—, `flutter analyze` 0 issues y
 `flutter test` **231 en verde** (5 nuevas).
 
-### 4b.6 Fase 5 — CU-21 Recibir Alerta Push · **hecha del lado del servidor** (14 pts)
+### 4b.6 Fase 5 — CU-21 Recibir Alerta Push · **HECHA** (14 pts)
 
 El circuito de negocio central, en tres commits como pedía el plan. Todo lo
 que no depende de Firebase está escrito, aplicado y verificado; lo que depende
@@ -640,6 +642,28 @@ Verificado el 16/09, todo junto:
 
 `CHANGELOG.md` agrupa `v0.1.0`, `v0.2.0` y `v0.3.0` por caso de uso.
 
+### 4b.12 El CU-21 de punta a punta y el cierre del sprint (16/09)
+
+**El sprint cerró 56 de 56 puntos.** La prueba con un teléfono real —pedido
+publicado desde la Web, alerta recibida en Android, apertura del detalle— se hizo el
+16/09 y encontró tres defectos que ninguna verificación anterior había visto:
+
+| Defecto | Arreglo |
+|---|---|
+| Desde la Web la alerta no salía: la Edge Function contestaba 405 al `OPTIONS` del navegador | Responde la verificación CORS (`329de15`) |
+| Tocar la notificación abría el detalle del **dueño**, con la dirección exacta | Abre `/profesional/pedidos/:id` (`5aad5a1`) |
+| Al volver, el Profesional caía en «Mis pedidos», que es del Buscador | El detalle se apila sobre el tablero, y las dos pantallas del Buscador validan el rol (`5aad5a1`) |
+
+La integración con Firebase (`ed223d8`, `8072456`) y esos arreglos quedaron en el tag
+**`v0.3.1`**. `flutter analyze` 0 issues y **273 pruebas en verde**.
+
+**Sección 7.3 del documento de planificación:** `docs/sprints/SPRINT-03-cierre.md`,
+lista para pegar, con el burndown en `docs/sprints/figuras/burndown-sprint-03.png` y
+la evidencia en `docs/sprints/evidencia-sprint-03.txt`. Incluye las correcciones al
+apartado 7.2 (remanentes 205/174 → 200/169, marcas de edición sin completar, la
+columna de horas que no se restableció, el punto de control del día 7 que no se
+ejecutó) y sigue la indicación del profesor: menos detalle de lo realizado.
+
 ## 5. Decisiones técnicas tomadas
 
 Formato: fecha · decisión · motivo. No se borran, se agregan.
@@ -756,6 +780,9 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 16/09 | **Los horarios no filtran el emparejamiento; la disponibilidad sí** | Un pedido publicado a las 23:00 le sirve igual al que atiende de 9 a 18: lo ve a la mañana y lo toma. Descartarlo por la hora de publicación sería perder trabajo por nada. Los horarios son información del perfil, que el Buscador mira antes de contactar (Sprint 5) |
 | 16/09 | Las horas viajan como minutos desde la medianoche, no como `TimeOfDay` | El dominio no puede depender de Flutter, y comparar y ordenar enteros no tiene sorpresas. La medianoche del final es 1440 («24:00»), que es lo que acepta `time` en Postgres: «22 a 00» es una franja de dos horas, no una de menos cero |
 | 16/09 | La validación de los horarios está en los dos lados, y es la misma | El cliente rechaza superposición y tope por día para no gastar un viaje en un «no»; el servidor los rechaza igual porque el cliente no es una fuente confiable. Lo que no se duplica es el mensaje: los del servidor son los que se muestran cuando llegan |
+| 16/09 | El CU-21 se da por cerrado recién con la notificación vista en un teléfono | Con el servidor completo y verificado se lo informaba en curso. La prueba real encontró tres defectos que ninguna verificación había visto, lo que confirma el criterio: un caso de uso de integración no se cierra en la base |
+| 16/09 | Los errores de una sección ya entregada se corrigen en la sección siguiente | El documento de planificación es incremental: el 7.2 no se toca. Sus errores se registran en el 7.3.6 con la corrección, que es lo que la propia Sección 1 pide ante cualquier desvío |
+| 16/09 | El cierre de sprint para el documento se escribe corto | Indicación del profesor: menos detalle de lo realizado y un plan de acción breve, siempre que se pueda demostrar el avance con las apps. El detalle técnico sigue viviendo en este archivo y en los commits |
 | 02/09 | El botón «Mi ubicación» y las sugerencias de búsqueda van en la columna del `SelectorUbicacion`, no flotando sobre el mapa | En Web, `GoogleMap` se dibuja con `HtmlElementView`, y un widget interactivo apilado arriba necesita `pointer_interceptor` para recibir el mouse. Se resolvió con una columna —búsqueda arriba, mapa con solo el pin encima (`IgnorePointer`, no necesita recibir toques), panel de «mi ubicación»/dirección/referencia abajo— en vez de sumar otra dependencia |
 
 ## 6. Deuda técnica y pendientes conocidos
@@ -794,30 +821,25 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 _(Lo primero que hay que hacer al retomar. Está en orden: cada punto depende
 del anterior.)_
 
-### 7.1 Sprint 3 — cerrado; lo que sigue
+### 7.1 Sprint 4 — lo que sigue
 
-El sprint está mergeado a `main` con el tag `v0.3.0`: 42 de 56 puntos cerrados,
-14 en curso (CU-21) y ningún descarte. Verificación de la Fase 10 en 4b.11.
+El Sprint 3 está cerrado: 56 de 56 puntos, tags `v0.3.0` y `v0.3.1`.
 
-1. **Firebase, del lado tuyo.** Es lo único que separa al CU-21 de estar
-   cerrado. El paso a paso está en **`docs/FIREBASE.md`**: crear el proyecto,
-   `flutterfire configure`, bajar la clave de la cuenta de servicio y cargarla
-   con `supabase secrets set`. Son 20 minutos y no toca código; después entra
-   `firebase_messaging` detrás de `ServicioPush`, que es una clase. iOS necesita
-   además la cuenta del Apple Developer Program y va aparte.
-2. **Para la demo:** la base quedó preparada con
-   `supabase/scripts/preparar_demo.sql` (Profesional aprobado y **disponible**,
-   zona de 20 km, 4 oficios, 6 pedidos en la calle). Es idempotente: se puede
-   correr de nuevo antes de mostrar. Si no llega ninguna alerta, lo primero que
-   hay que mirar es el interruptor de disponibilidad.
-3. **El circuito completo contra la base sigue sin ejercitarse a mano.** Es la
-   deuda más vieja: publicar con foto y ubicación, y después pausar, reanudar,
-   editar, renovar, cerrar y cancelar, desde la app.
-4. **Las dos deudas de seguridad de la sección 6**, las dos para el Sprint 4:
-   la ubicación exacta legible por PostgREST y el Profesional que puede
-   aprobarse solo.
-5. **Apartado 7.3 del documento vivo**, con su burndown: 42 cerrados, 14 en
-   curso, 0 descartados.
+1. **Pegar la sección 7.3** en el documento de planificación desde
+   `docs/sprints/SPRINT-03-cierre.md`, con las tres indicaciones del final de ese
+   archivo (tabla de revisión 1.3, índice con la 7.2 y la 7.3, Figura 4), y
+   subirlo a BB junto con `evidencia-sprint-03.txt`.
+2. **Grabar el video** del circuito del Sprint 3, que la sección cita como
+   material complementario: pedido publicado en la Web, alerta en el celular,
+   detalle, guardar; más zona, oficios, horarios y portafolio.
+3. **Planificar el Sprint 4** en `docs/sprints/SPRINT-04.md` (PT 5.0, 50 pts,
+   17/09 al 30/09). Arranca por **las dos deudas de seguridad** de la sección 6
+   —la ubicación exacta legible por PostgREST y el Profesional que puede aprobarse
+   solo—, porque el CU-25 desbloquea el contacto y el CU-31 acredita tokens.
+4. **Validar el entorno de prueba de Mercado Pago** el primer día: es la mitigación
+   del apartado 6 que venía para el Sprint 3 y no se hizo.
+5. Del Sprint 1 sigue pendiente el material de la entrega original (video de los 7
+   circuitos, capturas del esquema y de las políticas RLS).
 
 ### 7.2 Arrastrado de sprints anteriores
 

@@ -1,0 +1,29 @@
+Evidencia del Sprint 3 — PT 4.0 · 03/09/2026 al 16/09/2026
+Laburito · SIP 2026 · Comisión P03 · Releases v0.3.0 y v0.3.1
+
+Ítems replanificados desde el Sprint 2 (commits del inicio del período):
+0f6df51 feat(CU-17): consultar el historial de pedidos
+07375ec test(S2): saldar la deuda de pruebas de las Fases 5 y 6
+
+Commits del período (git log --oneline --since="2026-09-03" --no-merges):
+5aad5a1 fix(CU-21): abrir la alerta en el detalle del profesional y volver al tablero
+8072456 feat(CU-21): avisar los mensajes push que llegan con la app abierta
+76079e9 fix(nav): agregar el botón de volver donde faltaba
+329de15 fix(CU-21): responder la verificación de CORS en emparejar_pedido
+ed223d8 feat(CU-21): conectar las notificaciones push a Firebase
+a4aa971 docs(S3): apuntar el próximo paso a la guía de Firebase
+4238f19 docs(CU-21): agregar el paso a paso de Firebase para habilitar las alertas
+1eea04b chore(S3): agregar el guion que prepara la base para la demo
+492eaca docs(S3): registrar la verificación y el cierre del Sprint 3
+b0520cb docs(S3): agregar el CHANGELOG con v0.1.0, v0.2.0 y v0.3.0
+0a4b436 feat(CU-06): cargar el portafolio del profesional
+6a3239c feat(CU-44): gestionar horarios de atención y disponibilidad
+7c983b1 feat(CU-23): ignorar y guardar pedidos desde el tablero
+96a2f6b feat(CU-43): explorar el tablero de pedidos y ver su detalle
+ea27bd6 feat(CU-21): disparar la alerta al publicar el pedido
+35fde79 feat(CU-21): registrar el dispositivo del profesional para las alertas
+bdd5dc6 feat(CU-21): emparejar el pedido con los profesionales cercanos
+d4cabe7 feat(CU-12): editar las categorías de oficio en una sola transacción
+a38c349 feat(CU-07): configurar la zona de cobertura del profesional
+de98be8 fix(T-08): saldar la deuda del Sprint 2 sobre fotos y edición de pedidos
+76137a4 feat(T-07): esquema del profesional con sus políticas

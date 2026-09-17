@@ -3,6 +3,22 @@
 Todas las versiones del proyecto, agrupadas por caso de uso. El formato sigue
 la convención de commits del proyecto: `<tipo>(<ID>): <descripción>`.
 
+## v0.3.1 — CU-21 verificado de punta a punta
+
+_16/09/2026_
+
+La alerta push llega al teléfono. Es el cierre del CU-21, que en `v0.3.0` quedaba
+completo del lado del servidor pero sin haber sido probado con un dispositivo.
+
+- **CU-21** — Firebase conectado: permiso de notificaciones, registro y rotación
+  del token, canal de Android y aviso cuando el mensaje llega con la app abierta.
+- **CU-21** — la Edge Function responde la verificación CORS del navegador: desde
+  la Web la alerta no se disparaba.
+- **CU-21** — tocar la notificación abre el detalle del Profesional apilado sobre
+  el tablero; antes abría el del dueño del pedido y, al volver, «Mis pedidos».
+- Las pantallas del Buscador validan el rol.
+- Guía de puesta en marcha en `docs/FIREBASE.md`.
+
 ## v0.3.0 — Sprint 3 · Perfil del Profesional y Notificaciones (PT 4.0)
 
 _16/09/2026_
@@ -20,8 +36,8 @@ nuevo.
   aplicados ahí.
 - **CU-21 · Recibir Alerta Push** — emparejamiento por zona, oficio, estado de
   la cuenta y disponibilidad, resuelto en la base y disparado desde una Edge
-  Function. **Falta el proyecto de Firebase** para que la notificación llegue
-  al teléfono; todo lo demás está.
+  Function. La conexión con Firebase y la prueba en un dispositivo real están en
+  `v0.3.1`.
 - **CU-43 · Explorar Tablero de Pedidos** — pedidos vigentes ordenados por
   distancia, con filtros por oficio y por guardados.
 - **CU-22 · Ver Detalle de Pedido** — el pedido ajeno, sin la dirección exacta

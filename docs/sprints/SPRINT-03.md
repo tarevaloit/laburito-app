@@ -78,14 +78,14 @@ Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanific
 | T-08 | Migración 0013 — deuda del Sprint 2: lectura del bucket para el Profesional y guard del PATCH de edición | Backend | 3 | ✅ | `fix(T-08)` |
 | CU-07 | Configurar Zona de Cobertura | Full-stack | 5 | ✅ | `feat(CU-07)` |
 | CU-12 | Editar Categorías de Oficio | Full-stack | 4 | ✅ | `feat(CU-12)` |
-| CU-21 | Recibir Alerta Push (Edge Function de búsqueda por radio + integración FCM) | Backend | 14 | 🟡 | `feat(CU-21)` a, b y c — falta el proyecto de Firebase |
+| CU-21 | Recibir Alerta Push (Edge Function de búsqueda por radio + integración FCM) | Backend | 14 | ✅ | `bdd5dc6` … `5aad5a1` (7 commits) |
 | CU-43 | Explorar Tablero de Pedidos | Frontend | 5 | ✅ | `feat(CU-43)` |
 | CU-22 | Ver Detalle de Pedido | Frontend | 3 | ✅ | `feat(CU-22)` |
 | CU-23 | Ignorar Pedido | Full-stack | 2 | ✅ | `feat(CU-23)` |
 | CU-24 | Guardar Pedido (Favorito) | Full-stack | 2 | ✅ | `feat(CU-23)` |
 | CU-44 | Gestionar Horarios de Atención y estado de disponibilidad | Full-stack | 5 | ✅ | `feat(CU-44)` |
 | CU-06 | Cargar Portafolio | Full-stack | 5 | ✅ | `feat(CU-06)` |
-| | **Total** | | **56** | **42 ejecutados + 14 en curso** | |
+| | **Total** | | **56** | **56 ejecutados** | |
 
 **T-07 no lleva puntos**, con el mismo criterio que la T-02b del Sprint 2: no es un
 ítem del backlog sino la infraestructura que los casos de uso del PT 4.0 requieren
@@ -301,18 +301,24 @@ tres builds —web, APK e iOS simulador— compilando. El grep de secretos solo 
 comentarios de la Edge Function que nombran el rol. `CHANGELOG.md` con las tres
 versiones agrupadas por caso de uso. Merge a `main` y tag `v0.3.0`.
 
-### Cierre del sprint: 42 de 56 puntos
+### Cierre del sprint: 56 de 56 puntos
 
 | Estado | Pts | Ítems |
 |---|---|---|
-| Cerrados | **42** | CU-17, T-06, T-07, T-08, CU-07, CU-12, CU-43, CU-22, CU-23, CU-24, CU-44, CU-06 |
-| En curso | **14** | CU-21 — servidor completo y verificado; falta el proyecto de Firebase para que la notificación llegue al teléfono |
-| Descartados | 0 | El orden de descarte (CU-06 primero, después CU-44) **no se activó**: los dos entraron |
+| Cerrados | **56** | CU-17, T-06, T-07, T-08, CU-07, CU-12, CU-21, CU-43, CU-22, CU-23, CU-24, CU-44, CU-06 |
+| Descartados | 0 | El orden de descarte (CU-06 primero, después CU-44) **no se activó** |
 
-El CU-21 no se cuenta como cerrado a propósito: el emparejamiento está escrito,
-aplicado y probado contra la base, y la Edge Function está desplegada, pero nadie vio
-todavía llegar una notificación a un teléfono. Contarlo sería repetir el error que la
-retrospectiva del Sprint 2 marcó sobre dar por hecho lo que no se ejercitó.
+**El CU-21 se cerró el 16/09**, después de la prueba de punta a punta con un
+dispositivo real: pedido publicado desde la Web, notificación recibida en Android y
+apertura del detalle. Hasta esa prueba se lo informaba en curso a propósito —el
+servidor estaba completo, pero nadie había visto llegar una notificación—, y la
+prueba encontró tres defectos que ninguna verificación anterior había visto (CORS
+desde la Web, la pantalla que abría la notificación y lo que quedaba debajo al
+volver). La integración con Firebase y esos arreglos quedaron en el tag `v0.3.1`.
+
+La sección para el documento de planificación está en
+**`docs/sprints/SPRINT-03-cierre.md`**, con el burndown en `figuras/` y la evidencia
+de commits en `evidencia-sprint-03.txt`.
 
 ---
 

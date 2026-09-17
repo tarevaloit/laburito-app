@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" font-family="Helvetica, Arial, sans-serif">
+<rect width="1200" height="700" fill="#FFFFFF"/>
+<text x="90" y="38" font-size="24" font-weight="700" fill="#12263F">Burndown del proyecto al cierre del Sprint 3</text>
+<line x1="90" y1="590.0" x2="1160" y2="590.0" stroke="#E3E8EF" stroke-width="1"/>
+<text x="78" y="595.0" font-size="16" text-anchor="end" fill="#55677E">0</text>
+<line x1="90" y1="486.0" x2="1160" y2="486.0" stroke="#E3E8EF" stroke-width="1"/>
+<text x="78" y="491.0" font-size="16" text-anchor="end" fill="#55677E">50</text>
+<line x1="90" y1="382.0" x2="1160" y2="382.0" stroke="#E3E8EF" stroke-width="1"/>
+<text x="78" y="387.0" font-size="16" text-anchor="end" fill="#55677E">100</text>
+<line x1="90" y1="278.0" x2="1160" y2="278.0" stroke="#E3E8EF" stroke-width="1"/>
+<text x="78" y="283.0" font-size="16" text-anchor="end" fill="#55677E">150</text>
+<line x1="90" y1="174.0" x2="1160" y2="174.0" stroke="#E3E8EF" stroke-width="1"/>
+<text x="78" y="179.0" font-size="16" text-anchor="end" fill="#55677E">200</text>
+<line x1="90" y1="70.0" x2="1160" y2="70.0" stroke="#E3E8EF" stroke-width="1"/>
+<text x="78" y="75.0" font-size="16" text-anchor="end" fill="#55677E">250</text>
+<text x="90.0" y="620" font-size="16" text-anchor="middle" fill="#55677E">Inicio</text>
+<text x="268.3" y="620" font-size="16" text-anchor="middle" fill="#55677E">Sprint 1</text>
+<text x="446.7" y="620" font-size="16" text-anchor="middle" fill="#55677E">Sprint 2</text>
+<text x="625.0" y="620" font-size="16" text-anchor="middle" fill="#55677E">Sprint 3</text>
+<text x="803.3" y="620" font-size="16" text-anchor="middle" fill="#55677E">Sprint 4</text>
+<text x="981.7" y="620" font-size="16" text-anchor="middle" fill="#55677E">Sprint 5</text>
+<text x="1160.0" y="620" font-size="16" text-anchor="middle" fill="#55677E">Sprint 6</text>
+<line x1="90" y1="590" x2="1160" y2="590" stroke="#8798AC" stroke-width="1.5"/>
+<text x="24" y="330.0" font-size="16" fill="#55677E" transform="rotate(-90 24 330.0)" text-anchor="middle">Puntos de historia pendientes</text>
+<polyline points="90.0,101.2 268.3,182.7 446.7,264.1 625.0,345.6 803.3,427.1 981.7,508.5 1160.0,590.0" fill="none" stroke="#8798AC" stroke-width="2" stroke-dasharray="8 7"/>
+<polyline points="90.0,101.2 268.3,174.0 446.7,257.2 625.0,350.8 803.3,454.8 981.7,527.6 1160.0,590.0" fill="none" stroke="#1E63C4" stroke-width="3"/>
+<circle cx="90.0" cy="101.2" r="6" fill="#1E63C4"/>
+<circle cx="268.3" cy="174.0" r="6" fill="#1E63C4"/>
+<circle cx="446.7" cy="257.2" r="6" fill="#1E63C4"/>
+<circle cx="625.0" cy="350.8" r="6" fill="#1E63C4"/>
+<circle cx="803.3" cy="454.8" r="6" fill="#1E63C4"/>
+<circle cx="981.7" cy="527.6" r="6" fill="#1E63C4"/>
+<circle cx="1160.0" cy="590.0" r="6" fill="#1E63C4"/>
+<polyline points="90.0,101.2 268.3,174.0 446.7,238.5 625.0,342.5" fill="none" stroke="#F2811D" stroke-width="4"/>
+<circle cx="90.0" cy="101.2" r="6" fill="#F2811D"/>
+<circle cx="268.3" cy="174.0" r="6" fill="#F2811D"/>
+<circle cx="446.7" cy="238.5" r="6" fill="#F2811D"/>
+<circle cx="625.0" cy="342.5" r="6" fill="#F2811D"/>
+<text x="280.3" y="162.0" font-size="17" font-weight="700" fill="#C2620C">200</text>
+<text x="458.7" y="226.5" font-size="17" font-weight="700" fill="#C2620C">169</text>
+<text x="637.0" y="330.5" font-size="17" font-weight="700" fill="#C2620C">119</text>
+<text x="256.3" y="200.0" font-size="15" text-anchor="end" fill="#1E63C4">200</text>
+<text x="434.7" y="283.2" font-size="15" text-anchor="end" fill="#1E63C4">160</text>
+<text x="613.0" y="376.8" font-size="15" text-anchor="end" fill="#1E63C4">115</text>
+<line x1="90" y1="668" x2="130" y2="668" stroke="#8798AC" stroke-width="4" stroke-dasharray="8 7"/>
+<text x="140" y="674" font-size="16" fill="#12263F">Ideal (lineal)</text>
+<line x1="420" y1="668" x2="460" y2="668" stroke="#1E63C4" stroke-width="4"/>
+<text x="470" y="674" font-size="16" fill="#12263F">Planificada (Sección 1)</text>
+<line x1="750" y1="668" x2="790" y2="668" stroke="#F2811D" stroke-width="4"/>
+<text x="800" y="674" font-size="16" fill="#12263F">Real (alcance cerrado)</text>
+</svg>
