@@ -187,6 +187,9 @@ class _PushFalso implements ServicioPush {
 
   @override
   Stream<String> get pedidosAbiertos => const Stream.empty();
+
+  @override
+  Stream<AvisoPush> get avisosEnPrimerPlano => const Stream.empty();
 }
 
 /// El repositorio visto desde el controlador: devuelve el token sin red.

@@ -6,6 +6,11 @@ import '../features/notificaciones/data/servicio_push.dart';
 import 'router.dart';
 import 'theme.dart';
 
+/// Deja mostrar un `SnackBar` desde fuera de la jerarquía de `Scaffold` —acá,
+/// desde el `ref.listen` de un aviso push que puede llegar con la app en
+/// cualquier pantalla—, sin tener que pasar un `BuildContext` de por medio.
+final _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
 class LaburitoApp extends ConsumerWidget {
   const LaburitoApp({super.key});
 
@@ -28,11 +33,32 @@ class LaburitoApp extends ConsumerWidget {
       }
     });
 
+    // Con la app en primer plano, FCM no muestra nada solo (ver
+    // `ServicioPushFirebase.avisosEnPrimerPlano`): sin este `listen`, una
+    // alerta que llega mientras se mira la pantalla no se nota nunca.
+    ref.listen(avisosEnPrimerPlanoProvider, (_, siguiente) {
+      final aviso = siguiente.valueOrNull;
+      if (aviso == null) return;
+
+      _scaffoldMessengerKey.currentState
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+          content: Text('${aviso.titulo}: ${aviso.cuerpo}'),
+          action: aviso.pedidoId == null
+              ? null
+              : SnackBarAction(
+                  label: 'Ver',
+                  onPressed: () => router.go('/pedidos/${aviso.pedidoId}'),
+                ),
+        ));
+    });
+
     return MaterialApp.router(
       title: 'Laburito',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.claro,
       routerConfig: router,
+      scaffoldMessengerKey: _scaffoldMessengerKey,
     );
   }
 }

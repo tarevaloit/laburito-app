@@ -33,6 +33,25 @@ abstract interface class ServicioPush {
 
   /// El id de pedido de la notificación que abrió la app, si se abrió así.
   Stream<String> get pedidosAbiertos;
+
+  /// Cada mensaje que llega **con la app abierta y en primer plano**.
+  ///
+  /// FCM no lo hace sonar solo: el bloque `notification` de un mensaje entra
+  /// a la bandeja del sistema únicamente con la app en segundo plano o
+  /// cerrada. Con la app en pantalla, el mensaje se entrega acá y queda en la
+  /// pantalla mostrar algo — si no, la alerta llega y no se nota nunca en ese
+  /// caso, que es justamente el más fácil de probar en un emulador.
+  Stream<AvisoPush> get avisosEnPrimerPlano;
+}
+
+/// Lo que trae un mensaje de FCM, sin el tipo de `firebase_messaging` — es lo
+/// que le llega a la UI, que no tiene por qué conocer `RemoteMessage`.
+class AvisoPush {
+  const AvisoPush({required this.titulo, required this.cuerpo, this.pedidoId});
+
+  final String titulo;
+  final String cuerpo;
+  final String? pedidoId;
 }
 
 /// La implementación que corre hasta que exista el proyecto de Firebase.
@@ -54,6 +73,9 @@ class PushNoConfigurado implements ServicioPush {
 
   @override
   Stream<String> get pedidosAbiertos => const Stream.empty();
+
+  @override
+  Stream<AvisoPush> get avisosEnPrimerPlano => const Stream.empty();
 }
 
 /// La implementación real, sobre `firebase_messaging` (CU-21, `docs/FIREBASE.md`).
@@ -69,6 +91,12 @@ class PushNoConfigurado implements ServicioPush {
 /// reaccionar a un mensaje mientras nadie mira la pantalla, y acá lo único que
 /// importa es qué pasa cuando se toca — eso lo cubren `getInitialMessage` y
 /// `onMessageOpenedApp`, que corren en el isolate principal.
+///
+/// Con la app **en primer plano** es al revés: ahí FCM no muestra nada solo,
+/// y sin escuchar `onMessage` la alerta llega y no se nota — que es el caso
+/// más fácil de toparse probando en un emulador con la pantalla abierta.
+/// `avisosEnPrimerPlano` cubre eso; `LaburitoApp` lo escucha y muestra un
+/// `SnackBar`.
 class ServicioPushFirebase implements ServicioPush {
   ServicioPushFirebase() {
     FirebaseMessaging.onMessageOpenedApp.listen(_agregarSiTraePedido);
@@ -77,16 +105,32 @@ class ServicioPushFirebase implements ServicioPush {
     _mensajeria.getInitialMessage().then((mensaje) {
       if (mensaje != null) _agregarSiTraePedido(mensaje);
     });
+    // Con la app en primer plano, FCM no la muestra sola: hay que escuchar
+    // `onMessage` y avisar del lado de la UI.
+    FirebaseMessaging.onMessage.listen(_agregarAvisoEnPrimerPlano);
   }
 
   final FirebaseMessaging _mensajeria = FirebaseMessaging.instance;
   final _pedidosAbiertos = StreamController<String>.broadcast();
+  final _avisosEnPrimerPlano = StreamController<AvisoPush>.broadcast();
 
   void _agregarSiTraePedido(RemoteMessage mensaje) {
     final pedidoId = mensaje.data['pedido_id'];
     if (pedidoId is String && pedidoId.isNotEmpty) {
       _pedidosAbiertos.add(pedidoId);
     }
+  }
+
+  void _agregarAvisoEnPrimerPlano(RemoteMessage mensaje) {
+    final notificacion = mensaje.notification;
+    if (notificacion == null) return;
+
+    final pedidoId = mensaje.data['pedido_id'];
+    _avisosEnPrimerPlano.add(AvisoPush(
+      titulo: notificacion.title ?? 'Laburito',
+      cuerpo: notificacion.body ?? '',
+      pedidoId: pedidoId is String && pedidoId.isNotEmpty ? pedidoId : null,
+    ));
   }
 
   @override
@@ -104,6 +148,9 @@ class ServicioPushFirebase implements ServicioPush {
 
   @override
   Stream<String> get pedidosAbiertos => _pedidosAbiertos.stream;
+
+  @override
+  Stream<AvisoPush> get avisosEnPrimerPlano => _avisosEnPrimerPlano.stream;
 }
 
 /// Se reemplaza con un `override` en los tests por una implementación de
@@ -132,3 +179,9 @@ String plataformaActual() {
 @Riverpod(keepAlive: true)
 Stream<String> pedidosAbiertos(Ref ref) =>
     ref.watch(servicioPushProvider).pedidosAbiertos;
+
+/// Mensajes que llegan con la app abierta. `LaburitoApp` los muestra en un
+/// `SnackBar`: es la única forma de que se note una alerta en primer plano.
+@Riverpod(keepAlive: true)
+Stream<AvisoPush> avisosEnPrimerPlano(Ref ref) =>
+    ref.watch(servicioPushProvider).avisosEnPrimerPlano;
