@@ -39,6 +39,16 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- CU-32: la vuelta desde Mercado Pago. La Edge Function
+                 `retorno_pago` redirige a laburito://laburito/profesional/billetera
+                 y Flutter le pasa la ruta a go_router. -->
+            <meta-data android:name="flutter_deeplinking_enabled" android:value="true" />
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="laburito" android:host="laburito"/>
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
@@ -55,6 +65,13 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Sprint 4 (url_launcher): abrir el checkout de Mercado Pago, el
+             comprobante en PDF y el chat de WhatsApp. Desde Android 11, sin
+             declarar la intención la app no ve quién puede abrir la URL. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
         </intent>
     </queries>
     <uses-permission android:name="android.permission.CAMERA"/>
