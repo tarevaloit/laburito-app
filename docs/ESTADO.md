@@ -2,7 +2,7 @@
 
 > **Fuente de verdad del proyecto.** Este archivo se actualiza al cerrar cada sesión de trabajo.
 > Vive en `docs/ESTADO.md` del repo y se commitea junto con el código.
-> Última actualización: 16/09/2026
+> Última actualización: 29/09/2026
 
 ---
 
@@ -41,6 +41,7 @@ produjo una decisión técnica, va a la sección 5 de este archivo antes de cerr
 | `S1 · Cierre y documentación` | Sección 7.1 del Sprint Planning, evidencias, burndown real |
 | `S2 · Pedidos` | Arranque del Sprint 2: CU-13, CU-16 y siguientes |
 | `S3 · Esquema del Profesional` | Fase 1 del Sprint 3: T-07, migración 0012 |
+| `S4 · Monetización` | Sprint 4 completo: T-09, T-10, billetera, Mercado Pago, desbloqueo, cupones |
 
 ---
 
@@ -48,13 +49,12 @@ produjo una decisión técnica, va a la sección 5 de este archivo antes de cerr
 
 | Campo | Valor |
 |---|---|
-| Sprint en curso | **Sprint 4 — Monetización** (PT 5.0) · por planificar · 17/09 al 30/09 |
+| Sprint en curso | **Sprint 4 — Monetización** (PT 5.0) · rama `sprint-4` · plan en `docs/sprints/SPRINT-04.md` |
+| Período | 17/09/2026 al 30/09/2026 (ejecución desde el 29/09) |
+| Entrega por BB | 30/09/2026 hasta las 23:59 · reunión 01/10 |
+| Esfuerzo comprometido | 53 pts (50 del PT 5.0 + 3 de deuda de seguridad, T-09) |
 | Sprint anterior | **Sprint 3 — cerrado, 56/56 pts** (PT 4.0) · tags `v0.3.0` y `v0.3.1` · cierre en `docs/sprints/SPRINT-03-cierre.md` |
-| Período | 03/09/2026 al 16/09/2026 |
-| Entrega por BB | 16/09/2026 hasta las 23:59 |
-| Esfuerzo planificado | 56 pts (45 del PT 4.0 + 5 del CU-17 replanificado + 6 de deuda) |
-| Backlog restante | 169 pts al inicio del Sprint 3 (criterio de alcance cerrado, ver plan) |
-| Release | **v0.3.1** · remanente del backlog: **119 pts** (49,4 % de avance acumulado, 51,1 % planificado) |
+| Release | **v0.3.1** · remanente del backlog: **119 pts** (49,4 % de avance acumulado). Objetivo del sprint: v0.4.0, 72,3 % planificado |
 | Repositorio | https://github.com/tarevaloit/laburito |
 | Proyecto Supabase | `laburito` · ref `xbgwogitgzzxmoixqfjd` · PostgreSQL 17.6, PostGIS 3.3.7 |
 
