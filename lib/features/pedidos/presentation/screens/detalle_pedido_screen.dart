@@ -7,6 +7,7 @@ import '../../../../core/errors/mensajes_error.dart';
 import '../../../../core/utils/fechas.dart';
 import '../../../../core/widgets/marca_laburito.dart';
 import '../../../perfil/data/perfil_repository.dart';
+import '../../../profesional/data/contacto_repository.dart';
 import '../../data/pedido_exception.dart';
 import '../../data/pedidos_repository.dart';
 import '../../domain/pedido.dart';
@@ -170,6 +171,7 @@ class _Detalle extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 _Encabezado(pedido: pedido),
+                _Interesados(pedidoId: pedido.id),
                 const SizedBox(height: 20),
                 _Seccion(
                   titulo: 'Qué se necesita',
@@ -231,6 +233,45 @@ class _Detalle extends StatelessWidget {
         ),
         BarraDeAccionesPedido(pedido: pedido),
       ],
+    );
+  }
+}
+
+/// CU-25, paso 6: el Buscador ve cuántos Profesionales desbloquearon su
+/// contacto, que son los que le pueden estar escribiendo por WhatsApp. Quiénes
+/// son no: eso lo decide cada Profesional al escribir.
+///
+/// El aviso en el momento (una notificación) es el CU-48, del Sprint 5.
+class _Interesados extends ConsumerWidget {
+  const _Interesados({required this.pedidoId});
+
+  final String pedidoId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final total = ref.watch(interesadosPedidoProvider(pedidoId)).valueOrNull;
+    if (total == null || total == 0) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Row(
+        children: [
+          const Icon(Icons.handshake_outlined, size: 18, color: Colores.exito),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              total == 1
+                  ? '1 Profesional pidió tu contacto y te puede escribir por WhatsApp.'
+                  : '$total Profesionales pidieron tu contacto y te pueden escribir por WhatsApp.',
+              key: const Key('interesados'),
+              style: const TextStyle(
+                color: Colores.exito,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
