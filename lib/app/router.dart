@@ -8,6 +8,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/config/superficie.dart';
 import '../core/providers/supabase_providers.dart';
 import '../features/auth/presentation/screens/codigo_recuperacion_screen.dart';
+import '../features/billetera/presentation/screens/billetera_screen.dart';
+import '../features/billetera/presentation/screens/canjear_cupon_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/nueva_password_screen.dart';
 import '../features/auth/presentation/screens/recuperar_password_screen.dart';
@@ -200,6 +202,24 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => DetallePedidoPublicoScreen(
           id: state.pathParameters['id'] ?? '',
         ),
+      ),
+      // CU-30, CU-31, CU-33. `pago` llega al volver del checkout de Mercado
+      // Pago por `laburito://laburito/profesional/billetera?pago=…`, el enlace
+      // que arma la Edge Function `retorno_pago`.
+      GoRoute(
+        path: '/profesional/billetera',
+        name: 'billetera',
+        builder: (context, state) => BilleteraScreen(
+          pagoId: state.uri.queryParameters['pago'],
+        ),
+        routes: [
+          // CU-53.
+          GoRoute(
+            path: 'canjear',
+            name: 'canjearCupon',
+            builder: (context, state) => const CanjearCuponScreen(),
+          ),
+        ],
       ),
       GoRoute(
         path: '/verificacion',

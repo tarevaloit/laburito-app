@@ -170,6 +170,12 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
+                    onPressed: () => context.go('/profesional/billetera'),
+                    icon: const Icon(Icons.account_balance_wallet_outlined),
+                    label: Text('Mi billetera · ${p.saldoTokens} tokens'),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
                     onPressed: () => context.go('/profesional/zona'),
                     icon: const Icon(Icons.travel_explore),
                     label: const Text('Zona de cobertura'),

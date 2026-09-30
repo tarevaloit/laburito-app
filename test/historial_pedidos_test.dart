@@ -137,8 +137,12 @@ void main() {
     });
 
     testWidgets('un pedido en curso muestra cuánto le queda', (t) async {
+      // Al mediodía de dentro de tres días calendario, y no «ahora + 3 días y
+      // 2 horas»: corrida después de las 22:00, esa suma caía en el cuarto día
+      // y la prueba fallaba según la hora.
+      final hoy = DateTime.now();
       await montar(t, pedido(
-        vencimiento: DateTime.now().add(const Duration(days: 3, hours: 2)),
+        vencimiento: DateTime(hoy.year, hoy.month, hoy.day + 3, 12),
       ));
 
       expect(find.text('Vence en 3 días'), findsOneWidget);

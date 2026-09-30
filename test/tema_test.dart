@@ -132,7 +132,8 @@ void main() {
     await t.pumpWidget(conBarra(true));
     expect(find.text('Tablero'), findsOneWidget);
     expect(find.text('Billetera'), findsOneWidget);
-    expect(find.text('Pronto'), findsOneWidget);
+    // Desde el Sprint 4 la billetera existe: ya no lleva la insignia «Pronto».
+    expect(find.text('Pronto'), findsNothing);
     expect(find.text('Perfil'), findsOneWidget);
 
     await t.pumpWidget(conBarra(false));
