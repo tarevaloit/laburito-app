@@ -7,6 +7,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/config/superficie.dart';
 import '../core/providers/supabase_providers.dart';
+import '../features/admin/presentation/screens/cupones_screen.dart';
+import '../features/admin/presentation/screens/precios_screen.dart';
 import '../features/auth/presentation/screens/codigo_recuperacion_screen.dart';
 import '../features/billetera/presentation/screens/billetera_screen.dart';
 import '../features/billetera/presentation/screens/canjear_cupon_screen.dart';
@@ -202,6 +204,25 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => DetallePedidoPublicoScreen(
           id: state.pathParameters['id'] ?? '',
         ),
+      ),
+      // Panel del administrador (CU-40, CU-52). El rol se valida en
+      // `PanelAdmin`, no en el `redirect`: ver el comentario de esa clase.
+      GoRoute(
+        path: '/admin',
+        redirect: (context, state) =>
+            state.matchedLocation == '/admin' ? '/admin/precios' : null,
+        routes: [
+          GoRoute(
+            path: 'precios',
+            name: 'adminPrecios',
+            builder: (context, state) => const PreciosScreen(),
+          ),
+          GoRoute(
+            path: 'cupones',
+            name: 'adminCupones',
+            builder: (context, state) => const CuponesScreen(),
+          ),
+        ],
       ),
       // CU-30, CU-31, CU-33. `pago` llega al volver del checkout de Mercado
       // Pago por `laburito://laburito/profesional/billetera?pago=…`, el enlace

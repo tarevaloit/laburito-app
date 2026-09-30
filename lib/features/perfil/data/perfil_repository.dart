@@ -37,6 +37,7 @@ abstract class PerfilCompleto with _$PerfilCompleto {
   }) = _PerfilCompleto;
 
   bool get esProfesional => tipo == 'profesional';
+  bool get esAdministrador => tipo == 'administrador';
   bool get necesitaCargarDocumentacion =>
       esProfesional && estadoVerificacion == 'sin_documentacion';
   String get nombreCompleto => '$nombre $apellido';

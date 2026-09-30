@@ -103,7 +103,9 @@ class HomeScreen extends ConsumerWidget {
                 Text(
                   p.esProfesional
                       ? 'Cuenta de Profesional'
-                      : 'Cuenta de Buscador',
+                      : p.esAdministrador
+                          ? 'Cuenta de Administrador'
+                          : 'Cuenta de Buscador',
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colores.textoSecundario),
                 ),
@@ -148,7 +150,15 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                if (!p.esProfesional) ...[
+                if (p.esAdministrador) ...[
+                  BotonPrincipal(
+                    texto: 'Panel de administración',
+                    icono: Icons.admin_panel_settings_outlined,
+                    onPressed: () => context.go('/admin/precios'),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                if (!p.esProfesional && !p.esAdministrador) ...[
                   BotonPrincipal(
                     texto: 'Publicar un pedido',
                     icono: Icons.add_circle_outline,
