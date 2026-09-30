@@ -43,18 +43,25 @@ Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanific
 
 | ID | Tarea / Caso de Uso | Tipo | Pts | Estado | Evidencia |
 |---|---|---|---|---|---|
-| T-09 | Deuda de seguridad: ubicación exacta legible por la API, columnas sensibles del Profesional y fotos de pedidos cerrados | Backend | 3 | ⬜ | |
-| T-10 | Esquema de monetización con sus políticas RLS (infraestructura) | Backend | — | ⬜ | |
-| CU-30 | Consultar Saldo de Tokens | Frontend | 3 | ⬜ | |
-| CU-31 | Cargar Tokens (Mercado Pago Checkout Pro con credenciales de prueba) | Full-stack | 12 | ⬜ | |
-| CU-32 | Procesar Pago (webhook como Edge Function de Supabase) | Backend | 10 | ⬜ | |
-| CU-33 | Ver Historial de Pagos | Full-stack | 4 | ⬜ | |
-| CU-25 | Postularse (Desbloquear Contacto) | Full-stack | 6 | ⬜ | |
-| CU-40 | Configurar Precio de Tokens | Full-stack | 3 | ⬜ | |
-| CU-52 | Crear Cupón Promocional | Full-stack | 4 | ⬜ | |
-| CU-53 | Canjear Cupón de Tokens | Full-stack | 4 | ⬜ | |
-| CU-19 | Descargar Comprobante de Tokens (emitido por la plataforma) | Backend | 4 | ⬜ | |
+| T-09 | Deuda de seguridad: ubicación exacta legible por la API, columnas sensibles del Profesional y fotos de pedidos cerrados | Backend | 3 | 🟡 | `1622cc8` |
+| T-10 | Esquema de monetización con sus políticas RLS (infraestructura) | Backend | — | 🟡 | `71113e9` |
+| CU-30 | Consultar Saldo de Tokens | Frontend | 3 | 🟡 | `b23ba1c` |
+| CU-31 | Cargar Tokens (Mercado Pago Checkout Pro con credenciales de prueba) | Full-stack | 12 | 🟡 | `3f6fba0`, `b23ba1c` |
+| CU-32 | Procesar Pago (webhook como Edge Function de Supabase) | Backend | 10 | 🟡 | `3f6fba0`, `b23ba1c` |
+| CU-33 | Ver Historial de Pagos | Full-stack | 4 | 🟡 | `b23ba1c` |
+| CU-25 | Postularse (Desbloquear Contacto) | Full-stack | 6 | 🟡 | `2868316` |
+| CU-40 | Configurar Precio de Tokens | Full-stack | 3 | 🟡 | `c845fcb` |
+| CU-52 | Crear Cupón Promocional | Full-stack | 4 | 🟡 | `c845fcb` |
+| CU-53 | Canjear Cupón de Tokens | Full-stack | 4 | 🟡 | `a92d0fe`, `b23ba1c` |
+| CU-19 | Descargar Comprobante de Tokens (emitido por la plataforma) | Backend | 4 | 🟡 | `7896de4`, `b23ba1c` |
 | | **Total** | | **53** | | |
+
+**Estado al 29/09, 23:59.** Todo el alcance está escrito y commiteado, con 307 pruebas
+en verde y los builds de web y Android compilando. Nada está cerrado todavía: 🟡
+significa escrito y probado sin base, porque el proyecto de Supabase quedó pausado
+por inactividad y ninguna migración pudo aplicarse. Un ítem pasa a ✅ cuando su
+migración está aplicada con el guion en OK y, para el CU-31 y el CU-32, cuando se vio
+un pago de prueba acreditado en un teléfono.
 
 La T-10 no lleva puntos, con el criterio de la T-07: es la infraestructura sin la cual los
 casos de uso no existen, y su esfuerzo está dentro de sus estimaciones. La T-09 sí, porque
