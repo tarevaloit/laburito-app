@@ -2,7 +2,7 @@
 
 > **Fuente de verdad del proyecto.** Este archivo se actualiza al cerrar cada sesión de trabajo.
 > Vive en `docs/ESTADO.md` del repo y se commitea junto con el código.
-> Última actualización: 16/09/2026
+> Última actualización: 01/10/2026
 
 ---
 
@@ -41,6 +41,7 @@ produjo una decisión técnica, va a la sección 5 de este archivo antes de cerr
 | `S1 · Cierre y documentación` | Sección 7.1 del Sprint Planning, evidencias, burndown real |
 | `S2 · Pedidos` | Arranque del Sprint 2: CU-13, CU-16 y siguientes |
 | `S3 · Esquema del Profesional` | Fase 1 del Sprint 3: T-07, migración 0012 |
+| `S4 · Monetización` | Sprint 4 completo: T-09, T-10, billetera, Mercado Pago, desbloqueo, cupones |
 
 ---
 
@@ -48,13 +49,9 @@ produjo una decisión técnica, va a la sección 5 de este archivo antes de cerr
 
 | Campo | Valor |
 |---|---|
-| Sprint en curso | **Sprint 4 — Monetización** (PT 5.0) · por planificar · 17/09 al 30/09 |
-| Sprint anterior | **Sprint 3 — cerrado, 56/56 pts** (PT 4.0) · tags `v0.3.0` y `v0.3.1` · cierre en `docs/sprints/SPRINT-03-cierre.md` |
-| Período | 03/09/2026 al 16/09/2026 |
-| Entrega por BB | 16/09/2026 hasta las 23:59 |
-| Esfuerzo planificado | 56 pts (45 del PT 4.0 + 5 del CU-17 replanificado + 6 de deuda) |
-| Backlog restante | 169 pts al inicio del Sprint 3 (criterio de alcance cerrado, ver plan) |
-| Release | **v0.3.1** · remanente del backlog: **119 pts** (49,4 % de avance acumulado, 51,1 % planificado) |
+| Sprint en curso | **Sprint 5 — Enlaces Públicos y Calificación** (PT 6.0) · por planificar · 01/10 al 14/10 |
+| Sprint anterior | **Sprint 4 — cerrado, 53/53 pts** (PT 5.0) · tag `v0.4.0` · cierre en `docs/sprints/SPRINT-04-cierre.md` (y `.docx`) |
+| Release | **v0.4.0** · remanente del backlog: **69 pts** (70,6 % de avance acumulado, 72,3 % planificado) |
 | Repositorio | https://github.com/tarevaloit/laburito |
 | Proyecto Supabase | `laburito` · ref `xbgwogitgzzxmoixqfjd` · PostgreSQL 17.6, PostGIS 3.3.7 |
 
@@ -664,6 +661,84 @@ apartado 7.2 (remanentes 205/174 → 200/169, marcas de edición sin completar, 
 columna de horas que no se restableció, el punto de control del día 7 que no se
 ejecutó) y sigue la indicación del profesor: menos detalle de lo realizado.
 
+## 4c. Sprint 4 — cerrado, 53/53 pts (PT 5.0)
+
+Rama **`sprint-4`**, salida de `main` en `v0.3.1`. El plan, el orden de descarte y los
+puntos de control viven en `docs/sprints/SPRINT-04.md`; acá va lo que ya pasó.
+
+### 4c.1 Arranque (29/09)
+
+El sprint arrancó el 29/09, con la entrega el 30/09 a las 23:59: entre el 17/09 y el
+28/09 no hubo ejecución. Se decidió sostener el compromiso completo (53 pts) con el
+orden de descarte del apartado 6 fijado de antemano.
+
+**La base estuvo pausada** por inactividad (plan gratuito) del 29/09 al 01/10, cuando se
+restauró. Después del restore el pooler tardó unos minutos en aceptar conexiones de la
+CLI (`tenant/user cli_login_postgres… not found`): es esperable y se resuelve solo.
+
+### 4c.2 Lo escrito y commiteado
+
+| Commit | Qué | Verificado |
+|---|---|---|
+| `1622cc8` `fix(T-09)` | Migración 0020 + `scripts/verificar_0020.sql` | Aplicada el 01/10, guion 16/16 OK |
+| `71113e9` `feat(T-10)` | Migración 0021 + `scripts/verificar_0021.sql` | Aplicada, guion 12/12 OK |
+| `3f6fba0` `feat(CU-31,CU-32)` | Migración 0022, Edge Functions `crear_preferencia_pago`, `webhook_mercadopago`, `retorno_pago` y `_shared/http.ts`; esquema `laburito://` en Android e iOS | 0022 aplicada; funciones desplegadas. Falta cargar las credenciales de Mercado Pago |
+| `a92d0fe` `feat(CU-53)` | Migración 0025 | Aplicada |
+| `7896de4` `feat(CU-19)` | Migración 0026, Edge Function `comprobante_pago` | Aplicada y desplegada; sin ejercitar (necesita un pago aprobado) |
+| `b23ba1c` `feat(CU-30,CU-33)` | `lib/features/billetera/` completo: billetera, compra, seguimiento del pago, historial, canje y comprobante | `flutter test` |
+| `2868316` `feat(CU-25)` | Migración 0023 + desbloqueo en el detalle del Profesional + interesados en el del Buscador | `flutter test` |
+| `c845fcb` `feat(CU-40,CU-52)` | Migración 0024 + `lib/features/admin/` (armazón del panel, precios, cupones) | `flutter test` |
+
+Guion común de las funciones: `scripts/verificar_0022_0025.sql`, **23/23 OK** el 01/10.
+La primera corrida dio una falla **del guion**: comparaba el saldo con «el último»
+movimiento por fecha, y dentro de una transacción `now()` es el mismo para todos. Se
+reescribió para comparar contra la suma del libro. Todos los guiones
+corren dentro de una transacción que **aborta a propósito** al final y devuelven el
+resultado como el texto del error, una línea por regla: no pueden dejar nada escrito.
+
+Verificado sin base: `flutter analyze` 0 issues, `flutter test` **307 en verde** (273
+al cerrar el Sprint 3; 34 nuevas en `billetera_test`, `contacto_test` y `admin_test`),
+`flutter build web` y `flutter build apk --debug` compilan.
+
+### 4c.3 Aplicado y desplegado (01/10)
+
+Migraciones 0020 a 0026 ensayadas juntas con `rollback` y aplicadas de a una con
+`begin … commit`; los tres guiones en OK (51 reglas) y sin datos de prueba
+remanentes. Edge Functions desplegadas con `--use-api`: `crear_preferencia_pago` y
+`comprobante_pago` con JWT, `webhook_mercadopago` y `retorno_pago` sin. Prueba de humo:
+sin sesión 401, `OPTIONS` 204, webhook sin secretos 503, retorno 302 a
+`laburito://laburito/profesional/billetera?pago=…`.
+
+### 4c.4 Lo que falta, en orden
+
+1. Mercado Pago (`docs/MERCADOPAGO.md`): aplicación, cuentas de prueba, webhook y
+   `supabase secrets set MP_ACCESS_TOKEN=… MP_WEBHOOK_SECRET=…`.
+2. Prueba de punta a punta en el teléfono: compra con el comprador de prueba →
+   acreditación → desbloqueo → WhatsApp; canje del cupón `DEMO10`
+   (`scripts/preparar_demo.sql`); descarga del comprobante.
+3. Cuenta de administrador (`scripts/crear_admin.sql`) y prueba de precios y cupones.
+4. Cierre: merge, tag `v0.4.0`, `CHANGELOG.md`, apartado 7.4 con su burndown.
+
+### 4c.5 Cierre (01/10)
+
+**El sprint cerró 53 de 53 puntos.** La prueba real —compras con el comprador de prueba,
+desbloqueo, cupón creado en el panel y canjeado, precios— encontró cinco defectos, todos
+corregidos con una prueba que reproduce el recorrido: pagos que quedaban pendientes
+(conciliación `verificar_pago`, `1c1b003`), la sección Cupones inaccesible (`489d0c7`), la
+pantalla roja al guardar un precio (`dca09df`), el saldo del inicio desactualizado
+(`248182d`) y el cierre de sesión bloqueado en la Web (`ce7ba0c`).
+
+`flutter analyze` 0 issues, **317 pruebas en verde**, web y APK compilando. Merge a `main`
+y tag **`v0.4.0`**. Sección 7.4 en `docs/sprints/SPRINT-04-cierre.md` y `.docx` (generados
+por `figuras/generar-cierre-s4-docx.js`), evidencia en `evidencia-sprint-04.txt`.
+
+La reunión del Sprint 3 (17/09) no se hizo: los dos sprints se mostraron juntos el 01/10
+con el guion de `docs/sprints/DEMO-S3-S4.md`.
+
+**Queda abierto:** confirmar que los avisos firmados de Mercado Pago se aceptan (la
+acreditación no depende de ellos) y ejercitar el comprobante del CU-19 en la app, que
+pasó el guion pero no se descargó todavía desde un teléfono.
+
 ## 5. Decisiones técnicas tomadas
 
 Formato: fecha · decisión · motivo. No se borran, se agregan.
@@ -783,6 +858,21 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 16/09 | El CU-21 se da por cerrado recién con la notificación vista en un teléfono | Con el servidor completo y verificado se lo informaba en curso. La prueba real encontró tres defectos que ninguna verificación había visto, lo que confirma el criterio: un caso de uso de integración no se cierra en la base |
 | 16/09 | Los errores de una sección ya entregada se corrigen en la sección siguiente | El documento de planificación es incremental: el 7.2 no se toca. Sus errores se registran en el 7.3.6 con la corrección, que es lo que la propia Sección 1 pide ante cualquier desvío |
 | 16/09 | El cierre de sprint para el documento se escribe corto | Indicación del profesor: menos detalle de lo realizado y un plan de acción breve, siempre que se pueda demostrar el avance con las apps. El detalle técnico sigue viviendo en este archivo y en los commits |
+| 29/09 | **El saldo es la suma de un libro de movimientos** (0021) | `saldo_tokens` queda como total cacheado y `movimientos_tokens` guarda cada entrada y salida con el saldo que dejó. Los dos los escribe una sola función, `aplicar_movimiento_tokens()`, que bloquea la fila del Profesional y que ningún cliente puede ejecutar. Sin libro, el historial del CU-30 y el comprobante del CU-19 serían una reconstrucción, no un registro |
+| 29/09 | El saldo solo se mueve con la compuerta `app.movimiento_tokens`, **para cualquier rol** (0020) | Mismo patrón que `app.transicion_estado` de la 0008. Ni el admin lo escribe a mano: un saldo tocado por fuera del libro deja de coincidir con la suma de sus movimientos |
+| 29/09 | El resto de las columnas del Profesional se protege por rol: por PostgREST (`authenticated`, no admin) solo `descripcion`, `dni`, `disponible` y el paso a `en_revision` | El CU-09 hace ese paso desde el cliente (`marcarEnRevisionSiEstaCompleto`); cerrarlo lo habría roto. Las funciones SECURITY DEFINER —la baja de cuenta— corren como dueñas y pasan |
+| 29/09 | La lectura pública de pedidos pasa a `es_pedido_visible()` y la vista corre con los permisos de su dueño (0020) | Era la única forma de borrar la política que dejaba leer la fila entera —con la ubicación exacta— sin romper las cuatro políticas que dependían de ella (fotos, bucket, ignorados, favoritos). La vista queda `security_barrier` y sin `anon` |
+| 29/09 | **El precio nunca viaja desde la app**: el cliente manda el id del paquete y la Edge Function lee el precio de la base | Si el monto lo mandara el cliente, cualquiera se compraría 20 tokens a un peso. El pago copia cantidad y monto al crearse, así que un cambio de precio en el medio (CU-40) no altera lo que se ofreció |
+| 29/09 | El webhook valida la firma **y además** consulta el pago a la API de Mercado Pago | La firma prueba que la notificación la mandó Mercado Pago; la consulta evita creerle al cuerpo cualquier otro dato. `registrar_resultado_pago` es idempotente (bloquea el pago, un aprobado no se toca más, índice único por pago en el libro) y solo acredita si el monto cobrado coincide |
+| 29/09 | La vuelta del checkout es una Edge Function que redirige a `laburito://laburito/profesional/billetera` | Supabase sirve como texto plano el HTML de las Edge Functions, así que no puede ser una página. La app además relee el pago al volver a primer plano: si el navegador no abre el esquema, el circuito igual se completa |
+| 29/09 | `canjear_cupon` devuelve un resultado en vez de levantar excepciones (0025) | Un `raise` desharía también el registro del intento fallido, y el bloqueo por fuerza bruta que pide la ERS nunca se activaría. 5 fallidos en 15 minutos bloquean |
+| 29/09 | Desbloquear exige Profesional **aprobado**; comprar tokens, solo cuenta activa | El CU-09 existe para que un Buscador no le dé su teléfono a alguien sin verificar. Los tokens no vencen, así que comprarlos durante la revisión no le hace daño a nadie |
+| 29/09 | Desbloquear dos veces el mismo contacto no cobra (0023) | La fila del Profesional se bloquea antes de mirar si ya estaba desbloqueado: dos toques seguidos no cobran dos veces. Y un contacto pagado se sigue viendo aunque el Buscador cierre el pedido |
+| 29/09 | El comprobante del CU-19 lo emite la plataforma, no AFIP | Desvío respecto de la ERS, ya acotado en el título del PT 5.0. El PDF lo dice en el pie. Se genera una vez y se guarda en un bucket privado |
+| 29/09 | El panel del administrador vive en la misma app, bajo `/admin`, con el rol validado en la pantalla | Decisión del 19/08 (un solo proyecto). Adelanta el armazón del panel previsto para el Sprint 5 por la mitigación del apartado 6 |
+| 01/10 | **El pago se concilia también desde la app** (`verificar_pago`), no solo por webhook | En la primera prueba real los pagos quedaban pendientes sin `mp_payment_id`: el aviso de Mercado Pago no llegaba a aplicarse. Mercado Pago recomienda no depender solo del webhook. Al volver del checkout la app pide verificar; la función busca el pago por `external_reference` en la API y lo aplica con la misma función idempotente del webhook |
+| 01/10 | El webhook acepta también el formato IPN (`?topic=payment&id=`), que no trae firma | La autenticidad del resultado no la da el aviso sino la consulta a la API con nuestro Access Token: quien conozca la URL puede hacer que consultemos un pago, no inventar uno aprobado. Una firma **presente e inválida** sí se rechaza, y queda en el log con `[webhook] FIRMA INVÁLIDA` |
+| 29/09 | Los guiones de aceptación terminan con un `raise exception` que lleva el resultado | La transacción aborta sí o sí, aunque la herramienta ignore el `rollback` final. Es la forma de que un guion que toca datos reales no pueda dejar nada escrito |
 | 02/09 | El botón «Mi ubicación» y las sugerencias de búsqueda van en la columna del `SelectorUbicacion`, no flotando sobre el mapa | En Web, `GoogleMap` se dibuja con `HtmlElementView`, y un widget interactivo apilado arriba necesita `pointer_interceptor` para recibir el mouse. Se resolvió con una columna —búsqueda arriba, mapa con solo el pin encima (`IgnorePointer`, no necesita recibir toques), panel de «mi ubicación»/dirección/referencia abajo— en vez de sumar otra dependencia |
 
 ## 6. Deuda técnica y pendientes conocidos
@@ -796,9 +886,9 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | ~~Un pedido puede nacer en un estado terminal~~ | **Saldada el 02/09 con la migración 0009.** Trigger `pedidos_guard_alta` `BEFORE INSERT`, con la misma compuerta que el de UPDATE. | ✅ |
 | ~~El PATCH de edición no mira el estado del pedido~~ | **Saldada el 14/09 con la migración 0013** (`pedidos_guard_edicion`). Era: `actualizar_ubicacion_pedido` exige que el pedido esté `publicado` o `pausado`, pero el UPDATE de PostgREST que cambia título, descripción o presupuesto no: la RLS solo comprueba dueño. Hoy se le puede editar el título a un pedido cerrado. No molesta a nadie —el pedido ya no se lista— pero es una regla del CU-15 que vive solo en el cliente. | ✅ |
 | ~~El Profesional no puede ver las fotos de un pedido~~ | **Saldada el 14/09 con la migración 0013.** Era: las políticas de Storage del bucket `pedidos` son solo del dueño, así que el CU-16 no va a poder firmar las URLs. Falta una política de SELECT para pedidos publicados vigentes, o firmarlas desde una Edge Function. | ✅ |
-| **La vista pública no alcanza: por PostgREST se llega a la ubicación exacta** | `pedidos_publicos` esconde la referencia y redondea la coordenada, pero la política «pedidos: lectura de publicados vigentes» (0006) deja que cualquier autenticado lea la fila entera de `pedidos`, con `ubicacion` y `referencia_ubicacion`. La app nunca lo hace —el tablero y el detalle usan solo las funciones de la 0018— pero un `GET /rest/v1/pedidos` lo consigue. No se puede quitar la política sin romper la vista, que corre con `security_invoker`: la salida es una vista con barrera y `security definer`, o mover la lectura pública a una función. Es la deuda más grande que queda abierta | Sprint 4, antes de que haya contacto entre las partes |
-| **Un Profesional puede aprobarse solo y cargarse tokens** | La política «profesional propio: actualización» (0001/0002) es de fila entera, como la de `pedidos` antes de la 0008: el dueño puede escribir `estado_verificacion`, `saldo_tokens`, `calificacion_promedio` y `total_calificaciones` con un PATCH. Importa ya: el CU-21 va a notificar según la verificación, y el Sprint 4 cobra tokens. Se cierra con un trigger `BEFORE UPDATE` del patrón de `pedidos_guard_estado`, dejándole al dueño solo `descripcion`, `dni` y `disponible` | Sprint 3, antes del CU-21 |
-| Las fotos de un pedido cerrado se pueden agregar y borrar | El guard de la 0013 cubre la fila de `pedidos`, no `pedido_fotos` ni el bucket: las políticas de alta y baja de fotos (0006) solo miran dueño. La pantalla solo ofrece fotos en la edición, que ya exige publicado o pausado. Mismo tipo de regla que vivía solo en el cliente | Sprint 4 |
+| **La vista pública no alcanza: por PostgREST se llega a la ubicación exacta** | `pedidos_publicos` esconde la referencia y redondea la coordenada, pero la política «pedidos: lectura de publicados vigentes» (0006) deja que cualquier autenticado lea la fila entera de `pedidos`, con `ubicacion` y `referencia_ubicacion`. La app nunca lo hace —el tablero y el detalle usan solo las funciones de la 0018— pero un `GET /rest/v1/pedidos` lo consigue. No se puede quitar la política sin romper la vista, que corre con `security_invoker`: la salida es una vista con barrera y `security definer`, o mover la lectura pública a una función. Es la deuda más grande que queda abierta | ✅ Saldada el 01/10 con la 0020 |
+| **Un Profesional puede aprobarse solo y cargarse tokens** | La política «profesional propio: actualización» (0001/0002) es de fila entera, como la de `pedidos` antes de la 0008: el dueño puede escribir `estado_verificacion`, `saldo_tokens`, `calificacion_promedio` y `total_calificaciones` con un PATCH. Importa ya: el CU-21 va a notificar según la verificación, y el Sprint 4 cobra tokens. Se cierra con un trigger `BEFORE UPDATE` del patrón de `pedidos_guard_estado`, dejándole al dueño solo `descripcion`, `dni` y `disponible` | ✅ Saldada el 01/10 con la 0020 |
+| Las fotos de un pedido cerrado se pueden agregar y borrar | El guard de la 0013 cubre la fila de `pedidos`, no `pedido_fotos` ni el bucket: las políticas de alta y baja de fotos (0006) solo miran dueño. La pantalla solo ofrece fotos en la edición, que ya exige publicado o pausado. Mismo tipo de regla que vivía solo en el cliente | ✅ Saldada el 01/10 con la 0020 |
 | ~~La baja no borra los archivos del portafolio~~ | **Saldada el 16/09 con el CU-06.** `PerfilRepository._borrarArchivos` lee las rutas de `profesional_portafolio` y las borra por la API de Storage antes de llamar a la RPC | ✅ |
 | Historial de migraciones de la CLI vacío | 0001–0012 están aplicadas pero `supabase migration list` no lo sabe, así que `supabase db push` intentaría correrlas todas otra vez. No usar `db push` hasta hacer `supabase migration repair --status applied` de las doce | Cuando se adopte `db push` |
 | ~~`flutter test` y los builds se dejan de correr fase por fase~~ | **Saldada el 03/09.** La verificación diferida se hizo entera al cerrar la Fase 6: analyze 0 issues, 101 tests en verde, y web, APK e iOS compilando. La apuesta salió bien: no había ningún error acumulado de las Fases 5 y 6 | ✅ |
@@ -821,25 +911,15 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 _(Lo primero que hay que hacer al retomar. Está en orden: cada punto depende
 del anterior.)_
 
-### 7.1 Sprint 4 — lo que sigue
+### 7.1 Sprint 5 — lo que sigue
 
-El Sprint 3 está cerrado: 56 de 56 puntos, tags `v0.3.0` y `v0.3.1`.
-
-1. **Pegar la sección 7.3** en el documento de planificación desde
-   `docs/sprints/SPRINT-03-cierre.md`, con las tres indicaciones del final de ese
-   archivo (tabla de revisión 1.3, índice con la 7.2 y la 7.3, Figura 4), y
-   subirlo a BB junto con `evidencia-sprint-03.txt`.
-2. **Grabar el video** del circuito del Sprint 3, que la sección cita como
-   material complementario: pedido publicado en la Web, alerta en el celular,
-   detalle, guardar; más zona, oficios, horarios y portafolio.
-3. **Planificar el Sprint 4** en `docs/sprints/SPRINT-04.md` (PT 5.0, 50 pts,
-   17/09 al 30/09). Arranca por **las dos deudas de seguridad** de la sección 6
-   —la ubicación exacta legible por PostgREST y el Profesional que puede aprobarse
-   solo—, porque el CU-25 desbloquea el contacto y el CU-31 acredita tokens.
-4. **Validar el entorno de prueba de Mercado Pago** el primer día: es la mitigación
-   del apartado 6 que venía para el Sprint 3 y no se hizo.
-5. Del Sprint 1 sigue pendiente el material de la entrega original (video de los 7
-   circuitos, capturas del esquema y de las políticas RLS).
+1. **Pegar la sección 7.4** desde `docs/sprints/SPRINT-04-cierre.docx`, con la captura del
+   burndown, la fila 1.4 de la tabla de revisión y el índice al día.
+2. **Primeras tareas del Sprint 5** (ajustes del 7.4.7): actividad periódica sobre Supabase
+   para que no se pause, y alta de las cuentas de desarrollador de Apple y Google.
+3. Planificar `docs/sprints/SPRINT-05.md`: CU-26, CU-27, CU-28, CU-48, CU-45, CU-41 (35 pts)
+   más el CU-18 (4), con un punto de control a mitad del período.
+4. Volver el pack Bronce a $4.500 si quedó modificado por la demo.
 
 ### 7.2 Arrastrado de sprints anteriores
 

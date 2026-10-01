@@ -4,12 +4,16 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/colores.dart';
 import '../../../../core/errors/mensajes_error.dart';
+import '../../../../core/utils/enlaces.dart';
 import '../../../../core/utils/fechas.dart';
 import '../../../../core/widgets/boton_principal.dart';
 import '../../../../core/widgets/marca_laburito.dart';
+import '../../../billetera/presentation/controllers/billetera_controller.dart';
 import '../../../pedidos/data/urls_firmadas.dart';
 import '../../../pedidos/presentation/widgets/mini_mapa_pedido.dart';
+import '../../data/contacto_repository.dart';
 import '../../data/tablero_repository.dart';
+import '../../domain/contacto_buscador.dart';
 import '../../domain/pedido_tablero.dart';
 import '../controllers/tablero_controller.dart';
 
@@ -79,9 +83,9 @@ class DetallePedidoPublicoScreen extends ConsumerWidget {
   }
 }
 
-/// CU-24 y CU-23 desde el detalle. Son las dos mismas acciones de la tarjeta
-/// del tablero: no hay una tercera cosa que el Profesional pueda hacer con un
-/// pedido ajeno hasta el Sprint 4, cuando exista la postulación.
+/// La barra del detalle: el desbloqueo del contacto (CU-25) como acción
+/// principal, como en la Figura 3.12, y al costado las dos marcas del tablero
+/// —no me interesa (CU-23) y guardar (CU-24)— en versión ícono.
 class _Acciones extends ConsumerStatefulWidget {
   const _Acciones({required this.pedido});
 
@@ -98,14 +102,100 @@ class _AccionesState extends ConsumerState<_Acciones> {
     setState(() => _trabajando = true);
     try {
       await accion();
+    } on SaldoInsuficienteException {
+      if (mounted) await _ofrecerCompra();
     } on Object catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(MensajesError.desde(error))));
-      }
+      if (mounted) mostrarMensaje(context, MensajesError.desde(error));
     } finally {
       if (mounted) setState(() => _trabajando = false);
+    }
+  }
+
+  /// Flujo alterno 1.2 del CU-25: sin tokens, la acción se bloquea y se ofrece
+  /// ir a comprar.
+  Future<void> _ofrecerCompra() async {
+    final comprar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.account_balance_wallet_outlined,
+            color: Colores.naranja, size: 36),
+        title: const Text('No te quedan tokens'),
+        content: const Text(
+          'Para ver el teléfono del Buscador necesitás 1 token. Cargá un pack '
+          'desde tu billetera y volvé a este pedido.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Ahora no'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Comprar tokens'),
+          ),
+        ],
+      ),
+    );
+    if (comprar == true && mounted) context.push('/profesional/billetera');
+  }
+
+  Future<void> _desbloquear(int saldo) async {
+    if (saldo < 1) return _ofrecerCompra();
+
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Desbloquear contacto'),
+        content: Text(
+          'Vas a usar 1 token de tu saldo y te van a quedar ${saldo - 1}. '
+          'Vas a ver el teléfono del Buscador para escribirle por WhatsApp. '
+          'Si ya lo desbloqueaste antes, no se cobra de nuevo.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Usar 1 token'),
+          ),
+        ],
+      ),
+    );
+    if (confirmar != true || !mounted) return;
+
+    await _hacer(() async {
+      final resultado = await ref
+          .read(contactoRepositoryProvider)
+          .desbloquear(widget.pedido.id);
+      ref.invalidate(contactoPedidoProvider(widget.pedido.id));
+      ref.read(billeteraProvider.notifier).saldoActualizado(resultado.saldo);
+      if (mounted) {
+        mostrarMensaje(
+          context,
+          resultado.cobrado
+              ? 'Listo: ya podés escribirle a ${resultado.contacto.nombreCorto}.'
+              : 'Ya tenías este contacto: no se te cobró nada.',
+          esError: false,
+        );
+      }
+    });
+  }
+
+  Future<void> _escribir(ContactoBuscador contacto) async {
+    final enlace = contacto.enlaceWhatsApp(tituloPedido: widget.pedido.titulo);
+    if (enlace == null) {
+      mostrarMensaje(
+        context,
+        'No pudimos armar el enlace de WhatsApp con ${contacto.telefono}. '
+        'Probá llamando a ese número.',
+      );
+      return;
+    }
+    final abierto = await abrirEnlace(enlace);
+    if (!abierto && mounted) {
+      mostrarMensaje(context, 'No pudimos abrir WhatsApp.');
     }
   }
 
@@ -113,48 +203,179 @@ class _AccionesState extends ConsumerState<_Acciones> {
   Widget build(BuildContext context) {
     final pedido = widget.pedido;
     final repo = ref.read(tableroRepositoryProvider);
+    final contacto = ref.watch(contactoPedidoProvider(pedido.id)).valueOrNull;
+    final saldo = ref.watch(billeteraProvider).valueOrNull?.saldo;
+    final desbloqueado = contacto?.desbloqueado ?? false;
 
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _trabajando
-                    ? null
-                    : () => _hacer(() async {
-                          // El Navigator se toma antes del await: después del
-                          // `await` el context puede no servir más, y el
-                          // analizador tiene razón en desconfiar.
-                          final navegador = Navigator.of(context);
-                          await repo.ignorar(pedido.id);
-                          // Se vuelve al tablero: el pedido ya no está ahí, y
-                          // quedarse mirándolo sería raro.
-                          ref.invalidate(tableroProvider);
-                          await navegador.maybePop();
-                        }),
-                icon: const Icon(Icons.visibility_off_outlined),
-                label: const Text('No me interesa'),
+            if (!desbloqueado && saldo != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text.rich(
+                        TextSpan(children: [
+                          const TextSpan(text: 'Vas a usar '),
+                          const TextSpan(
+                            text: '1 token',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          TextSpan(
+                            text: saldo > 0
+                                ? ' · te quedan $saldo'
+                                : ' · no te quedan tokens',
+                          ),
+                        ]),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colores.textoSecundario,
+                        ),
+                      ),
+                    ),
+                    const Icon(Icons.toll, size: 16, color: Colores.naranja),
+                    const SizedBox(width: 4),
+                    Text('$saldo',
+                        style: const TextStyle(fontWeight: FontWeight.w700)),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: BotonPrincipal(
-                texto: pedido.guardado ? 'Guardado' : 'Guardar',
-                icono: pedido.guardado
-                    ? Icons.bookmark
-                    : Icons.bookmark_border,
-                cargando: _trabajando,
-                onPressed: () => _hacer(() async {
-                  await repo.guardar(pedido.id, guardado: !pedido.guardado);
-                  ref.invalidate(pedidoPublicoProvider(pedido.id));
-                  ref.invalidate(tableroProvider);
-                }),
-              ),
+            Row(
+              children: [
+                IconButton.outlined(
+                  tooltip: 'No me interesa',
+                  onPressed: _trabajando
+                      ? null
+                      : () => _hacer(() async {
+                            // El Navigator se toma antes del await: después
+                            // del `await` el context puede no servir más.
+                            final navegador = Navigator.of(context);
+                            await repo.ignorar(pedido.id);
+                            // Se vuelve al tablero: el pedido ya no está ahí.
+                            ref.invalidate(tableroProvider);
+                            await navegador.maybePop();
+                          }),
+                  icon: const Icon(Icons.visibility_off_outlined),
+                ),
+                const SizedBox(width: 8),
+                IconButton.outlined(
+                  tooltip: pedido.guardado ? 'Quitar de guardados' : 'Guardar',
+                  onPressed: _trabajando
+                      ? null
+                      : () => _hacer(() async {
+                            await repo.guardar(pedido.id,
+                                guardado: !pedido.guardado);
+                            ref.invalidate(pedidoPublicoProvider(pedido.id));
+                            ref.invalidate(tableroProvider);
+                          }),
+                  icon: Icon(pedido.guardado
+                      ? Icons.bookmark
+                      : Icons.bookmark_border),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: desbloqueado
+                      ? BotonPrincipal(
+                          texto: 'Escribir por WhatsApp',
+                          icono: Icons.chat_outlined,
+                          onPressed: () => _escribir(contacto!),
+                        )
+                      : BotonPrincipal(
+                          texto: 'Desbloquear · 1 token',
+                          icono: Icons.lock_open_outlined,
+                          cargando: _trabajando,
+                          onPressed: contacto == null || saldo == null
+                              ? null
+                              : () => _desbloquear(saldo),
+                        ),
+                ),
+              ],
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// «Datos del Buscador» de la Figura 3.12: el nombre corto y el teléfono
+/// enmascarado, o entero si ya se desbloqueó.
+class _DatosDelBuscador extends ConsumerWidget {
+  const _DatosDelBuscador({required this.pedidoId});
+
+  final String pedidoId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final contacto = ref.watch(contactoPedidoProvider(pedidoId)).valueOrNull;
+    if (contacto == null) return const SizedBox.shrink();
+
+    return TarjetaPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'DATOS DEL BUSCADOR',
+            style: TextStyle(
+              fontSize: 11,
+              letterSpacing: 0.8,
+              color: Colores.textoTenue,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: Colores.azulSuave,
+                child: Text(
+                  contacto.nombreCorto.characters.first.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colores.azul,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(contacto.nombreCorto,
+                        style: const TextStyle(fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Icon(
+                          contacto.desbloqueado
+                              ? Icons.phone_outlined
+                              : Icons.lock_outline,
+                          size: 14,
+                          color: Colores.textoSecundario,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          contacto.desbloqueado
+                              ? (contacto.telefono ?? 'Sin teléfono')
+                              : (contacto.telefonoEnmascarado ??
+                                  'Sin teléfono'),
+                          key: const Key('telefono-buscador'),
+                          style: const TextStyle(
+                              color: Colores.textoSecundario),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -223,10 +444,12 @@ class _Detalle extends ConsumerWidget {
         ),
         const SizedBox(height: 4),
         const Text(
-          'La ubicación es aproximada. La dirección exacta se comparte al '
-          'tomar el trabajo.',
+          'La ubicación es aproximada. La dirección exacta la acordás con el '
+          'Buscador cuando lo contactes.',
           style: TextStyle(fontSize: 12, color: Colores.textoTenue),
         ),
+        const SizedBox(height: 16),
+        _DatosDelBuscador(pedidoId: pedido.id),
         const SizedBox(height: 16),
         TarjetaPanel(
           child: Column(

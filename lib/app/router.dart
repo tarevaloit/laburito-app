@@ -7,7 +7,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/config/superficie.dart';
 import '../core/providers/supabase_providers.dart';
+import '../features/admin/presentation/screens/cupones_screen.dart';
+import '../features/admin/presentation/screens/precios_screen.dart';
 import '../features/auth/presentation/screens/codigo_recuperacion_screen.dart';
+import '../features/billetera/presentation/screens/billetera_screen.dart';
+import '../features/billetera/presentation/screens/canjear_cupon_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/nueva_password_screen.dart';
 import '../features/auth/presentation/screens/recuperar_password_screen.dart';
@@ -201,6 +205,47 @@ final routerProvider = Provider<GoRouter>((ref) {
           id: state.pathParameters['id'] ?? '',
         ),
       ),
+      // Panel del administrador (CU-40, CU-52). El rol se valida en
+      // `PanelAdmin`, no en el `redirect`: ver el comentario de esa clase.
+      //
+      // La redirección mira `state.uri.path` y no `matchedLocation`: el
+      // `redirect` de una ruta padre corre también al navegar a sus hijas, y
+      // ahí `matchedLocation` es el del padre (`/admin`). Con esa condición,
+      // tocar «Cupones» devolvía siempre a Precios.
+      GoRoute(
+        path: '/admin',
+        redirect: redireccionPanelAdmin,
+        routes: [
+          GoRoute(
+            path: 'precios',
+            name: 'adminPrecios',
+            builder: (context, state) => const PreciosScreen(),
+          ),
+          GoRoute(
+            path: 'cupones',
+            name: 'adminCupones',
+            builder: (context, state) => const CuponesScreen(),
+          ),
+        ],
+      ),
+      // CU-30, CU-31, CU-33. `pago` llega al volver del checkout de Mercado
+      // Pago por `laburito://laburito/profesional/billetera?pago=…`, el enlace
+      // que arma la Edge Function `retorno_pago`.
+      GoRoute(
+        path: '/profesional/billetera',
+        name: 'billetera',
+        builder: (context, state) => BilleteraScreen(
+          pagoId: state.uri.queryParameters['pago'],
+        ),
+        routes: [
+          // CU-53.
+          GoRoute(
+            path: 'canjear',
+            name: 'canjearCupon',
+            builder: (context, state) => const CanjearCuponScreen(),
+          ),
+        ],
+      ),
       GoRoute(
         path: '/verificacion',
         name: 'verificacion',
@@ -243,6 +288,11 @@ final routerProvider = Provider<GoRouter>((ref) {
     ),
   );
 });
+
+/// `/admin` a secas lleva a Precios; `/admin/cupones` y el resto, a donde
+/// pidieron. Ver el comentario de la ruta en [routerProvider].
+String? redireccionPanelAdmin(BuildContext context, GoRouterState state) =>
+    state.uri.path == '/admin' ? '/admin/precios' : null;
 
 /// Puente entre el stream de Supabase y el `refreshListenable` de go_router.
 class _RefrescoDeAuth extends ChangeNotifier {

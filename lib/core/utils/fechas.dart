@@ -60,6 +60,19 @@ class Fechas {
     return 'el ${larga(fecha)}';
   }
 
+  /// «Hoy · 10:24», «Ayer · 19:02», «14/03/2026 · 15:40». El renglón de un
+  /// movimiento de la billetera (Figura 3.13): ahí sí importa la hora, porque
+  /// en un mismo día puede haber una compra y dos desbloqueos.
+  static String conHora(DateTime fecha, [DateTime? ahora]) {
+    final local = fecha.toLocal();
+    final dias = -_diasDeDiferencia(local, ahora ?? DateTime.now());
+    final hora = '${_dosDigitos(local.hour)}:${_dosDigitos(local.minute)}';
+
+    if (dias == 0) return 'Hoy · $hora';
+    if (dias == 1) return 'Ayer · $hora';
+    return '${corta(local)} · $hora';
+  }
+
   /// Diferencia en días **de calendario**, no en múltiplos de 24 horas.
   ///
   /// La distinción importa: a las 23:00 de hoy, un vencimiento mañana a las

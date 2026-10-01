@@ -1,5 +1,5 @@
 -- ============================================================================
--- Laburito — Preparar la base para la demo del Sprint 3
+-- Laburito — Preparar la base para la demo (Sprint 3 y Sprint 4)
 -- ============================================================================
 --
 -- Deja el entorno en el estado que la demo necesita. Es idempotente: se puede
@@ -14,6 +14,10 @@
 --      tablero lista igual pero sin distancias, y el emparejamiento no lo
 --      encuentra nunca.
 --   3. Le asegura al menos un oficio, que es el otro insumo del emparejamiento.
+--   5. (Sprint 4) Deja un cupón DEMO10 vigente de 10 tokens, para mostrar el
+--      canje (CU-53) y tener saldo con qué desbloquear un contacto (CU-25)
+--      aunque Mercado Pago no esté configurado. Un cupón se canjea una vez por
+--      Profesional: si ya se usó, se crea otro código a mano desde el panel.
 --   4. Devuelve a la calle los pedidos vencidos del Buscador de prueba, para
 --      que el tablero tenga qué mostrar. La fecha se mueve con la compuerta
 --      `app.transicion_estado` abierta porque, desde la 0013, un UPDATE común
@@ -79,6 +83,16 @@ update public.pedidos
 
 select set_config('app.transicion_estado', 'off', true);
 
+-- 5. Cupón de la demo (Sprint 4). Directo en la tabla: `crear_cupon()` exige
+--    una sesión de administrador, que el SQL Editor no tiene.
+insert into public.cupones (codigo, tokens, vence_at, limite_usos)
+values ('DEMO10', 10, now() + interval '30 days', null)
+on conflict do nothing;
+
+update public.cupones
+   set vence_at = greatest(vence_at, now() + interval '30 days'), activo = true
+ where codigo = 'DEMO10';
+
 -- ============================================================================
 -- Estado final: esto es lo que conviene mirar antes de la demo.
 -- ============================================================================
@@ -100,3 +114,7 @@ select count(*) filter (where estado = 'publicado' and fecha_vencimiento > now()
            as pedidos_en_la_calle,
        count(*) as pedidos_totales
   from public.pedidos;
+
+select codigo, tokens, vence_at, usos, limite_usos
+  from public.cupones
+ where codigo = 'DEMO10';

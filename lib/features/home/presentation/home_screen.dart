@@ -7,6 +7,7 @@ import '../../../core/widgets/barra_navegacion.dart';
 import '../../../core/widgets/boton_principal.dart';
 import '../../../core/widgets/marca_laburito.dart';
 import '../../auth/presentation/controllers/auth_controller.dart';
+import '../../billetera/presentation/controllers/billetera_controller.dart';
 import '../../perfil/data/perfil_repository.dart';
 
 /// Home provisorio del Sprint 1. Confirma la identidad del usuario autenticado,
@@ -67,6 +68,14 @@ class HomeScreen extends ConsumerWidget {
             return const Center(child: Text('Sin perfil asociado.'));
           }
 
+          // El saldo sale de la billetera y no del perfil: el perfil se lee
+          // una vez al iniciar sesión, y la billetera es la que se actualiza
+          // al comprar, canjear o desbloquear (CU-30). Solo para el
+          // Profesional: los demás no tienen billetera que leer.
+          final saldo = p.esProfesional
+              ? ref.watch(billeteraProvider).valueOrNull?.saldo ?? p.saldoTokens
+              : 0;
+
           return TarjetaFormulario(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -103,7 +112,9 @@ class HomeScreen extends ConsumerWidget {
                 Text(
                   p.esProfesional
                       ? 'Cuenta de Profesional'
-                      : 'Cuenta de Buscador',
+                      : p.esAdministrador
+                          ? 'Cuenta de Administrador'
+                          : 'Cuenta de Buscador',
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colores.textoSecundario),
                 ),
@@ -142,13 +153,21 @@ class HomeScreen extends ConsumerWidget {
                         _Dato('DNI', p.dni ?? '—'),
                         _Dato('Verificación', p.verificacionLegible ?? '—'),
                         _Dato('Oficios', p.categorias.length.toString()),
-                        _Dato('Tokens', p.saldoTokens.toString()),
+                        _Dato('Tokens', saldo.toString()),
                       ],
                     ],
                   ),
                 ),
                 const SizedBox(height: 20),
-                if (!p.esProfesional) ...[
+                if (p.esAdministrador) ...[
+                  BotonPrincipal(
+                    texto: 'Panel de administración',
+                    icono: Icons.admin_panel_settings_outlined,
+                    onPressed: () => context.go('/admin/precios'),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                if (!p.esProfesional && !p.esAdministrador) ...[
                   BotonPrincipal(
                     texto: 'Publicar un pedido',
                     icono: Icons.add_circle_outline,
@@ -167,6 +186,12 @@ class HomeScreen extends ConsumerWidget {
                     texto: 'Ver pedidos cerca mío',
                     icono: Icons.explore_outlined,
                     onPressed: () => context.go('/profesional/tablero'),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () => context.go('/profesional/billetera'),
+                    icon: const Icon(Icons.account_balance_wallet_outlined),
+                    label: Text('Mi billetera · $saldo tokens'),
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton.icon(

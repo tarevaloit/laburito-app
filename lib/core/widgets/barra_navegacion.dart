@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/colores.dart';
 import '../config/superficie.dart';
-import 'marca_laburito.dart';
 
 /// Secciones de la app móvil del Profesional (Figuras 3.11 a 3.19 del ANEXO UI).
 enum SeccionApp { tablero, billetera, perfil }
@@ -13,11 +12,10 @@ enum SeccionApp { tablero, billetera, perfil }
 /// En la web devuelve `null` desde [siCorresponde]: el Buscador navega por la
 /// barra superior de la marca (Figura 3.1), no por una barra inferior.
 ///
-/// Está la estructura completa del Anexo aunque el Tablero de pedidos (CU-43)
-/// sea del Sprint 2 y la Billetera (CU-30) del Sprint 4: las secciones que
-/// todavía no existen quedan visibles, marcadas como «Pronto», y avisan al
-/// tocarlas. Es a propósito — así la navegación de la demo es la definitiva y
-/// no hay que rearmarla cuando lleguen las pantallas.
+/// Es la estructura completa del Anexo. Desde el Sprint 4 las tres secciones
+/// existen: el Tablero (CU-43), la Billetera (CU-30) y el Perfil. La
+/// Billetera estuvo marcada «Pronto» hasta entonces para que la navegación de
+/// las demos fuera la definitiva.
 class BarraNavegacion extends StatelessWidget {
   const BarraNavegacion({
     super.key,
@@ -56,11 +54,7 @@ class BarraNavegacion extends StatelessWidget {
       case SeccionApp.perfil:
         context.go('/perfil');
       case SeccionApp.billetera:
-        mostrarMensaje(
-          context,
-          'La billetera y la compra de tokens llegan en el Sprint 4.',
-          esError: false,
-        );
+        context.go('/profesional/billetera');
     }
   }
 
@@ -90,11 +84,8 @@ class BarraNavegacion extends StatelessWidget {
         );
       case SeccionApp.billetera:
         return const NavigationDestination(
-          icon: Badge(
-            label: Text('Pronto'),
-            backgroundColor: Colores.naranja,
-            child: Icon(Icons.account_balance_wallet_outlined),
-          ),
+          icon: Icon(Icons.account_balance_wallet_outlined),
+          selectedIcon: Icon(Icons.account_balance_wallet_rounded),
           label: 'Billetera',
         );
       case SeccionApp.perfil:
