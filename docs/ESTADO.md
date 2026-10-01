@@ -675,25 +675,27 @@ El sprint arrancó el 29/09, con la entrega el 30/09 a las 23:59: entre el 17/09
 28/09 no hubo ejecución. Se decidió sostener el compromiso completo (53 pts) con el
 orden de descarte del apartado 6 fijado de antemano.
 
-**La base de Supabase está pausada.** El plan gratuito la suspendió por inactividad
-(`xbgwogitgzzxmoixqfjd.supabase.co` da NXDOMAIN). Hay que restaurarla desde el panel
-(*Restore project*). Hasta entonces, **ninguna migración del sprint está aplicada** y
-ninguna Edge Function nueva está desplegada.
+**La base estuvo pausada** por inactividad (plan gratuito) del 29/09 al 01/10, cuando se
+restauró. Después del restore el pooler tardó unos minutos en aceptar conexiones de la
+CLI (`tenant/user cli_login_postgres… not found`): es esperable y se resuelve solo.
 
-### 4c.2 Lo escrito, commiteado y **sin aplicar**
+### 4c.2 Lo escrito y commiteado
 
 | Commit | Qué | Verificado |
 |---|---|---|
-| `1622cc8` `fix(T-09)` | Migración 0020 + `scripts/verificar_0020.sql` | Pendiente (base pausada) |
-| `71113e9` `feat(T-10)` | Migración 0021 + `scripts/verificar_0021.sql` | Pendiente |
-| `3f6fba0` `feat(CU-31,CU-32)` | Migración 0022, Edge Functions `crear_preferencia_pago`, `webhook_mercadopago`, `retorno_pago` y `_shared/http.ts`; esquema `laburito://` en Android e iOS | Pendiente, y además necesita las credenciales de Mercado Pago |
-| `a92d0fe` `feat(CU-53)` | Migración 0025 | Pendiente |
-| `7896de4` `feat(CU-19)` | Migración 0026, Edge Function `comprobante_pago` | Pendiente |
+| `1622cc8` `fix(T-09)` | Migración 0020 + `scripts/verificar_0020.sql` | Aplicada el 01/10, guion 16/16 OK |
+| `71113e9` `feat(T-10)` | Migración 0021 + `scripts/verificar_0021.sql` | Aplicada, guion 12/12 OK |
+| `3f6fba0` `feat(CU-31,CU-32)` | Migración 0022, Edge Functions `crear_preferencia_pago`, `webhook_mercadopago`, `retorno_pago` y `_shared/http.ts`; esquema `laburito://` en Android e iOS | 0022 aplicada; funciones desplegadas. Falta cargar las credenciales de Mercado Pago |
+| `a92d0fe` `feat(CU-53)` | Migración 0025 | Aplicada |
+| `7896de4` `feat(CU-19)` | Migración 0026, Edge Function `comprobante_pago` | Aplicada y desplegada; sin ejercitar (necesita un pago aprobado) |
 | `b23ba1c` `feat(CU-30,CU-33)` | `lib/features/billetera/` completo: billetera, compra, seguimiento del pago, historial, canje y comprobante | `flutter test` |
 | `2868316` `feat(CU-25)` | Migración 0023 + desbloqueo en el detalle del Profesional + interesados en el del Buscador | `flutter test` |
 | `c845fcb` `feat(CU-40,CU-52)` | Migración 0024 + `lib/features/admin/` (armazón del panel, precios, cupones) | `flutter test` |
 
-Guion común de las funciones: `scripts/verificar_0022_0025.sql`. Todos los guiones
+Guion común de las funciones: `scripts/verificar_0022_0025.sql`, **23/23 OK** el 01/10.
+La primera corrida dio una falla **del guion**: comparaba el saldo con «el último»
+movimiento por fecha, y dentro de una transacción `now()` es el mismo para todos. Se
+reescribió para comparar contra la suma del libro. Todos los guiones
 corren dentro de una transacción que **aborta a propósito** al final y devuelven el
 resultado como el texto del error, una línea por regla: no pueden dejar nada escrito.
 
@@ -701,20 +703,24 @@ Verificado sin base: `flutter analyze` 0 issues, `flutter test` **307 en verde**
 al cerrar el Sprint 3; 34 nuevas en `billetera_test`, `contacto_test` y `admin_test`),
 `flutter build web` y `flutter build apk --debug` compilan.
 
-### 4c.3 Lo que falta, en orden
+### 4c.3 Aplicado y desplegado (01/10)
 
-1. Restaurar el proyecto de Supabase.
-2. Aplicar 0020 → 0026 en orden, cada una con `begin … commit` desde la CLI, y correr
-   los tres guiones de aceptación.
-3. Desplegar las funciones: `crear_preferencia_pago` y `comprobante_pago` con JWT;
-   `webhook_mercadopago` y `retorno_pago` con `--no-verify-jwt`.
-4. Mercado Pago (`docs/MERCADOPAGO.md`): aplicación, cuentas de prueba, webhook y
+Migraciones 0020 a 0026 ensayadas juntas con `rollback` y aplicadas de a una con
+`begin … commit`; los tres guiones en OK (51 reglas) y sin datos de prueba
+remanentes. Edge Functions desplegadas con `--use-api`: `crear_preferencia_pago` y
+`comprobante_pago` con JWT, `webhook_mercadopago` y `retorno_pago` sin. Prueba de humo:
+sin sesión 401, `OPTIONS` 204, webhook sin secretos 503, retorno 302 a
+`laburito://laburito/profesional/billetera?pago=…`.
+
+### 4c.4 Lo que falta, en orden
+
+1. Mercado Pago (`docs/MERCADOPAGO.md`): aplicación, cuentas de prueba, webhook y
    `supabase secrets set MP_ACCESS_TOKEN=… MP_WEBHOOK_SECRET=…`.
-5. Prueba de punta a punta en el teléfono: compra con el comprador de prueba →
+2. Prueba de punta a punta en el teléfono: compra con el comprador de prueba →
    acreditación → desbloqueo → WhatsApp; canje del cupón `DEMO10`
    (`scripts/preparar_demo.sql`); descarga del comprobante.
-6. Cuenta de administrador (`scripts/crear_admin.sql`) y prueba de precios y cupones.
-7. Cierre: merge, tag `v0.4.0`, `CHANGELOG.md`, apartado 7.4 con su burndown.
+3. Cuenta de administrador (`scripts/crear_admin.sql`) y prueba de precios y cupones.
+4. Cierre: merge, tag `v0.4.0`, `CHANGELOG.md`, apartado 7.4 con su burndown.
 
 ## 5. Decisiones técnicas tomadas
 
@@ -861,9 +867,9 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | ~~Un pedido puede nacer en un estado terminal~~ | **Saldada el 02/09 con la migración 0009.** Trigger `pedidos_guard_alta` `BEFORE INSERT`, con la misma compuerta que el de UPDATE. | ✅ |
 | ~~El PATCH de edición no mira el estado del pedido~~ | **Saldada el 14/09 con la migración 0013** (`pedidos_guard_edicion`). Era: `actualizar_ubicacion_pedido` exige que el pedido esté `publicado` o `pausado`, pero el UPDATE de PostgREST que cambia título, descripción o presupuesto no: la RLS solo comprueba dueño. Hoy se le puede editar el título a un pedido cerrado. No molesta a nadie —el pedido ya no se lista— pero es una regla del CU-15 que vive solo en el cliente. | ✅ |
 | ~~El Profesional no puede ver las fotos de un pedido~~ | **Saldada el 14/09 con la migración 0013.** Era: las políticas de Storage del bucket `pedidos` son solo del dueño, así que el CU-16 no va a poder firmar las URLs. Falta una política de SELECT para pedidos publicados vigentes, o firmarlas desde una Edge Function. | ✅ |
-| **La vista pública no alcanza: por PostgREST se llega a la ubicación exacta** | `pedidos_publicos` esconde la referencia y redondea la coordenada, pero la política «pedidos: lectura de publicados vigentes» (0006) deja que cualquier autenticado lea la fila entera de `pedidos`, con `ubicacion` y `referencia_ubicacion`. La app nunca lo hace —el tablero y el detalle usan solo las funciones de la 0018— pero un `GET /rest/v1/pedidos` lo consigue. No se puede quitar la política sin romper la vista, que corre con `security_invoker`: la salida es una vista con barrera y `security definer`, o mover la lectura pública a una función. Es la deuda más grande que queda abierta | Sprint 4 · **escrita en la 0020, falta aplicarla** |
-| **Un Profesional puede aprobarse solo y cargarse tokens** | La política «profesional propio: actualización» (0001/0002) es de fila entera, como la de `pedidos` antes de la 0008: el dueño puede escribir `estado_verificacion`, `saldo_tokens`, `calificacion_promedio` y `total_calificaciones` con un PATCH. Importa ya: el CU-21 va a notificar según la verificación, y el Sprint 4 cobra tokens. Se cierra con un trigger `BEFORE UPDATE` del patrón de `pedidos_guard_estado`, dejándole al dueño solo `descripcion`, `dni` y `disponible` | Sprint 4 · **escrita en la 0020, falta aplicarla** |
-| Las fotos de un pedido cerrado se pueden agregar y borrar | El guard de la 0013 cubre la fila de `pedidos`, no `pedido_fotos` ni el bucket: las políticas de alta y baja de fotos (0006) solo miran dueño. La pantalla solo ofrece fotos en la edición, que ya exige publicado o pausado. Mismo tipo de regla que vivía solo en el cliente | Sprint 4 · **escrita en la 0020, falta aplicarla** |
+| **La vista pública no alcanza: por PostgREST se llega a la ubicación exacta** | `pedidos_publicos` esconde la referencia y redondea la coordenada, pero la política «pedidos: lectura de publicados vigentes» (0006) deja que cualquier autenticado lea la fila entera de `pedidos`, con `ubicacion` y `referencia_ubicacion`. La app nunca lo hace —el tablero y el detalle usan solo las funciones de la 0018— pero un `GET /rest/v1/pedidos` lo consigue. No se puede quitar la política sin romper la vista, que corre con `security_invoker`: la salida es una vista con barrera y `security definer`, o mover la lectura pública a una función. Es la deuda más grande que queda abierta | ✅ Saldada el 01/10 con la 0020 |
+| **Un Profesional puede aprobarse solo y cargarse tokens** | La política «profesional propio: actualización» (0001/0002) es de fila entera, como la de `pedidos` antes de la 0008: el dueño puede escribir `estado_verificacion`, `saldo_tokens`, `calificacion_promedio` y `total_calificaciones` con un PATCH. Importa ya: el CU-21 va a notificar según la verificación, y el Sprint 4 cobra tokens. Se cierra con un trigger `BEFORE UPDATE` del patrón de `pedidos_guard_estado`, dejándole al dueño solo `descripcion`, `dni` y `disponible` | ✅ Saldada el 01/10 con la 0020 |
+| Las fotos de un pedido cerrado se pueden agregar y borrar | El guard de la 0013 cubre la fila de `pedidos`, no `pedido_fotos` ni el bucket: las políticas de alta y baja de fotos (0006) solo miran dueño. La pantalla solo ofrece fotos en la edición, que ya exige publicado o pausado. Mismo tipo de regla que vivía solo en el cliente | ✅ Saldada el 01/10 con la 0020 |
 | ~~La baja no borra los archivos del portafolio~~ | **Saldada el 16/09 con el CU-06.** `PerfilRepository._borrarArchivos` lee las rutas de `profesional_portafolio` y las borra por la API de Storage antes de llamar a la RPC | ✅ |
 | Historial de migraciones de la CLI vacío | 0001–0012 están aplicadas pero `supabase migration list` no lo sabe, así que `supabase db push` intentaría correrlas todas otra vez. No usar `db push` hasta hacer `supabase migration repair --status applied` de las doce | Cuando se adopte `db push` |
 | ~~`flutter test` y los builds se dejan de correr fase por fase~~ | **Saldada el 03/09.** La verificación diferida se hizo entera al cerrar la Fase 6: analyze 0 issues, 101 tests en verde, y web, APK e iOS compilando. La apuesta salió bien: no había ningún error acumulado de las Fases 5 y 6 | ✅ |
@@ -888,9 +894,8 @@ del anterior.)_
 
 ### 7.1 Sprint 4 — lo que sigue
 
-Ver la sección 4c.3: restaurar Supabase, aplicar 0020–0026 con sus guiones, desplegar
-las cuatro Edge Functions, cargar las credenciales de Mercado Pago, probar en el
-teléfono y cerrar con el tag `v0.4.0` y el apartado 7.4.
+Ver la sección 4c.4: cargar las credenciales de Mercado Pago, probar en el teléfono y
+cerrar con el tag `v0.4.0` y el apartado 7.4. La base y las funciones ya están.
 
 Del Sprint 3 quedan: pegar la sección 7.3 en el documento y el video del circuito.
 

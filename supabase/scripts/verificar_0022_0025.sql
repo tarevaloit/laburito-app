@@ -142,11 +142,15 @@ exception when others then
     insert into _v (resultado) values ('OK   un pedido cerrado da: ' || sqlerrm);
 end $$;
 
+-- El saldo arrancó en 0 al principio del guion, así que tiene que ser la
+-- suma de los movimientos de esta transacción. No se compara contra «el
+-- último» movimiento: adentro de una transacción `now()` es el mismo para
+-- todos, y ordenar por fecha da cualquiera.
 insert into _v (resultado)
 select case when (select saldo_tokens from public.profesionales where perfil_id = auth.uid())
-               = (select saldo_resultante from public.movimientos_tokens
-                   where profesional_id = auth.uid() order by created_at desc, id limit 1)
-            then 'OK   el saldo coincide con el último movimiento del libro'
+               = (select coalesce(sum(cantidad), 0) from public.movimientos_tokens
+                   where profesional_id = auth.uid() and created_at = now())
+            then 'OK   el saldo coincide con la suma del libro'
             else 'FALLA el saldo no coincide con el libro' end;
 
 insert into _v (resultado)

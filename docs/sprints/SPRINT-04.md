@@ -43,8 +43,8 @@ Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanific
 
 | ID | Tarea / Caso de Uso | Tipo | Pts | Estado | Evidencia |
 |---|---|---|---|---|---|
-| T-09 | Deuda de seguridad: ubicación exacta legible por la API, columnas sensibles del Profesional y fotos de pedidos cerrados | Backend | 3 | 🟡 | `1622cc8` |
-| T-10 | Esquema de monetización con sus políticas RLS (infraestructura) | Backend | — | 🟡 | `71113e9` |
+| T-09 | Deuda de seguridad: ubicación exacta legible por la API, columnas sensibles del Profesional y fotos de pedidos cerrados | Backend | 3 | ✅ | `1622cc8` |
+| T-10 | Esquema de monetización con sus políticas RLS (infraestructura) | Backend | — | ✅ | `71113e9` |
 | CU-30 | Consultar Saldo de Tokens | Frontend | 3 | 🟡 | `b23ba1c` |
 | CU-31 | Cargar Tokens (Mercado Pago Checkout Pro con credenciales de prueba) | Full-stack | 12 | 🟡 | `3f6fba0`, `b23ba1c` |
 | CU-32 | Procesar Pago (webhook como Edge Function de Supabase) | Backend | 10 | 🟡 | `3f6fba0`, `b23ba1c` |
@@ -55,6 +55,11 @@ Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanific
 | CU-53 | Canjear Cupón de Tokens | Full-stack | 4 | 🟡 | `a92d0fe`, `b23ba1c` |
 | CU-19 | Descargar Comprobante de Tokens (emitido por la plataforma) | Backend | 4 | 🟡 | `7896de4`, `b23ba1c` |
 | | **Total** | | **53** | | |
+
+**Estado al 01/10.** Base restaurada: migraciones 0020 a 0026 aplicadas con sus guiones
+en OK (51 reglas) y las cuatro Edge Functions desplegadas. La T-09 y la T-10 quedan
+cerradas. El resto sigue 🟡 hasta la prueba en el teléfono (ajuste 3 del 7.3.7); el
+CU-31 y el CU-32 además esperan las credenciales de Mercado Pago.
 
 **Estado al 29/09, 23:59.** Todo el alcance está escrito y commiteado, con 307 pruebas
 en verde y los builds de web y Android compilando. Nada está cerrado todavía: 🟡
