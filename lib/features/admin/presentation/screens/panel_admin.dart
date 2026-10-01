@@ -45,7 +45,11 @@ class PanelAdmin extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final perfil = ref.watch(perfilCompletoProvider);
 
+    // `skipLoadingOnReload`: confirmar un precio con la contraseña (CU-40)
+    // vuelve a iniciar sesión, y eso recarga el perfil. Sin esto, el panel
+    // cambiaba el formulario por un spinner justo mientras se guardaba.
     final contenido = perfil.when(
+      skipLoadingOnReload: true,
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('No pudimos cargar tu perfil: $e')),
       data: (p) => p?.esAdministrador ?? false
@@ -85,7 +89,10 @@ class PanelAdmin extends ConsumerWidget {
                   children: [
                     SizedBox(
                       width: _anchoLateral,
-                      child: ColoredBox(
+                      // Material y no ColoredBox: los ListTile pintan su
+                      // fondo de seleccionado y el efecto del toque sobre el
+                      // Material más cercano.
+                      child: Material(
                         color: Colores.azul,
                         child: _Lateral(actual: actual),
                       ),
@@ -115,14 +122,17 @@ class _Lateral extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Padding(
-                  padding: EdgeInsets.only(left: 8),
-                  child: Text(
-                    'Laburito',
-                    style: TextStyle(
-                      color: Colores.textoSobreColor,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
+                const Flexible(
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 8),
+                    child: Text(
+                      'Laburito',
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Colores.textoSobreColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                 ),

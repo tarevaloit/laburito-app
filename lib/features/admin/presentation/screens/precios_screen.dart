@@ -63,43 +63,10 @@ class _PreciosScreenState extends ConsumerState<PreciosScreen> {
             p: nuevo,
       };
 
-  Future<String?> _pedirPassword() {
-    final controller = TextEditingController();
-    return showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Confirmá con tu contraseña'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Cambiar precios impacta en el momento en la app de todos los '
-              'Profesionales.',
-            ),
-            const SizedBox(height: 16),
-            CampoTexto(
-              etiqueta: 'Contraseña',
-              controller: controller,
-              obscureText: true,
-              autofillHints: const [AutofillHints.password],
-              onFieldSubmitted: (v) => Navigator.pop(ctx, v),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, controller.text),
-            child: const Text('Confirmar'),
-          ),
-        ],
-      ),
-    ).whenComplete(controller.dispose);
-  }
+  Future<String?> _pedirPassword() => showDialog<String>(
+        context: context,
+        builder: (_) => const _DialogoPassword(),
+      );
 
   Future<void> _guardar(List<PaqueteTokens> paquetes) async {
     if (!(_formulario.currentState?.validate() ?? false)) return;
@@ -219,6 +186,66 @@ class _PreciosScreenState extends ConsumerState<PreciosScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Paso 4 del CU-40: la contraseña otra vez antes de guardar.
+///
+/// Es un widget con estado y no un `AlertDialog` armado en el momento porque
+/// el controlador del campo tiene que vivir **lo mismo que el diálogo**. Antes
+/// se descartaba cuando el `showDialog` devolvía el resultado, pero el diálogo
+/// todavía estaba animando su salida y volvía a dibujar el campo: «A
+/// TextEditingController was used after being disposed», y la pantalla roja.
+class _DialogoPassword extends StatefulWidget {
+  const _DialogoPassword();
+
+  @override
+  State<_DialogoPassword> createState() => _DialogoPasswordState();
+}
+
+class _DialogoPasswordState extends State<_DialogoPassword> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Confirmá con tu contraseña'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Cambiar precios impacta en el momento en la app de todos los '
+            'Profesionales.',
+          ),
+          const SizedBox(height: 16),
+          CampoTexto(
+            key: const Key('password-admin'),
+            etiqueta: 'Contraseña',
+            controller: _controller,
+            obscureText: true,
+            autofillHints: const [AutofillHints.password],
+            onFieldSubmitted: (v) => Navigator.pop(context, v),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, _controller.text),
+          child: const Text('Confirmar'),
+        ),
+      ],
     );
   }
 }
