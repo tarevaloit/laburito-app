@@ -153,6 +153,20 @@ class BilleteraRepository {
     ];
   }
 
+  /// Conciliación del CU-32: le pide al servidor que busque este pago en
+  /// Mercado Pago y aplique lo que conteste. Es el respaldo del webhook: si el
+  /// aviso de Mercado Pago se demora o no llega, el pago se resuelve igual.
+  ///
+  /// Nunca falla hacia la pantalla: si la verificación no se pudo hacer, el
+  /// pago queda como estaba y se lo vuelve a leer de la base.
+  Future<void> verificarPago(String id) async {
+    try {
+      await _client.functions.invoke('verificar_pago', body: {'pago_id': id});
+    } on Object {
+      // El seguimiento vuelve a intentar en el próximo ciclo.
+    }
+  }
+
   // ---------------------------------------------------------------- CU-53
 
   Future<CanjeCupon> canjear(String codigo) async {

@@ -127,6 +127,6 @@ Documento: DNI `12345678`.
 | Síntoma | Qué mirar |
 |---|---|
 | «Los pagos no están disponibles» al tocar «Pagar» | Falta `MP_ACCESS_TOKEN` o es de otra cuenta. `supabase secrets list` |
-| El pago se aprueba pero los tokens no llegan | Logs de `webhook_mercadopago` en el panel de Supabase. Si dice «firma inválida», la clave del webhook no coincide con la del paso 4 |
+| El pago se aprueba pero los tokens no llegan | Desde el 01/10 la app concilia sola al volver del checkout, y en el detalle de un pago pendiente está **Consultar a Mercado Pago**. Para la causa de fondo: Supabase → Edge Functions → `webhook_mercadopago` → Logs, buscando `[webhook]`. `FIRMA INVÁLIDA` = la clave del webhook no coincide con la del paso 4; si no aparece ninguna línea, Mercado Pago no está llamando a la URL |
 | Mercado Pago dice que no podés pagarte a vos mismo | Estás logueado en el checkout con el vendedor o con tu cuenta real: entrá con el comprador |
 | El checkout pide un código de verificación | Últimos 6 dígitos del ID del usuario de prueba |

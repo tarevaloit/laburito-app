@@ -9,6 +9,7 @@ import '../../../../core/widgets/boton_principal.dart';
 import '../../../../core/widgets/marca_laburito.dart';
 import '../../data/billetera_repository.dart';
 import '../../domain/pago.dart';
+import '../controllers/billetera_controller.dart';
 
 /// El estado de un pago en una píldora de color: verde aprobado, naranja
 /// pendiente, rojo rechazado o cancelado.
@@ -64,12 +65,41 @@ class _DetallePago extends ConsumerStatefulWidget {
 
 class _DetallePagoState extends ConsumerState<_DetallePago> {
   bool _descargando = false;
+  bool _verificando = false;
+  late Pago _pago = widget.pago;
+
+  /// Un pago pendiente se puede consultar a mano: busca el pago en Mercado
+  /// Pago y aplica lo que conteste (la conciliación del CU-32).
+  Future<void> _verificar() async {
+    setState(() => _verificando = true);
+    final repo = ref.read(billeteraRepositoryProvider);
+    try {
+      await repo.verificarPago(_pago.id);
+      final actualizado = await repo.pago(_pago.id);
+      if (!mounted || actualizado == null) return;
+      setState(() => _pago = actualizado);
+      if (actualizado.estado != EstadoPago.pendiente) {
+        ref.invalidate(historialPagosProvider);
+        await ref.read(billeteraProvider.notifier).refrescar();
+      } else if (mounted) {
+        mostrarMensaje(
+          context,
+          'Mercado Pago todavía no tiene este pago como pagado.',
+          esError: false,
+        );
+      }
+    } on Object catch (error) {
+      if (mounted) mostrarMensaje(context, MensajesError.desde(error));
+    } finally {
+      if (mounted) setState(() => _verificando = false);
+    }
+  }
 
   Future<void> _descargar() async {
     setState(() => _descargando = true);
     try {
       final url =
-          await ref.read(billeteraRepositoryProvider).comprobante(widget.pago.id);
+          await ref.read(billeteraRepositoryProvider).comprobante(_pago.id);
       final abierto = await abrirEnlace(url);
       if (!abierto && mounted) {
         mostrarMensaje(context, 'No pudimos abrir el comprobante.');
@@ -83,7 +113,7 @@ class _DetallePagoState extends ConsumerState<_DetallePago> {
 
   @override
   Widget build(BuildContext context) {
-    final pago = widget.pago;
+    final pago = _pago;
 
     return SafeArea(
       child: Padding(
@@ -129,13 +159,26 @@ class _DetallePagoState extends ConsumerState<_DetallePago> {
                 cargando: _descargando,
                 onPressed: _descargar,
               )
-            else if (pago.estado == EstadoPago.pendiente)
+            else if (pago.estado == EstadoPago.pendiente) ...[
               const AvisoEstado.pendiente(
                 icono: Icons.hourglass_top_rounded,
                 titulo: 'Comprobante en proceso de emisión',
                 detalle: 'Va a estar disponible cuando Mercado Pago confirme '
                     'el pago.',
               ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _verificando ? null : _verificar,
+                icon: _verificando
+                    ? const SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh),
+                label: const Text('Consultar a Mercado Pago'),
+              ),
+            ],
           ],
         ),
       ),

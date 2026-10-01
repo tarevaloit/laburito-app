@@ -206,6 +206,16 @@ void main() {
       );
     });
 
+    test('verificar un pago pide la conciliación y no rompe si falla',
+        () async {
+      await BilleteraRepository(client).verificarPago('pago-1');
+      expect(servidor.funciones, ['verificar_pago']);
+      expect(servidor.ultimoCuerpo, {'pago_id': 'pago-1'});
+
+      servidor.sinRed = true;
+      await BilleteraRepository(client).verificarPago('pago-1');
+    });
+
     test('el canje devuelve lo acreditado sin levantar excepciones', () async {
       final bueno = await BilleteraRepository(client).canjear('BIENVENIDA10');
       expect(bueno.exitoso, isTrue);
@@ -275,6 +285,9 @@ class _ServidorFalso {
                 'pago_id': 'pago-nuevo',
                 'url': 'https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=1',
               }, 200);
+      }
+      if (nombre == 'verificar_pago') {
+        return _json(pedido, {'estado': 'aprobado'}, 200);
       }
       if (nombre == 'comprobante_pago') {
         return _json(pedido, {

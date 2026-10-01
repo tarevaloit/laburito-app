@@ -598,9 +598,10 @@ class _Vacio extends StatelessWidget {
 
 /// CU-32, pasos 5 y 6: el resultado del pago al volver de Mercado Pago.
 ///
-/// Relee el pago cada tres segundos mientras siga pendiente, hasta un minuto:
-/// el webhook suele llegar antes que la persona a la app, pero no siempre.
-/// Cuando se resuelve, recarga el saldo.
+/// Mientras siga pendiente, cada tres segundos y hasta un minuto, pide la
+/// conciliación con Mercado Pago (`verificar_pago`) y relee el pago. El webhook
+/// suele llegar antes que la persona a la app, pero no siempre. Cuando se
+/// resuelve, recarga el saldo.
 class _SeguimientoPago extends ConsumerStatefulWidget {
   const _SeguimientoPago({
     super.key,
@@ -639,8 +640,11 @@ class _SeguimientoPagoState extends ConsumerState<_SeguimientoPago> {
   Future<void> _consultar() async {
     _intentos++;
     try {
-      final pago =
-          await ref.read(billeteraRepositoryProvider).pago(widget.pagoId);
+      final repo = ref.read(billeteraRepositoryProvider);
+      // Primero se le pregunta a Mercado Pago (por si el webhook no llegó) y
+      // después se lee la base, que es la que manda.
+      await repo.verificarPago(widget.pagoId);
+      final pago = await repo.pago(widget.pagoId);
       if (!mounted) return;
       final resuelto = pago != null && pago.estado != EstadoPago.pendiente;
       setState(() => _pago = pago);
