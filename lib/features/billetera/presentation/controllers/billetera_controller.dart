@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/widgets.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -54,6 +55,14 @@ class Billetera extends _$Billetera {
   @override
   Future<EstadoBilletera> build() {
     ref.watch(sesionProvider);
+
+    // Un pago se puede acreditar mientras la app está en segundo plano (el
+    // webhook no espera a nadie). Al volver a primer plano se relee, y así el
+    // saldo queda al día en todas las pantallas que lo muestran, no solo en
+    // la billetera.
+    final alVolver = AppLifecycleListener(onResume: refrescar);
+    ref.onDispose(alVolver.dispose);
+
     return _leer();
   }
 

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -17,6 +18,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// CU-30, CU-31, CU-32, CU-33, CU-53 y CU-19 — La billetera del Profesional.
 void main() {
+  // La billetera escucha el ciclo de vida de la app para recargarse al volver
+  // a primer plano: necesita el binding aunque estas pruebas no dibujen nada.
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   const bronce =
       PaqueteTokens(id: 'b', nombre: 'Bronce', cantidad: 5, precioArs: 4500);
   const plata =
@@ -248,6 +253,22 @@ void main() {
       expect(estado.sinConexion, isTrue);
     });
 
+    test('al volver la app a primer plano, la billetera se relee', () async {
+      await container.read(billeteraProvider.future);
+      final pedidosAntes = servidor.lecturasDeSaldo;
+
+      TestWidgetsFlutterBinding.instance
+          .handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      TestWidgetsFlutterBinding.instance
+          .handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      TestWidgetsFlutterBinding.instance
+          .handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await Future<void>.delayed(Duration.zero);
+      await container.read(billeteraProvider.future);
+
+      expect(servidor.lecturasDeSaldo, greaterThan(pedidosAntes));
+    });
+
     test('el saldo que devuelve una operación se pinta al toque', () async {
       await container.read(billeteraProvider.future);
 
@@ -263,6 +284,7 @@ class _ServidorFalso {
   Object? ultimoCuerpo;
   bool mercadoPagoCaido = false;
   bool sinRed = false;
+  int lecturasDeSaldo = 0;
 
   Future<http.Response> responder(http.Request pedido) async {
     if (sinRed) throw http.ClientException('sin red');
@@ -307,6 +329,7 @@ class _ServidorFalso {
     }
 
     if (ruta == '/rest/v1/profesionales') {
+      lecturasDeSaldo++;
       return _json(pedido, {'saldo_tokens': 12}, 200);
     }
 

@@ -7,6 +7,7 @@ import '../../../core/widgets/barra_navegacion.dart';
 import '../../../core/widgets/boton_principal.dart';
 import '../../../core/widgets/marca_laburito.dart';
 import '../../auth/presentation/controllers/auth_controller.dart';
+import '../../billetera/presentation/controllers/billetera_controller.dart';
 import '../../perfil/data/perfil_repository.dart';
 
 /// Home provisorio del Sprint 1. Confirma la identidad del usuario autenticado,
@@ -66,6 +67,14 @@ class HomeScreen extends ConsumerWidget {
           if (p == null) {
             return const Center(child: Text('Sin perfil asociado.'));
           }
+
+          // El saldo sale de la billetera y no del perfil: el perfil se lee
+          // una vez al iniciar sesión, y la billetera es la que se actualiza
+          // al comprar, canjear o desbloquear (CU-30). Solo para el
+          // Profesional: los demás no tienen billetera que leer.
+          final saldo = p.esProfesional
+              ? ref.watch(billeteraProvider).valueOrNull?.saldo ?? p.saldoTokens
+              : 0;
 
           return TarjetaFormulario(
             child: Column(
@@ -144,7 +153,7 @@ class HomeScreen extends ConsumerWidget {
                         _Dato('DNI', p.dni ?? '—'),
                         _Dato('Verificación', p.verificacionLegible ?? '—'),
                         _Dato('Oficios', p.categorias.length.toString()),
-                        _Dato('Tokens', p.saldoTokens.toString()),
+                        _Dato('Tokens', saldo.toString()),
                       ],
                     ],
                   ),
@@ -182,7 +191,7 @@ class HomeScreen extends ConsumerWidget {
                   OutlinedButton.icon(
                     onPressed: () => context.go('/profesional/billetera'),
                     icon: const Icon(Icons.account_balance_wallet_outlined),
-                    label: Text('Mi billetera · ${p.saldoTokens} tokens'),
+                    label: Text('Mi billetera · $saldo tokens'),
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton.icon(

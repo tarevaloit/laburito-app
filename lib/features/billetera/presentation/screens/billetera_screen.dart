@@ -71,11 +71,15 @@ class _BilleteraScreenState extends ConsumerState<BilleteraScreen>
   }
 
   /// Al volver a la app —desde el navegador, desde la app de Mercado Pago—
-  /// se relee todo. Es el camino que funciona siempre, aunque el enlace
+  /// se relee el historial de pagos. El saldo lo relee solo el
+  /// `billeteraProvider`, que escucha el mismo evento para todas las
+  /// pantallas. Es el camino que funciona siempre, aunque el enlace
   /// `laburito://` no haya abierto la app.
   @override
   void didChangeAppLifecycleState(AppLifecycleState estado) {
-    if (estado == AppLifecycleState.resumed) _recargar();
+    if (estado == AppLifecycleState.resumed) {
+      ref.invalidate(historialPagosProvider);
+    }
   }
 
   Future<void> _recargar() async {
