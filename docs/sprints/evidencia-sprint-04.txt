@@ -1,0 +1,18 @@
+ce7ba0c 01/10/2026 14:18 fix(CU-10): cerrar sesión en la web pedía permisos de notificación y no salía
+248182d 01/10/2026 14:10 fix(CU-30): el home mostraba el saldo del inicio de sesión
+dca09df 01/10/2026 14:05 fix(CU-40): guardar un precio desde el panel daba pantalla roja
+489d0c7 01/10/2026 13:46 fix(CU-52): la sección Cupones del panel redirigía siempre a Precios
+1c1b003 01/10/2026 13:34 fix(CU-32): conciliar el pago con Mercado Pago desde la app y aceptar avisos IPN
+5bff1d3 01/10/2026 13:26 docs(S4): guion de la presentación conjunta del Sprint 3 y el Sprint 4
+d323abe 01/10/2026 07:16 docs(S4): guion de prueba y demo del sprint
+c804b8b 01/10/2026 07:04 docs(S4): aplicar 0020-0026, desplegar las funciones y registrar la verificación
+1d78076 29/09/2026 23:34 docs(S4): registrar el avance del sprint y los guiones de aceptación
+c845fcb 29/09/2026 23:32 feat(CU-40,CU-52): panel del administrador con precios y cupones
+2868316 29/09/2026 23:31 feat(CU-25): desbloquear el contacto del buscador con un token
+b23ba1c 29/09/2026 23:31 feat(CU-30,CU-33): billetera del profesional con compra, historial, canje y comprobante
+7896de4 29/09/2026 23:30 feat(CU-19): emitir el comprobante en PDF de una compra aprobada
+a92d0fe 29/09/2026 23:30 feat(CU-53): canjear cupones con bloqueo por intentos fallidos
+3f6fba0 29/09/2026 23:30 feat(CU-31,CU-32): cargar tokens con Checkout Pro y acreditarlos por webhook
+71113e9 29/09/2026 23:30 feat(T-10): esquema de monetización con sus políticas
+1622cc8 29/09/2026 23:30 fix(T-09): cerrar la ubicación exacta, las columnas del profesional y las fotos de pedidos cerrados
+98c3a44 29/09/2026 23:06 docs(S4): planificar el Sprint 4 y la puesta en marcha de Mercado Pago

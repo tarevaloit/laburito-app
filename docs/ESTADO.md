@@ -2,7 +2,7 @@
 
 > **Fuente de verdad del proyecto.** Este archivo se actualiza al cerrar cada sesión de trabajo.
 > Vive en `docs/ESTADO.md` del repo y se commitea junto con el código.
-> Última actualización: 29/09/2026
+> Última actualización: 01/10/2026
 
 ---
 
@@ -49,12 +49,9 @@ produjo una decisión técnica, va a la sección 5 de este archivo antes de cerr
 
 | Campo | Valor |
 |---|---|
-| Sprint en curso | **Sprint 4 — Monetización** (PT 5.0) · rama `sprint-4` · plan en `docs/sprints/SPRINT-04.md` |
-| Período | 17/09/2026 al 30/09/2026 (ejecución desde el 29/09) |
-| Entrega por BB | 30/09/2026 hasta las 23:59 · reunión 01/10 |
-| Esfuerzo comprometido | 53 pts (50 del PT 5.0 + 3 de deuda de seguridad, T-09) |
-| Sprint anterior | **Sprint 3 — cerrado, 56/56 pts** (PT 4.0) · tags `v0.3.0` y `v0.3.1` · cierre en `docs/sprints/SPRINT-03-cierre.md` |
-| Release | **v0.3.1** · remanente del backlog: **119 pts** (49,4 % de avance acumulado). Objetivo del sprint: v0.4.0, 72,3 % planificado |
+| Sprint en curso | **Sprint 5 — Enlaces Públicos y Calificación** (PT 6.0) · por planificar · 01/10 al 14/10 |
+| Sprint anterior | **Sprint 4 — cerrado, 53/53 pts** (PT 5.0) · tag `v0.4.0` · cierre en `docs/sprints/SPRINT-04-cierre.md` (y `.docx`) |
+| Release | **v0.4.0** · remanente del backlog: **69 pts** (70,6 % de avance acumulado, 72,3 % planificado) |
 | Repositorio | https://github.com/tarevaloit/laburito |
 | Proyecto Supabase | `laburito` · ref `xbgwogitgzzxmoixqfjd` · PostgreSQL 17.6, PostGIS 3.3.7 |
 
@@ -664,7 +661,7 @@ apartado 7.2 (remanentes 205/174 → 200/169, marcas de edición sin completar, 
 columna de horas que no se restableció, el punto de control del día 7 que no se
 ejecutó) y sigue la indicación del profesor: menos detalle de lo realizado.
 
-## 4c. Sprint 4 — en curso (PT 5.0)
+## 4c. Sprint 4 — cerrado, 53/53 pts (PT 5.0)
 
 Rama **`sprint-4`**, salida de `main` en `v0.3.1`. El plan, el orden de descarte y los
 puntos de control viven en `docs/sprints/SPRINT-04.md`; acá va lo que ya pasó.
@@ -721,6 +718,26 @@ sin sesión 401, `OPTIONS` 204, webhook sin secretos 503, retorno 302 a
    (`scripts/preparar_demo.sql`); descarga del comprobante.
 3. Cuenta de administrador (`scripts/crear_admin.sql`) y prueba de precios y cupones.
 4. Cierre: merge, tag `v0.4.0`, `CHANGELOG.md`, apartado 7.4 con su burndown.
+
+### 4c.5 Cierre (01/10)
+
+**El sprint cerró 53 de 53 puntos.** La prueba real —compras con el comprador de prueba,
+desbloqueo, cupón creado en el panel y canjeado, precios— encontró cinco defectos, todos
+corregidos con una prueba que reproduce el recorrido: pagos que quedaban pendientes
+(conciliación `verificar_pago`, `1c1b003`), la sección Cupones inaccesible (`489d0c7`), la
+pantalla roja al guardar un precio (`dca09df`), el saldo del inicio desactualizado
+(`248182d`) y el cierre de sesión bloqueado en la Web (`ce7ba0c`).
+
+`flutter analyze` 0 issues, **317 pruebas en verde**, web y APK compilando. Merge a `main`
+y tag **`v0.4.0`**. Sección 7.4 en `docs/sprints/SPRINT-04-cierre.md` y `.docx` (generados
+por `figuras/generar-cierre-s4-docx.js`), evidencia en `evidencia-sprint-04.txt`.
+
+La reunión del Sprint 3 (17/09) no se hizo: los dos sprints se mostraron juntos el 01/10
+con el guion de `docs/sprints/DEMO-S3-S4.md`.
+
+**Queda abierto:** confirmar que los avisos firmados de Mercado Pago se aceptan (la
+acreditación no depende de ellos) y ejercitar el comprobante del CU-19 en la app, que
+pasó el guion pero no se descargó todavía desde un teléfono.
 
 ## 5. Decisiones técnicas tomadas
 
@@ -894,12 +911,15 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 _(Lo primero que hay que hacer al retomar. Está en orden: cada punto depende
 del anterior.)_
 
-### 7.1 Sprint 4 — lo que sigue
+### 7.1 Sprint 5 — lo que sigue
 
-Ver la sección 4c.4: cargar las credenciales de Mercado Pago, probar en el teléfono y
-cerrar con el tag `v0.4.0` y el apartado 7.4. La base y las funciones ya están.
-
-Del Sprint 3 quedan: pegar la sección 7.3 en el documento y el video del circuito.
+1. **Pegar la sección 7.4** desde `docs/sprints/SPRINT-04-cierre.docx`, con la captura del
+   burndown, la fila 1.4 de la tabla de revisión y el índice al día.
+2. **Primeras tareas del Sprint 5** (ajustes del 7.4.7): actividad periódica sobre Supabase
+   para que no se pause, y alta de las cuentas de desarrollador de Apple y Google.
+3. Planificar `docs/sprints/SPRINT-05.md`: CU-26, CU-27, CU-28, CU-48, CU-45, CU-41 (35 pts)
+   más el CU-18 (4), con un punto de control a mitad del período.
+4. Volver el pack Bronce a $4.500 si quedó modificado por la demo.
 
 ### 7.2 Arrastrado de sprints anteriores
 

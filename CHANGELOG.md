@@ -3,6 +3,57 @@
 Todas las versiones del proyecto, agrupadas por caso de uso. El formato sigue
 la convención de commits del proyecto: `<tipo>(<ID>): <descripción>`.
 
+## v0.4.0 — Sprint 4 · Monetización (PT 5.0)
+
+_01/10/2026_
+
+El modelo de negocio funciona sobre el entorno de prueba de Mercado Pago: el
+Profesional compra tokens, el pago se acredita solo y con un token obtiene el
+contacto del Buscador.
+
+### Casos de uso
+
+- **CU-30 · Consultar Saldo de Tokens** — billetera con saldo, packs y últimos
+  movimientos; muestra el último saldo si se corta la conexión y se relee al
+  volver a la app.
+- **CU-31 · Cargar Tokens** — Checkout Pro con credenciales de prueba. La app
+  manda solo el pack; el precio lo pone el servidor.
+- **CU-32 · Procesar Pago** — webhook con validación de firma y consulta a la
+  API, más conciliación desde la app al volver del checkout. La acreditación es
+  idempotente y exige que el monto coincida.
+- **CU-33 · Ver Historial de Pagos** — aprobados, pendientes y rechazados, con
+  el detalle de cada uno y el motivo de un rechazo.
+- **CU-25 · Postularse (Desbloquear Contacto)** — un token por contacto, sin
+  cobrar dos veces, con el teléfono enmascarado hasta pagar y el chat de
+  WhatsApp. El Buscador ve cuántos Profesionales pidieron su contacto.
+- **CU-40 · Configurar Precio de Tokens** — panel del administrador, con la
+  contraseña pedida otra vez antes de guardar.
+- **CU-52 · Crear Cupón Promocional** — código, tokens, vencimiento y límite de
+  usos.
+- **CU-53 · Canjear Cupón de Tokens** — una vez por Profesional, con bloqueo
+  temporal ante intentos fallidos repetidos.
+- **CU-19 · Descargar Comprobante** — PDF emitido por la plataforma (no es una
+  factura de AFIP).
+
+### Infraestructura y deuda
+
+- **T-09** — la dirección exacta de un pedido deja de poder leerse por la API;
+  un Profesional ya no puede cargarse tokens ni aprobarse solo; las fotos de un
+  pedido cerrado no se pueden tocar.
+- **T-10** — esquema de monetización: el saldo es la suma de un libro de
+  movimientos que solo escribe una función del servidor.
+- Migraciones 0020 a 0026, verificadas con 51 reglas contra la base. Edge
+  Functions `crear_preferencia_pago`, `webhook_mercadopago`, `verificar_pago`,
+  `retorno_pago` y `comprobante_pago`.
+
+### Arreglos de la prueba real
+
+- La sección Cupones del panel redirigía siempre a Precios.
+- Guardar un precio en el panel daba un error de pantalla completa.
+- Cerrar sesión en la Web pedía permisos de notificación y no salía: la Web no
+  usa push.
+- El inicio mostraba el saldo del momento de iniciar sesión.
+
 ## v0.3.1 — CU-21 verificado de punta a punta
 
 _16/09/2026_
