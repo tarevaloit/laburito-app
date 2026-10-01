@@ -47,16 +47,24 @@ class DispositivosRepository {
   /// no se pudo borrar una fila es peor que un token de más, que además se
   /// limpia solo —la Edge Function da de baja los que FCM reporta como
   /// desconocidos, y el próximo inicio de sesión lo traspasa—.
+  ///
+  /// Pedir el token también va adentro del `try`, y con un tope de tiempo: en
+  /// la web, `getToken()` abría el permiso del navegador y fallaba, y como
+  /// estaba afuera, la excepción cortaba el cierre de sesión (01/10).
   Future<void> darDeBaja() async {
-    final token = await _push.token();
-    if (token == null) return;
-
     try {
-      await _client.rpc('dar_de_baja_dispositivo', params: {'p_token': token});
+      final token = await _push.token().timeout(_tope);
+      if (token == null) return;
+
+      await _client
+          .rpc('dar_de_baja_dispositivo', params: {'p_token': token})
+          .timeout(_tope);
     } on Object catch (error) {
       if (kDebugMode) debugPrint('No se pudo dar de baja el dispositivo: $error');
     }
   }
+
+  static const _tope = Duration(seconds: 5);
 }
 
 @Riverpod(keepAlive: true)

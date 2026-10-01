@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../notificaciones/data/registro_push.dart';
@@ -101,7 +102,18 @@ class AuthController extends _$AuthController {
     // Primero el dispositivo, después la sesión: la baja del token necesita
     // `auth.uid()`, así que después del signOut ya no se podría hacer y el
     // teléfono seguiría recibiendo los pedidos de esta cuenta (CU-21).
-    await ref.read(registroPushProvider.notifier).darDeBaja();
+    //
+    // Y nunca impide salir: si la baja falla o tarda, la sesión se cierra
+    // igual (decisión del 16/09). Un token de más se limpia solo; quedarse
+    // adentro sin poder salir no tiene arreglo para quien lo sufre.
+    try {
+      await ref
+          .read(registroPushProvider.notifier)
+          .darDeBaja()
+          .timeout(const Duration(seconds: 8));
+    } on Object catch (error) {
+      if (kDebugMode) debugPrint('La baja del dispositivo falló: $error');
+    }
 
     await _ejecutar(_repo.cerrarSesion);
     ref.invalidate(perfilCompletoProvider);

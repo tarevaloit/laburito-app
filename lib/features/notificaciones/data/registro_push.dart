@@ -51,7 +51,13 @@ class RegistroPush extends _$RegistroPush {
 
   /// Se llama antes de cerrar sesión: el teléfono deja de recibir los pedidos
   /// de una cuenta que ya no está abierta acá.
+  ///
+  /// Si en esta sesión no se registró ningún token —un Buscador, un
+  /// administrador, la web, un permiso denegado— no hay nada que dar de baja,
+  /// y no se le vuelve a pedir el token al sistema: pedirlo puede abrir el
+  /// diálogo de permisos justo cuando la persona quiere irse.
   Future<void> darDeBaja() async {
+    if (state.valueOrNull == null) return;
     await ref.read(dispositivosRepositoryProvider).darDeBaja();
     state = const AsyncData(null);
   }

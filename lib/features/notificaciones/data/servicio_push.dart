@@ -159,9 +159,17 @@ class ServicioPushFirebase implements ServicioPush {
 /// Cae en [PushNoConfigurado] si `Firebase.initializeApp()` no corrió (o
 /// falló) en `main.dart` — mismo criterio que el resto del CU-21: sin push la
 /// app funciona igual, así que un Firebase mal configurado no puede tirar acá.
+///
+/// **En la web tampoco hay push.** Las alertas del CU-21 son de la app del
+/// Profesional; la web es la del Buscador y la del administrador. Pedirle el
+/// token a Firebase en el navegador abre el permiso de notificaciones y trata
+/// de registrar un service worker (`firebase-messaging-sw.js`) que el proyecto
+/// no tiene: el navegador recibe el `index.html`, falla por el tipo MIME, y esa
+/// excepción cortaba el cierre de sesión.
 @Riverpod(keepAlive: true)
-ServicioPush servicioPush(Ref ref) =>
-    Firebase.apps.isEmpty ? const PushNoConfigurado() : ServicioPushFirebase();
+ServicioPush servicioPush(Ref ref) => kIsWeb || Firebase.apps.isEmpty
+    ? const PushNoConfigurado()
+    : ServicioPushFirebase();
 
 /// Con qué nombre viaja la plataforma a la base. Son los tres valores que
 /// acepta el `check` de `profesional_dispositivos` (migración 0012).

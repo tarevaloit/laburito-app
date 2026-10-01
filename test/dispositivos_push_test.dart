@@ -115,6 +115,17 @@ void main() {
 
       await expectLater(repo.darDeBaja(), completes);
     });
+
+    test('si pedir el token tira (la web sin service worker), la baja no tira',
+        () async {
+      final repo = DispositivosRepository(
+        await cliente(),
+        _PushFalso(token: token, tokenFalla: true),
+      );
+
+      await expectLater(repo.darDeBaja(), completes);
+      expect(servidor.llamadas, isEmpty);
+    });
   });
 
   group('registro por sesión', () {
@@ -162,16 +173,47 @@ void main() {
 
       expect(await container.read(registroPushProvider.future), isNull);
     });
+
+    test('al cerrar sesión, si no se registró nada, no se pide el token',
+        () async {
+      // Un Buscador o un administrador en la web: pedir el token abría el
+      // permiso del navegador justo al querer salir.
+      _RepoFalso.bajas = 0;
+      final push = _PushFalso(token: token);
+      final container = contenedor(perfilBuscador, push);
+      await container.read(registroPushProvider.future);
+
+      await container.read(registroPushProvider.notifier).darDeBaja();
+
+      expect(push.tokensPedidos, 0);
+      expect(_RepoFalso.bajas, 0);
+    });
+
+    test('al cerrar sesión, el Profesional registrado sí se da de baja',
+        () async {
+      _RepoFalso.bajas = 0;
+      final container = contenedor(perfilProfesional, _PushFalso(token: token));
+      await container.read(registroPushProvider.future);
+
+      await container.read(registroPushProvider.notifier).darDeBaja();
+
+      expect(_RepoFalso.bajas, 1);
+      expect(container.read(registroPushProvider).value, isNull);
+    });
   });
 }
 
 class _PushFalso implements ServicioPush {
-  _PushFalso({required String token, this.permiso = true})
+  _PushFalso({required String token, this.permiso = true, this.tokenFalla = false})
       : tokenDelTelefono = token;
 
   final String tokenDelTelefono;
   final bool permiso;
+
+  /// Como `getToken()` en la web sin service worker: tira.
+  final bool tokenFalla;
   bool permisoPedido = false;
+  int tokensPedidos = 0;
 
   @override
   Future<bool> pedirPermiso() async {
@@ -180,7 +222,13 @@ class _PushFalso implements ServicioPush {
   }
 
   @override
-  Future<String?> token() async => permiso ? tokenDelTelefono : null;
+  Future<String?> token() async {
+    tokensPedidos++;
+    if (tokenFalla) {
+      throw Exception('[firebase_messaging/failed-service-worker-registration]');
+    }
+    return permiso ? tokenDelTelefono : null;
+  }
 
   @override
   Stream<String> get tokenRenovado => const Stream.empty();
@@ -198,8 +246,10 @@ class _RepoFalso implements DispositivosRepository {
   Future<String?> registrar() async =>
       'tttttttttttttttttttttttttttttttttttttttt';
 
+  static int bajas = 0;
+
   @override
-  Future<void> darDeBaja() async {}
+  Future<void> darDeBaja() async => bajas++;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
