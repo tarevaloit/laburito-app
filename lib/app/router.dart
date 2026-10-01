@@ -207,10 +207,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       // Panel del administrador (CU-40, CU-52). El rol se valida en
       // `PanelAdmin`, no en el `redirect`: ver el comentario de esa clase.
+      //
+      // La redirección mira `state.uri.path` y no `matchedLocation`: el
+      // `redirect` de una ruta padre corre también al navegar a sus hijas, y
+      // ahí `matchedLocation` es el del padre (`/admin`). Con esa condición,
+      // tocar «Cupones» devolvía siempre a Precios.
       GoRoute(
         path: '/admin',
-        redirect: (context, state) =>
-            state.matchedLocation == '/admin' ? '/admin/precios' : null,
+        redirect: redireccionPanelAdmin,
         routes: [
           GoRoute(
             path: 'precios',
@@ -284,6 +288,11 @@ final routerProvider = Provider<GoRouter>((ref) {
     ),
   );
 });
+
+/// `/admin` a secas lleva a Precios; `/admin/cupones` y el resto, a donde
+/// pidieron. Ver el comentario de la ruta en [routerProvider].
+String? redireccionPanelAdmin(BuildContext context, GoRouterState state) =>
+    state.uri.path == '/admin' ? '/admin/precios' : null;
 
 /// Puente entre el stream de Supabase y el `refreshListenable` de go_router.
 class _RefrescoDeAuth extends ChangeNotifier {

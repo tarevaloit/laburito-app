@@ -31,7 +31,12 @@
 import { json } from '../_shared/http.ts';
 import { aplicar, consultarPago, MP_ACCESS_TOKEN } from '../_shared/mercadopago.ts';
 
-const MP_WEBHOOK_SECRET = Deno.env.get('MP_WEBHOOK_SECRET');
+// Se limpian espacios, saltos de línea y comillas: al pegar la clave en
+// `supabase secrets set` es fácil arrastrar alguno, y con un solo carácter de
+// más ninguna firma coincide.
+const MP_WEBHOOK_SECRET = Deno.env.get('MP_WEBHOOK_SECRET')
+  ?.trim()
+  .replace(/^["']|["']$/g, '');
 
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return json({ error: 'Usá POST' }, 405);
@@ -73,8 +78,13 @@ Deno.serve(async (req) => {
       return json({ error: 'Webhook sin configurar' }, 503);
     }
     if (!(await firmaValida(req, dataId))) {
-      console.warn(`[webhook] FIRMA INVÁLIDA para el pago ${dataId}: revisar que `
-        + 'MP_WEBHOOK_SECRET sea la clave del webhook de la aplicación del vendedor');
+      // Lo que entró al cálculo, para compararlo con el panel de Mercado Pago.
+      // Nunca la clave.
+      console.warn(`[webhook] FIRMA INVÁLIDA para el pago ${dataId} `
+        + `(x-request-id=${req.headers.get('x-request-id')}, `
+        + `x-signature=${req.headers.get('x-signature')}): revisar que `
+        + 'MP_WEBHOOK_SECRET sea la clave secreta del webhook de la aplicación '
+        + 'cuyo Access Token está en MP_ACCESS_TOKEN');
       return json({ error: 'Firma inválida' }, 401);
     }
   }
