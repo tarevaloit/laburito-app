@@ -24,6 +24,7 @@ import '../features/pedidos/presentation/screens/crear_pedido_screen.dart';
 import '../features/pedidos/presentation/screens/detalle_pedido_screen.dart';
 import '../features/pedidos/presentation/screens/editar_pedido_screen.dart';
 import '../features/pedidos/presentation/screens/historial_pedidos_screen.dart';
+import '../features/notificaciones/presentation/screens/notificaciones_screen.dart';
 import '../features/perfil/presentation/screens/baja_cuenta_screen.dart';
 import '../features/profesional/presentation/screens/detalle_pedido_publico_screen.dart';
 import '../features/profesional/presentation/screens/horarios_screen.dart';
@@ -185,6 +186,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/profesional/contactos',
         name: 'misContactos',
         builder: (context, state) => const MisContactosScreen(),
+      ),
+      // CU-48. Centro de notificaciones de los dos actores.
+      GoRoute(
+        path: '/notificaciones',
+        name: 'notificaciones',
+        builder: (context, state) => const NotificacionesScreen(),
       ),
       GoRoute(
         path: '/home',

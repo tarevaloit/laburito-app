@@ -8,6 +8,7 @@ import '../../../core/widgets/boton_principal.dart';
 import '../../../core/widgets/marca_laburito.dart';
 import '../../auth/presentation/controllers/auth_controller.dart';
 import '../../billetera/presentation/controllers/billetera_controller.dart';
+import '../../notificaciones/presentation/campana_notificaciones.dart';
 import '../../perfil/data/perfil_repository.dart';
 
 /// Home provisorio del Sprint 1. Confirma la identidad del usuario autenticado,
@@ -49,6 +50,8 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const LogoLaburito(alto: 34),
         actions: [
+          // CU-48.
+          const CampanaNotificaciones(),
           IconButton(
             tooltip: 'Cerrar sesión',
             icon: const Icon(Icons.logout),
