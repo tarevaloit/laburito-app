@@ -32,6 +32,7 @@ import '../features/profesional/presentation/screens/portafolio_screen.dart';
 import '../features/profesional/presentation/screens/tablero_screen.dart';
 import '../features/profesional/presentation/screens/zona_cobertura_screen.dart';
 import '../features/reputacion/presentation/screens/calificar_screen.dart';
+import '../features/reputacion/presentation/screens/estadisticas_screen.dart';
 import '../features/reputacion/presentation/screens/mis_contactos_screen.dart';
 import '../features/reputacion/presentation/screens/perfil_publico_screen.dart';
 import '../features/perfil/presentation/screens/perfil_screen.dart';
@@ -192,6 +193,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/notificaciones',
         name: 'notificaciones',
         builder: (context, state) => const NotificacionesScreen(),
+      ),
+      // CU-45 (Figura 3.18).
+      GoRoute(
+        path: '/profesional/estadisticas',
+        name: 'estadisticas',
+        builder: (context, state) => const EstadisticasScreen(),
       ),
       GoRoute(
         path: '/home',

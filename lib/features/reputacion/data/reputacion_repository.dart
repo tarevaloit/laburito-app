@@ -6,6 +6,7 @@ import '../../../core/config/env.dart';
 import '../../../core/providers/supabase_providers.dart';
 import '../../billetera/data/billetera_repository.dart' show ErrorDeFuncion;
 import '../domain/calificacion.dart';
+import '../domain/metricas.dart';
 import '../domain/perfil_publico.dart';
 
 part 'reputacion_repository.g.dart';
@@ -113,6 +114,14 @@ class ReputacionRepository {
       rethrow;
     }
   }
+
+  /// CU-45. Métricas del Profesional que llama, por semana o por mes.
+  Future<MetricasPerfil> metricas(PeriodoMetricas periodo) async {
+    final json = await _client.rpc('metricas_perfil', params: {
+      'p_periodo': periodo.name,
+    });
+    return MetricasPerfil.desdeJson(json as Map<String, dynamic>);
+  }
 }
 
 @Riverpod(keepAlive: true)
@@ -130,3 +139,7 @@ Future<List<MiContacto>> misContactos(Ref ref) =>
 @riverpod
 Future<EnlaceCalificacion> enlaceCalificacion(Ref ref, String token) =>
     ref.watch(reputacionRepositoryProvider).infoCalificacion(token);
+
+@riverpod
+Future<MetricasPerfil> metricasPerfil(Ref ref, PeriodoMetricas periodo) =>
+    ref.watch(reputacionRepositoryProvider).metricas(periodo);

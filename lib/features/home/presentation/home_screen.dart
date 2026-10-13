@@ -197,6 +197,13 @@ class HomeScreen extends ConsumerWidget {
                     label: Text('Mi billetera · $saldo tokens'),
                   ),
                   const SizedBox(height: 12),
+                  // CU-45.
+                  OutlinedButton.icon(
+                    onPressed: () => context.go('/profesional/estadisticas'),
+                    icon: const Icon(Icons.bar_chart),
+                    label: const Text('Mis estadísticas'),
+                  ),
+                  const SizedBox(height: 12),
                   // CU-28.
                   OutlinedButton.icon(
                     onPressed: () => context.go('/profesional/contactos'),

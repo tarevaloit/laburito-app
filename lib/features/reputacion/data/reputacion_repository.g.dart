@@ -327,5 +327,136 @@ class _EnlaceCalificacionProviderElement
   @override
   String get token => (origin as EnlaceCalificacionProvider).token;
 }
+
+String _$metricasPerfilHash() => r'd6c55efa3680ef0e6ce6f14db67172a60c15f56e';
+
+/// See also [metricasPerfil].
+@ProviderFor(metricasPerfil)
+const metricasPerfilProvider = MetricasPerfilFamily();
+
+/// See also [metricasPerfil].
+class MetricasPerfilFamily extends Family<AsyncValue<MetricasPerfil>> {
+  /// See also [metricasPerfil].
+  const MetricasPerfilFamily();
+
+  /// See also [metricasPerfil].
+  MetricasPerfilProvider call(
+    PeriodoMetricas periodo,
+  ) {
+    return MetricasPerfilProvider(
+      periodo,
+    );
+  }
+
+  @override
+  MetricasPerfilProvider getProviderOverride(
+    covariant MetricasPerfilProvider provider,
+  ) {
+    return call(
+      provider.periodo,
+    );
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'metricasPerfilProvider';
+}
+
+/// See also [metricasPerfil].
+class MetricasPerfilProvider extends AutoDisposeFutureProvider<MetricasPerfil> {
+  /// See also [metricasPerfil].
+  MetricasPerfilProvider(
+    PeriodoMetricas periodo,
+  ) : this._internal(
+          (ref) => metricasPerfil(
+            ref as MetricasPerfilRef,
+            periodo,
+          ),
+          from: metricasPerfilProvider,
+          name: r'metricasPerfilProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$metricasPerfilHash,
+          dependencies: MetricasPerfilFamily._dependencies,
+          allTransitiveDependencies:
+              MetricasPerfilFamily._allTransitiveDependencies,
+          periodo: periodo,
+        );
+
+  MetricasPerfilProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.periodo,
+  }) : super.internal();
+
+  final PeriodoMetricas periodo;
+
+  @override
+  Override overrideWith(
+    FutureOr<MetricasPerfil> Function(MetricasPerfilRef provider) create,
+  ) {
+    return ProviderOverride(
+      origin: this,
+      override: MetricasPerfilProvider._internal(
+        (ref) => create(ref as MetricasPerfilRef),
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        periodo: periodo,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeFutureProviderElement<MetricasPerfil> createElement() {
+    return _MetricasPerfilProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is MetricasPerfilProvider && other.periodo == periodo;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, periodo.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+mixin MetricasPerfilRef on AutoDisposeFutureProviderRef<MetricasPerfil> {
+  /// The parameter `periodo` of this provider.
+  PeriodoMetricas get periodo;
+}
+
+class _MetricasPerfilProviderElement
+    extends AutoDisposeFutureProviderElement<MetricasPerfil>
+    with MetricasPerfilRef {
+  _MetricasPerfilProviderElement(super.provider);
+
+  @override
+  PeriodoMetricas get periodo => (origin as MetricasPerfilProvider).periodo;
+}
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

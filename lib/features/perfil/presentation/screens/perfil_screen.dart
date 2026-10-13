@@ -176,8 +176,27 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                     const SizedBox(height: 24),
                     // CU-26. Solo se ofrece con la documentación aprobada:
                     // el perfil público muestra «Cuenta verificada».
-                    if (p.estadoVerificacion == 'aprobado')
+                    if (p.estadoVerificacion == 'aprobado') ...[
                       CompartirPerfil(suspendida: p.estado == 'suspendido'),
+                      const SizedBox(height: 8),
+                      // CU-45 y CU-28: los accesos de la Figura 3.17.
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.bar_chart,
+                            color: Colores.azulMedio),
+                        title: const Text('Mis estadísticas'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.push('/profesional/estadisticas'),
+                      ),
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.people_outline,
+                            color: Colores.azulMedio),
+                        title: const Text('Mis contactos y calificaciones'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.push('/profesional/contactos'),
+                      ),
+                    ],
                   ],
                   const SizedBox(height: 24),
                   CampoTexto(
