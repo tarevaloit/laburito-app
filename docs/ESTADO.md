@@ -2,7 +2,7 @@
 
 > **Fuente de verdad del proyecto.** Este archivo se actualiza al cerrar cada sesión de trabajo.
 > Vive en `docs/ESTADO.md` del repo y se commitea junto con el código.
-> Última actualización: 01/10/2026
+> Última actualización: 13/10/2026
 
 ---
 
@@ -42,6 +42,7 @@ produjo una decisión técnica, va a la sección 5 de este archivo antes de cerr
 | `S2 · Pedidos` | Arranque del Sprint 2: CU-13, CU-16 y siguientes |
 | `S3 · Esquema del Profesional` | Fase 1 del Sprint 3: T-07, migración 0012 |
 | `S4 · Monetización` | Sprint 4 completo: T-09, T-10, billetera, Mercado Pago, desbloqueo, cupones |
+| `S5 · Enlaces y calificación` | Sprint 5 completo: T-11, perfil público, calificación, notificaciones, métricas, denuncias, CU-18 |
 
 ---
 
@@ -49,7 +50,7 @@ produjo una decisión técnica, va a la sección 5 de este archivo antes de cerr
 
 | Campo | Valor |
 |---|---|
-| Sprint en curso | **Sprint 5 — Enlaces Públicos y Calificación** (PT 6.0) · por planificar · 01/10 al 14/10 |
+| Sprint en curso | **Sprint 5 — Enlaces Públicos y Calificación** (PT 6.0) · 39 pts comprometidos · 01/10 al 14/10 · plan en `docs/sprints/SPRINT-05.md` |
 | Sprint anterior | **Sprint 4 — cerrado, 53/53 pts** (PT 5.0) · tag `v0.4.0` · cierre en `docs/sprints/SPRINT-04-cierre.md` (y `.docx`) |
 | Release | **v0.4.0** · remanente del backlog: **69 pts** (70,6 % de avance acumulado, 72,3 % planificado) |
 | Repositorio | https://github.com/tarevaloit/laburito |
@@ -739,6 +740,19 @@ con el guion de `docs/sprints/DEMO-S3-S4.md`.
 acreditación no depende de ellos) y ejercitar el comprobante del CU-19 en la app, que
 pasó el guion pero no se descargó todavía desde un teléfono.
 
+## 4d. Sprint 5 — en curso (PT 6.0)
+
+Rama **`sprint-5`**, salida de `main` en `v0.4.0`. El plan, las decisiones de diseño y los
+puntos de control viven en `docs/sprints/SPRINT-05.md`; acá va lo que ya pasó.
+
+### 4d.1 Arranque (13/10)
+
+El sprint arrancó el 13/10, con la entrega el 14/10 a las 23:59: entre el 01/10 y el 12/10
+no hubo ejecución. El punto de control del 07/10 (ajuste 1 del 7.4.7) no se cumplió. Se
+decidió sostener los 39 puntos (35 del PT 6.0 más el CU-18) **sin orden de descarte**.
+
+La base estaba activa al arrancar (la API respondió 200 el 13/10).
+
 ## 5. Decisiones técnicas tomadas
 
 Formato: fecha · decisión · motivo. No se borran, se agregan.
@@ -872,6 +886,11 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 29/09 | El panel del administrador vive en la misma app, bajo `/admin`, con el rol validado en la pantalla | Decisión del 19/08 (un solo proyecto). Adelanta el armazón del panel previsto para el Sprint 5 por la mitigación del apartado 6 |
 | 01/10 | **El pago se concilia también desde la app** (`verificar_pago`), no solo por webhook | En la primera prueba real los pagos quedaban pendientes sin `mp_payment_id`: el aviso de Mercado Pago no llegaba a aplicarse. Mercado Pago recomienda no depender solo del webhook. Al volver del checkout la app pide verificar; la función busca el pago por `external_reference` en la API y lo aplica con la misma función idempotente del webhook |
 | 01/10 | El webhook acepta también el formato IPN (`?topic=payment&id=`), que no trae firma | La autenticidad del resultado no la da el aviso sino la consulta a la API con nuestro Access Token: quien conozca la URL puede hacer que consultemos un pago, no inventar uno aprobado. Una firma **presente e inválida** sí se rechaza, y queda en el log con `[webhook] FIRMA INVÁLIDA` |
+| 13/10 | **Sprint 5 sin orden de descarte** | Decisión del responsable al arrancar con un día y medio de plazo: se comprometen los 39 puntos y lo que no cierre se replanifica en el 7.5.3. El punto de control del 07/10 no se cumplió y se documenta |
+| 13/10 | **La Web se publica en Firebase Hosting desde el Sprint 5** | Los enlaces del CU-26, CU-27, CU-28 y CU-18 se abren en el celular del Buscador: necesitan una URL pública. Se usa el proyecto de Firebase del CU-21. Es un adelanto parcial de la T-03, que conserva sus puntos en el Sprint 6. La URL base va en `.env` como `WEB_URL` |
+| 13/10 | **CU-18 con el enlace mágico de Supabase Auth** | La ERS supone un Buscador sin cuenta; en Laburito el Buscador está registrado. El «enlace de gestión» pasa a ser un acceso de un solo uso que abre la sesión en sus pedidos. Una Edge Function mira si hay pedidos activos para el correo antes de pedir el envío; la respuesta es siempre genérica. Se descartó un token propio con Resend: otra cuenta externa y duplicar las acciones del pedido para un acceso sin sesión |
+| 13/10 | El perfil público se sirve con una Edge Function | El bucket `portafolios` es privado y firmar sus URLs exige la clave de servicio, que una RPC para `anon` no tiene. La función además registra la visita del CU-45 |
+| 13/10 | El enlace de calificación nace de un contacto desbloqueado | Es la protección contra reseñas falsas que pide la ERS: no hay enlace sin un contacto real pagado con un token, se usa una vez y en la base se guarda solo su hash |
 | 29/09 | Los guiones de aceptación terminan con un `raise exception` que lleva el resultado | La transacción aborta sí o sí, aunque la herramienta ignore el `rollback` final. Es la forma de que un guion que toca datos reales no pueda dejar nada escrito |
 | 02/09 | El botón «Mi ubicación» y las sugerencias de búsqueda van en la columna del `SelectorUbicacion`, no flotando sobre el mapa | En Web, `GoogleMap` se dibuja con `HtmlElementView`, y un widget interactivo apilado arriba necesita `pointer_interceptor` para recibir el mouse. Se resolvió con una columna —búsqueda arriba, mapa con solo el pin encima (`IgnorePointer`, no necesita recibir toques), panel de «mi ubicación»/dirección/referencia abajo— en vez de sumar otra dependencia |
 
@@ -913,13 +932,13 @@ del anterior.)_
 
 ### 7.1 Sprint 5 — lo que sigue
 
-1. **Pegar la sección 7.4** desde `docs/sprints/SPRINT-04-cierre.docx`, con la captura del
-   burndown, la fila 1.4 de la tabla de revisión y el índice al día.
-2. **Primeras tareas del Sprint 5** (ajustes del 7.4.7): actividad periódica sobre Supabase
-   para que no se pause, y alta de las cuentas de desarrollador de Apple y Google.
-3. Planificar `docs/sprints/SPRINT-05.md`: CU-26, CU-27, CU-28, CU-48, CU-45, CU-41 (35 pts)
-   más el CU-18 (4), con un punto de control a mitad del período.
-4. Volver el pack Bronce a $4.500 si quedó modificado por la demo.
+1. **Fase 0** de `docs/sprints/SPRINT-05.md`: workflow de actividad periódica sobre
+   Supabase, `WEB_URL`, estrategia de URL por ruta y Firebase Hosting.
+2. **Fase 1 — T-11**: migración 0027 con su guion; aplicarla antes de construir encima.
+3. Fases 2 a 4 (CU-26, CU-27, CU-28) y el circuito probado en el teléfono antes de seguir.
+4. Pendiente del responsable: alta de las cuentas de desarrollador de Apple y Google,
+   pegar la sección 7.4 en el documento y volver el pack Bronce a $4.500 si quedó
+   modificado por la demo.
 
 ### 7.2 Arrastrado de sprints anteriores
 
