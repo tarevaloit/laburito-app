@@ -30,6 +30,8 @@ import '../features/profesional/presentation/screens/horarios_screen.dart';
 import '../features/profesional/presentation/screens/portafolio_screen.dart';
 import '../features/profesional/presentation/screens/tablero_screen.dart';
 import '../features/profesional/presentation/screens/zona_cobertura_screen.dart';
+import '../features/reputacion/presentation/screens/calificar_screen.dart';
+import '../features/reputacion/presentation/screens/mis_contactos_screen.dart';
 import '../features/reputacion/presentation/screens/perfil_publico_screen.dart';
 import '../features/perfil/presentation/screens/perfil_screen.dart';
 import '../features/verificacion/presentation/screens/carga_documentos_screen.dart';
@@ -169,6 +171,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => PerfilPublicoScreen(
           slug: state.pathParameters['slug'] ?? '',
         ),
+      ),
+      // CU-28. Calificación por enlace de un solo uso (Figura 3.7).
+      GoRoute(
+        path: '/calificar/:token',
+        name: 'calificar',
+        builder: (context, state) => CalificarScreen(
+          token: state.pathParameters['token'] ?? '',
+        ),
+      ),
+      // CU-28. Desde acá el Profesional pide la calificación al terminar.
+      GoRoute(
+        path: '/profesional/contactos',
+        name: 'misContactos',
+        builder: (context, state) => const MisContactosScreen(),
       ),
       GoRoute(
         path: '/home',

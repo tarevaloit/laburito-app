@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../app/colores.dart';
 import '../../../../core/errors/mensajes_error.dart';
+import '../../../../core/utils/enlaces.dart';
 import '../../../../core/widgets/marca_laburito.dart';
 import '../../data/reputacion_repository.dart';
 
@@ -80,10 +80,7 @@ class _CompartirPerfilState extends ConsumerState<CompartirPerfil> {
     if (enlace == null) return;
     final mensaje = 'Hola, te paso mi perfil de Laburito: ahí podés ver mis '
         'trabajos y lo que opinan otros clientes. $enlace';
-    final abierto = await launchUrl(
-      Uri.https('wa.me', '/', {'text': mensaje}),
-      mode: LaunchMode.externalApplication,
-    );
+    final abierto = await abrirEnlace(Uri.https('wa.me', '/', {'text': mensaje}));
     if (!abierto && mounted) {
       mostrarMensaje(context, 'No pudimos abrir WhatsApp. El enlace ya está copiado.');
     }

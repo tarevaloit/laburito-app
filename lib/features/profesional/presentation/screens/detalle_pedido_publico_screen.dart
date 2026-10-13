@@ -11,6 +11,8 @@ import '../../../../core/widgets/marca_laburito.dart';
 import '../../../billetera/presentation/controllers/billetera_controller.dart';
 import '../../../pedidos/data/urls_firmadas.dart';
 import '../../../pedidos/presentation/widgets/mini_mapa_pedido.dart';
+import '../../../reputacion/domain/calificacion.dart';
+import '../../../reputacion/presentation/pedir_calificacion.dart';
 import '../../data/contacto_repository.dart';
 import '../../data/tablero_repository.dart';
 import '../../domain/contacto_buscador.dart';
@@ -296,6 +298,30 @@ class _AccionesState extends ConsumerState<_Acciones> {
                 ),
               ],
             ),
+            // CU-28. Al terminar el trabajo; también desde «Mis contactos»,
+            // que sigue mostrando el contacto después de que el Buscador
+            // cierre el pedido.
+            if (desbloqueado)
+              TextButton.icon(
+                onPressed: _trabajando
+                    ? null
+                    : () => _hacer(() async {
+                          await pedirCalificacion(
+                            context,
+                            ref,
+                            MiContacto(
+                              pedidoId: pedido.id,
+                              titulo: pedido.titulo,
+                              estadoPedido: 'publicado',
+                              nombreCorto: contacto!.nombreCorto,
+                              telefono: contacto.telefono,
+                              desbloqueadoAt: DateTime.now(),
+                            ),
+                          );
+                        }),
+                icon: const Icon(Icons.star_outline_rounded, size: 18),
+                label: const Text('¿Terminaste el trabajo? Pedí tu calificación'),
+              ),
           ],
         ),
       ),

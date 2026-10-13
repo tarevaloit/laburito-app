@@ -175,5 +175,157 @@ class _PerfilPublicoProviderElement
   @override
   String get slug => (origin as PerfilPublicoProvider).slug;
 }
+
+String _$misContactosHash() => r'c2475387364f683a57d130d3588cc73ca1cb9f45';
+
+/// See also [misContactos].
+@ProviderFor(misContactos)
+final misContactosProvider =
+    AutoDisposeFutureProvider<List<MiContacto>>.internal(
+  misContactos,
+  name: r'misContactosProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$misContactosHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef MisContactosRef = AutoDisposeFutureProviderRef<List<MiContacto>>;
+String _$enlaceCalificacionHash() =>
+    r'e7e733d4b459e8ffbc28093acffdaf471a1f2ecd';
+
+/// See also [enlaceCalificacion].
+@ProviderFor(enlaceCalificacion)
+const enlaceCalificacionProvider = EnlaceCalificacionFamily();
+
+/// See also [enlaceCalificacion].
+class EnlaceCalificacionFamily extends Family<AsyncValue<EnlaceCalificacion>> {
+  /// See also [enlaceCalificacion].
+  const EnlaceCalificacionFamily();
+
+  /// See also [enlaceCalificacion].
+  EnlaceCalificacionProvider call(
+    String token,
+  ) {
+    return EnlaceCalificacionProvider(
+      token,
+    );
+  }
+
+  @override
+  EnlaceCalificacionProvider getProviderOverride(
+    covariant EnlaceCalificacionProvider provider,
+  ) {
+    return call(
+      provider.token,
+    );
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'enlaceCalificacionProvider';
+}
+
+/// See also [enlaceCalificacion].
+class EnlaceCalificacionProvider
+    extends AutoDisposeFutureProvider<EnlaceCalificacion> {
+  /// See also [enlaceCalificacion].
+  EnlaceCalificacionProvider(
+    String token,
+  ) : this._internal(
+          (ref) => enlaceCalificacion(
+            ref as EnlaceCalificacionRef,
+            token,
+          ),
+          from: enlaceCalificacionProvider,
+          name: r'enlaceCalificacionProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$enlaceCalificacionHash,
+          dependencies: EnlaceCalificacionFamily._dependencies,
+          allTransitiveDependencies:
+              EnlaceCalificacionFamily._allTransitiveDependencies,
+          token: token,
+        );
+
+  EnlaceCalificacionProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.token,
+  }) : super.internal();
+
+  final String token;
+
+  @override
+  Override overrideWith(
+    FutureOr<EnlaceCalificacion> Function(EnlaceCalificacionRef provider)
+        create,
+  ) {
+    return ProviderOverride(
+      origin: this,
+      override: EnlaceCalificacionProvider._internal(
+        (ref) => create(ref as EnlaceCalificacionRef),
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        token: token,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeFutureProviderElement<EnlaceCalificacion> createElement() {
+    return _EnlaceCalificacionProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is EnlaceCalificacionProvider && other.token == token;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, token.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+mixin EnlaceCalificacionRef
+    on AutoDisposeFutureProviderRef<EnlaceCalificacion> {
+  /// The parameter `token` of this provider.
+  String get token;
+}
+
+class _EnlaceCalificacionProviderElement
+    extends AutoDisposeFutureProviderElement<EnlaceCalificacion>
+    with EnlaceCalificacionRef {
+  _EnlaceCalificacionProviderElement(super.provider);
+
+  @override
+  String get token => (origin as EnlaceCalificacionProvider).token;
+}
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
