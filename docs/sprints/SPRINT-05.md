@@ -46,15 +46,23 @@ Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanific
 
 | ID | Tarea / Caso de Uso | Tipo | Pts | Estado | Evidencia |
 |---|---|---|---|---|---|
-| T-11 | Esquema de reputación, enlaces y actividad con sus políticas RLS (infraestructura) | Backend | — | ⬜ | |
-| CU-26 | Compartir Perfil Público (vía link) | Full-stack | 6 | ⬜ | |
-| CU-27 | Acceder a Perfil por Link | Frontend | 5 | ⬜ | |
-| CU-28 | Calificar Profesional (vía link de un solo uso) | Full-stack | 8 | ⬜ | |
-| CU-48 | Ver Notificaciones de Actividad | Full-stack | 7 | ⬜ | |
-| CU-45 | Ver Métricas de Perfil | Full-stack | 5 | ⬜ | |
-| CU-41 | Reportar Usuario | Full-stack | 4 | ⬜ | |
-| CU-18 | Solicitar Reenvío de Enlace de Gestión | Backend | 4 | ⬜ | |
+| T-11 | Esquema de reputación, enlaces y actividad con sus políticas RLS (infraestructura) | Backend | — | ✅ | `008afbd` |
+| CU-26 | Compartir Perfil Público (vía link) | Full-stack | 6 | 🟡 | `8400bcd` |
+| CU-27 | Acceder a Perfil por Link | Frontend | 5 | 🟡 | `8400bcd` |
+| CU-28 | Calificar Profesional (vía link de un solo uso) | Full-stack | 8 | 🟡 | `52b09ec` |
+| CU-48 | Ver Notificaciones de Actividad | Full-stack | 7 | 🟡 | `93b0174` |
+| CU-45 | Ver Métricas de Perfil | Full-stack | 5 | 🟡 | `c7d8a93` |
+| CU-41 | Reportar Usuario | Full-stack | 4 | 🟡 | `68778ce` |
+| CU-18 | Solicitar Reenvío de Enlace de Gestión | Backend | 4 | 🟡 | `66d208a` |
 | | **Total** | | **39** | | |
+
+**Estado al 13/10, noche.** Todo el alcance está escrito, commiteado y aplicado: migraciones
+0027 a 0033 con sus guiones en OK (59 reglas), Edge Functions `perfil_publico` y
+`reenviar_enlace_gestion` desplegadas sin JWT, la Web publicada en Firebase Hosting,
+`flutter analyze` sin issues, **362 pruebas en verde** (317 al cierre del Sprint 4) y web y
+APK compilando. 🟡 significa eso: falta el recorrido en el teléfono y en el navegador del
+celular, que es la condición de cierre del ajuste 3 del 7.4.7. El CU-18 además depende de
+la configuración de Supabase Auth del apartado 7.
 
 La T-11 no lleva puntos, con el criterio de la T-07 y la T-10: es la infraestructura sin la
 cual los casos de uso no existen, y su esfuerzo está dentro de sus estimaciones.
@@ -190,7 +198,7 @@ cierre se replanifica al Sprint 6 en el apartado 7.5.3, con su estimación origi
 | Qué | Dónde | Para qué |
 |---|---|---|
 | Sesión de Firebase CLI y el sitio de Hosting | `firebase login`, consola de Firebase | Publicar la Web (decisión 1) |
-| Plantilla *Magic Link* y URL de redirección | Supabase → Authentication → Email Templates y URL Configuration | CU-18 |
+| Plantilla *Magic Link* y URL de redirección | Supabase → Authentication → Email Templates y URL Configuration: agregar `https://byto-laburitoapp-2e5af.web.app/**` a *Redirect URLs* | CU-18 |
 | Secretos del workflow | GitHub → Settings → Secrets: `SUPABASE_URL`, `SUPABASE_ANON_KEY` | Actividad periódica |
 | Cuentas de desarrollador | Apple Developer Program, Google Play Console | Mitigación del apartado 6 para la T-03 |
 

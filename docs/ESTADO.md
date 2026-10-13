@@ -753,6 +753,43 @@ decidió sostener los 39 puntos (35 del PT 6.0 más el CU-18) **sin orden de des
 
 La base estaba activa al arrancar (la API respondió 200 el 13/10).
 
+### 4d.2 Lo escrito, aplicado y desplegado (13/10)
+
+| Commit | Qué | Verificado |
+|---|---|---|
+| `6a70eb3` `docs(S5)` | `docs/sprints/SPRINT-05.md` | — |
+| `8e45af4` `chore(S5)` | Workflow `supabase-actividad.yml`, `WEB_URL`, URL por ruta, Hosting | Falta cargar los secretos del workflow |
+| `008afbd` `feat(T-11)` | Migración 0027 + `verificar_0027.sql` | Aplicada, 14/14 OK |
+| `8400bcd` `feat(CU-26,CU-27)` | 0028, 0029, Edge Function `perfil_publico`, Mi Perfil y `/p/:slug` | Aplicadas, 9/9 OK; función desplegada (404 propio y OPTIONS 204 probados) |
+| `52b09ec` `feat(CU-28)` | 0030, «Mis contactos», `/calificar/:token` | Aplicada, 14/14 OK |
+| `93b0174` `feat(CU-48)` | 0031 (disparadores), campana y `/notificaciones` | Aplicada, 7/7 OK |
+| `c7d8a93` `feat(CU-45)` | 0032, «Mis estadísticas» | Aplicada, 5/5 OK |
+| `68778ce` `feat(CU-41)` | 0033, formulario de reporte, «Denuncias» en el panel | Aplicada, 10/10 OK |
+| `66d208a` `feat(CU-18)` | Edge Function `reenviar_enlace_gestion`, `/recuperar-pedido` | Desplegada; mensaje genérico y correo inválido probados. Sin probar el envío real |
+
+`flutter analyze` 0 issues, **362 pruebas en verde** (45 nuevas), web y APK compilando. Web
+publicada en https://byto-laburitoapp-2e5af.web.app el 13/10. Desde el entorno de Claude no
+se pudo abrir (el proxy intercepta el certificado): la primera vista real es la del celular.
+
+Las pruebas de recorrido encontraron tres defectos antes de llegar al teléfono: las
+estrellas del perfil público desbordaban a 390 px, el botón de compartir seguía girando
+detrás de la alerta de cuenta suspendida y el gráfico de métricas desbordaba con la barra
+más alta. Es el tercer ajuste del 7.4.7 funcionando.
+
+### 4d.3 Lo que falta, en orden
+
+1. **Supabase → Authentication → URL Configuration**: agregar
+   `https://byto-laburitoapp-2e5af.web.app/**` a *Redirect URLs* (sin eso el enlace del
+   CU-18 cae en la Site URL). En *Email Templates → Magic Link*, un texto tipo «Gestioná
+   tu pedido» con `{{ .ConfirmationURL }}`.
+2. **Recorrido en el teléfono** (App del Profesional aprobado + navegador del celular):
+   Mi Perfil → Compartir → abrir el enlace sin sesión → Mis contactos → Pedir calificación
+   → calificar desde el navegador → ver la reseña en el perfil y el aviso en la campana →
+   Mis estadísticas → reportar desde el perfil público con la cuenta del Buscador → ver la
+   denuncia en el panel → Recuperar mi pedido con el correo del Buscador.
+3. Secretos `SUPABASE_URL` y `SUPABASE_ANON_KEY` en GitHub para el workflow de actividad.
+4. Cierre: merge, tag `v0.5.0`, `CHANGELOG.md`, apartado 7.5 con su burndown.
+
 ## 5. Decisiones técnicas tomadas
 
 Formato: fecha · decisión · motivo. No se borran, se agregan.
@@ -890,6 +927,9 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 13/10 | **La Web se publica en Firebase Hosting desde el Sprint 5** | Los enlaces del CU-26, CU-27, CU-28 y CU-18 se abren en el celular del Buscador: necesitan una URL pública. Se usa el proyecto de Firebase del CU-21. Es un adelanto parcial de la T-03, que conserva sus puntos en el Sprint 6. La URL base va en `.env` como `WEB_URL` |
 | 13/10 | **CU-18 con el enlace mágico de Supabase Auth** | La ERS supone un Buscador sin cuenta; en Laburito el Buscador está registrado. El «enlace de gestión» pasa a ser un acceso de un solo uso que abre la sesión en sus pedidos. Una Edge Function mira si hay pedidos activos para el correo antes de pedir el envío; la respuesta es siempre genérica. Se descartó un token propio con Resend: otra cuenta externa y duplicar las acciones del pedido para un acceso sin sesión |
 | 13/10 | El perfil público se sirve con una Edge Function | El bucket `portafolios` es privado y firmar sus URLs exige la clave de servicio, que una RPC para `anon` no tiene. La función además registra la visita del CU-45 |
+| 13/10 | El Profesional pide la calificación desde «Mis contactos» | El trabajo termina cuando el Buscador ya cerró el pedido, y entonces el detalle del tablero deja de mostrarse. El contacto pagado sigue (0023), así que la lista de contactos desbloqueados es el lugar natural; el detalle del pedido conserva un atajo mientras sigue visible |
+| 13/10 | La denuncia apunta al usuario por el slug o por el pedido, nunca por id | La app no conoce el uuid de la otra persona ni lo necesita: el Buscador denuncia desde el perfil público (el CU-25 decidió que no ve a los interesados) y el Profesional desde el pedido que puede ver o desbloqueó |
+| 13/10 | Los avisos del CU-48 los escriben disparadores | Si los escribiera el cliente, cualquiera se inventaría un «se acreditaron 100 tokens». `notificar()` no la ejecuta ningún cliente, y por PostgREST de un aviso solo se puede cambiar `leida_at` |
 | 13/10 | El enlace de calificación nace de un contacto desbloqueado | Es la protección contra reseñas falsas que pide la ERS: no hay enlace sin un contacto real pagado con un token, se usa una vez y en la base se guarda solo su hash |
 | 29/09 | Los guiones de aceptación terminan con un `raise exception` que lleva el resultado | La transacción aborta sí o sí, aunque la herramienta ignore el `rollback` final. Es la forma de que un guion que toca datos reales no pueda dejar nada escrito |
 | 02/09 | El botón «Mi ubicación» y las sugerencias de búsqueda van en la columna del `SelectorUbicacion`, no flotando sobre el mapa | En Web, `GoogleMap` se dibuja con `HtmlElementView`, y un widget interactivo apilado arriba necesita `pointer_interceptor` para recibir el mouse. Se resolvió con una columna —búsqueda arriba, mapa con solo el pin encima (`IgnorePointer`, no necesita recibir toques), panel de «mi ubicación»/dirección/referencia abajo— en vez de sumar otra dependencia |
@@ -932,13 +972,10 @@ del anterior.)_
 
 ### 7.1 Sprint 5 — lo que sigue
 
-1. **Fase 0** de `docs/sprints/SPRINT-05.md`: workflow de actividad periódica sobre
-   Supabase, `WEB_URL`, estrategia de URL por ruta y Firebase Hosting.
-2. **Fase 1 — T-11**: migración 0027 con su guion; aplicarla antes de construir encima.
-3. Fases 2 a 4 (CU-26, CU-27, CU-28) y el circuito probado en el teléfono antes de seguir.
-4. Pendiente del responsable: alta de las cuentas de desarrollador de Apple y Google,
-   pegar la sección 7.4 en el documento y volver el pack Bronce a $4.500 si quedó
-   modificado por la demo.
+Ver «4d.3 Lo que falta, en orden»: configuración de Supabase Auth para el CU-18, recorrido
+en el teléfono, secretos del workflow y cierre con el apartado 7.5. Sigue pendiente del
+responsable: alta de las cuentas de desarrollador de Apple y Google, pegar la sección 7.4
+en el documento y volver el pack Bronce a $4.500 si quedó modificado por la demo.
 
 ### 7.2 Arrastrado de sprints anteriores
 
