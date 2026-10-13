@@ -30,6 +30,7 @@ import '../features/profesional/presentation/screens/horarios_screen.dart';
 import '../features/profesional/presentation/screens/portafolio_screen.dart';
 import '../features/profesional/presentation/screens/tablero_screen.dart';
 import '../features/profesional/presentation/screens/zona_cobertura_screen.dart';
+import '../features/reputacion/presentation/screens/perfil_publico_screen.dart';
 import '../features/perfil/presentation/screens/perfil_screen.dart';
 import '../features/verificacion/presentation/screens/carga_documentos_screen.dart';
 
@@ -55,6 +56,14 @@ const _neutrales = <String>{
   '/legales/terminos',
   '/legales/privacidad',
 };
+
+/// Rutas públicas del Sprint 5, con un parámetro: las abre alguien sin cuenta
+/// desde un enlace de WhatsApp (modelo «Frictionless»). Con sesión también se
+/// ven: un Buscador registrado puede abrir el mismo enlace.
+const _prefijosPublicos = <String>['/p/', '/calificar/'];
+
+bool esRutaNeutral(String ruta) =>
+    _neutrales.contains(ruta) || _prefijosPublicos.any(ruta.startsWith);
 
 final routerProvider = Provider<GoRouter>((ref) {
   final refresco = _RefrescoDeAuth(
@@ -83,7 +92,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       final accesibleSinSesion =
-          _soloSinSesion.contains(destino) || _neutrales.contains(destino);
+          _soloSinSesion.contains(destino) || esRutaNeutral(destino);
 
       if (sesion == null) {
         return accesibleSinSesion ? null : '/login';
@@ -92,8 +101,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // CU-08: con el correo sin validar no se llega al home. La sesión solo
       // existe acá si el PIN todavía no se confirmó o si Supabase tiene
       // desactivado *Confirm email*.
-      if (sesion.user.emailConfirmedAt == null &&
-          !_neutrales.contains(destino)) {
+      if (sesion.user.emailConfirmedAt == null && !esRutaNeutral(destino)) {
         final email = Uri.encodeComponent(sesion.user.email ?? '');
         return '/verificar?email=$email';
       }
@@ -153,6 +161,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const NuevaPasswordScreen(),
           ),
         ],
+      ),
+      // CU-27. Perfil público del Profesional (Figura 3.6).
+      GoRoute(
+        path: '/p/:slug',
+        name: 'perfilPublico',
+        builder: (context, state) => PerfilPublicoScreen(
+          slug: state.pathParameters['slug'] ?? '',
+        ),
       ),
       GoRoute(
         path: '/home',

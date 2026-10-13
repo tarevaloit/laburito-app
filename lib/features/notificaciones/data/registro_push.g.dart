@@ -6,7 +6,7 @@ part of 'registro_push.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$registroPushHash() => r'03ef8ad80ab015daec8788da651dbe4b1678fc31';
+String _$registroPushHash() => r'33390d91ab789fae5729bba5169366efb92803da';
 
 /// CU-21 — Deja este teléfono registrado mientras haya un Profesional adentro.
 ///

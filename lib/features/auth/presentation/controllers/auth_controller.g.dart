@@ -6,7 +6,7 @@ part of 'auth_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$authControllerHash() => r'54de625db01ba5aba9b637a7db57d8774d08eda4';
+String _$authControllerHash() => r'b2022f774505a45f029c3ef45e986e779777f063';
 
 /// Orquesta las operaciones de autenticación y expone su estado de carga.
 /// Cada método devuelve `true` si la operación terminó sin error.

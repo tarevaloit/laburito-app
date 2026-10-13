@@ -12,6 +12,7 @@ import '../../../../core/widgets/campo_texto.dart';
 import '../../../../core/widgets/marca_laburito.dart';
 import '../../../categorias/data/categorias_repository.dart';
 import '../../../categorias/presentation/selector_oficios.dart';
+import '../../../reputacion/presentation/widgets/compartir_perfil.dart';
 import '../../data/perfil_repository.dart';
 import '../controllers/perfil_controller.dart';
 
@@ -171,6 +172,13 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                       ],
                     ),
                   ),
+                  if (p.esProfesional) ...[
+                    const SizedBox(height: 24),
+                    // CU-26. Solo se ofrece con la documentación aprobada:
+                    // el perfil público muestra «Cuenta verificada».
+                    if (p.estadoVerificacion == 'aprobado')
+                      CompartirPerfil(suspendida: p.estado == 'suspendido'),
+                  ],
                   const SizedBox(height: 24),
                   CampoTexto(
                     etiqueta: 'Correo electrónico',
