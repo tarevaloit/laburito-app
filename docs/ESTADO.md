@@ -787,6 +787,9 @@ más alta. Es el tercer ajuste del 7.4.7 funcionando.
    → calificar desde el navegador → ver la reseña en el perfil y el aviso en la campana →
    Mis estadísticas → reportar desde el perfil público con la cuenta del Buscador → ver la
    denuncia en el panel → Recuperar mi pedido con el correo del Buscador.
+   **Con datos móviles, no con el wifi de la facultad**: su firewall Fortinet intercepta
+   HTTPS y Chrome rechaza la Web con `ERR_CERT_AUTHORITY_INVALID` (13/10). Vale también
+   para la demo del 15/10.
 3. Secretos `SUPABASE_URL` y `SUPABASE_ANON_KEY` en GitHub para el workflow de actividad.
 4. Cierre: merge, tag `v0.5.0`, `CHANGELOG.md`, apartado 7.5 con su burndown.
 
