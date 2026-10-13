@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../app/colores.dart';
+import '../../../../core/providers/supabase_providers.dart';
 import '../../../../core/widgets/marca_laburito.dart';
+import '../../../denuncias/presentation/reportar_usuario.dart';
 import '../../data/reputacion_repository.dart';
 import '../../domain/perfil_publico.dart';
 import '../widgets/estrellas.dart';
@@ -16,16 +18,17 @@ import '../widgets/estrellas.dart';
 /// celular, trabajos y reseñas van uno debajo del otro; desde 760 px de ancho,
 /// lado a lado como en la figura.
 class PerfilPublicoScreen extends ConsumerWidget {
-  const PerfilPublicoScreen({super.key, required this.slug, this.acciones});
+  const PerfilPublicoScreen({super.key, required this.slug});
 
   final String slug;
-
-  /// Lo que se suma debajo del perfil para quien tiene sesión (CU-41).
-  final Widget Function(PerfilPublico perfil)? acciones;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final perfil = ref.watch(perfilPublicoProvider(slug));
+    // CU-41: reportar exige sesión (precondición del caso de uso). Sin
+    // cuenta, el perfil se ve igual y el botón no aparece.
+    final conSesion =
+        ref.watch(supabaseClientProvider).auth.currentSession != null;
 
     return Scaffold(
       backgroundColor: Colores.fondo,
@@ -47,7 +50,26 @@ class PerfilPublicoScreen extends ConsumerWidget {
                 accion: 'Ir a Laburito',
                 onAccion: () => context.go('/login'),
               )
-            : _Perfil(perfil: p, acciones: acciones?.call(p)),
+            : _Perfil(
+                perfil: p,
+                acciones: conSesion
+                    ? Center(
+                        child: TextButton.icon(
+                          onPressed: () => mostrarReporteUsuario(
+                            context,
+                            sobre: p.nombreCompleto,
+                            slug: p.slug,
+                          ),
+                          icon: const Icon(Icons.flag_outlined,
+                              color: Colores.textoSecundario),
+                          label: const Text(
+                            'Reportar a este profesional',
+                            style: TextStyle(color: Colores.textoSecundario),
+                          ),
+                        ),
+                      )
+                    : null,
+              ),
       ),
     );
   }

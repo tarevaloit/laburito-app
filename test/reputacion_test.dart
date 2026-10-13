@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:laburito/app/router.dart';
 import 'package:laburito/core/config/env.dart';
+import 'package:laburito/core/providers/supabase_providers.dart';
 import 'package:laburito/features/reputacion/data/reputacion_repository.dart';
 import 'package:laburito/features/reputacion/domain/perfil_publico.dart';
 import 'package:laburito/features/reputacion/presentation/screens/perfil_publico_screen.dart';
@@ -92,6 +93,8 @@ void main() {
 
       await t.pumpWidget(ProviderScope(
         overrides: [
+          // Sin sesión, como el Buscador que llega desde WhatsApp.
+          supabaseClientProvider.overrideWithValue(client),
           reputacionRepositoryProvider.overrideWithValue(_RepoFalso()),
         ],
         child: MaterialApp(home: PerfilPublicoScreen(slug: slug)),
@@ -111,6 +114,8 @@ void main() {
       expect(find.text('Vino rapidísimo y resolvió la pérdida.'), findsOneWidget);
       expect(find.text('Trabajos realizados'), findsOneWidget);
       expect(find.textContaining('todavía no subió fotos'), findsOneWidget);
+      // CU-41: sin sesión no se ofrece reportar.
+      expect(find.text('Reportar a este profesional'), findsNothing);
     });
 
     testWidgets('un enlace roto muestra el 404 propio', (t) async {

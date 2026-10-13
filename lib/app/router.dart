@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/config/superficie.dart';
 import '../core/providers/supabase_providers.dart';
 import '../features/admin/presentation/screens/cupones_screen.dart';
+import '../features/admin/presentation/screens/denuncias_screen.dart';
 import '../features/admin/presentation/screens/precios_screen.dart';
 import '../features/auth/presentation/screens/codigo_recuperacion_screen.dart';
 import '../features/billetera/presentation/screens/billetera_screen.dart';
@@ -271,6 +272,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'cupones',
             name: 'adminCupones',
             builder: (context, state) => const CuponesScreen(),
+          ),
+          // CU-41: la alerta del panel.
+          GoRoute(
+            path: 'denuncias',
+            name: 'adminDenuncias',
+            builder: (context, state) => const DenunciasScreen(),
           ),
         ],
       ),
