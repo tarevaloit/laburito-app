@@ -109,6 +109,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: const Text('¿Olvidaste tu contraseña?'),
                 ),
               ),
+              // CU-18. Solo en la Web: el pedido es del Buscador.
+              if (Entorno.esWeb)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: cargando
+                        ? null
+                        : () => context.go('/recuperar-pedido'),
+                    child: const Text('¿Perdiste el acceso a tu pedido?'),
+                  ),
+                ),
               const SizedBox(height: 12),
               BotonPrincipal(
                 texto: 'Ingresar',

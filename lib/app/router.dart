@@ -25,6 +25,7 @@ import '../features/pedidos/presentation/screens/crear_pedido_screen.dart';
 import '../features/pedidos/presentation/screens/detalle_pedido_screen.dart';
 import '../features/pedidos/presentation/screens/editar_pedido_screen.dart';
 import '../features/pedidos/presentation/screens/historial_pedidos_screen.dart';
+import '../features/pedidos/presentation/screens/recuperar_pedido_screen.dart';
 import '../features/notificaciones/presentation/screens/notificaciones_screen.dart';
 import '../features/perfil/presentation/screens/baja_cuenta_screen.dart';
 import '../features/profesional/presentation/screens/detalle_pedido_publico_screen.dart';
@@ -44,6 +45,8 @@ const _soloSinSesion = <String>{
   '/login',
   '/registro',
   '/registro/profesional',
+  // CU-18: con sesión ya se llega a los pedidos.
+  '/recuperar-pedido',
 };
 
 /// Alta de Buscador. Existe solo en la web: la app nativa es la del
@@ -200,6 +203,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/profesional/estadisticas',
         name: 'estadisticas',
         builder: (context, state) => const EstadisticasScreen(),
+      ),
+      // CU-18. «Recuperar mi pedido».
+      GoRoute(
+        path: '/recuperar-pedido',
+        name: 'recuperarPedido',
+        builder: (context, state) => const RecuperarPedidoScreen(),
       ),
       GoRoute(
         path: '/home',
