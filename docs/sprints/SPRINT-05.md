@@ -47,16 +47,18 @@ Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanific
 | ID | Tarea / Caso de Uso | Tipo | Pts | Estado | Evidencia |
 |---|---|---|---|---|---|
 | T-11 | Esquema de reputación, enlaces y actividad con sus políticas RLS (infraestructura) | Backend | — | ✅ | `008afbd` |
-| CU-26 | Compartir Perfil Público (vía link) | Full-stack | 6 | 🟡 | `8400bcd` |
-| CU-27 | Acceder a Perfil por Link | Frontend | 5 | 🟡 | `8400bcd` |
-| CU-28 | Calificar Profesional (vía link de un solo uso) | Full-stack | 8 | 🟡 | `52b09ec` |
-| CU-48 | Ver Notificaciones de Actividad | Full-stack | 7 | 🟡 | `93b0174` |
-| CU-45 | Ver Métricas de Perfil | Full-stack | 5 | 🟡 | `c7d8a93` |
-| CU-41 | Reportar Usuario | Full-stack | 4 | 🟡 | `68778ce` |
-| CU-18 | Solicitar Reenvío de Enlace de Gestión | Backend | 4 | 🟡 | `66d208a` |
+| CU-26 | Compartir Perfil Público (vía link) | Full-stack | 6 | ✅ | `8400bcd` |
+| CU-27 | Acceder a Perfil por Link | Frontend | 5 | ✅ | `8400bcd` |
+| CU-28 | Calificar Profesional (vía link de un solo uso) | Full-stack | 8 | ✅ | `52b09ec` |
+| CU-48 | Ver Notificaciones de Actividad | Full-stack | 7 | ✅ | `93b0174` |
+| CU-45 | Ver Métricas de Perfil | Full-stack | 5 | ✅ | `c7d8a93` |
+| CU-41 | Reportar Usuario | Full-stack | 4 | ✅ | `68778ce` |
+| CU-18 | Solicitar Reenvío de Enlace de Gestión | Backend | 4 | ✅ | `66d208a` |
 | | **Total** | | **39** | | |
 
-**Estado al 13/10, noche.** Todo el alcance está escrito, commiteado y aplicado: migraciones
+**Cerrado el 13/10: 39 de 39 puntos**, tag `v0.5.0`. Sección 7.5 en `SPRINT-05-cierre.md` y `.docx`.
+
+**Estado al 13/10, noche (antes del cierre).** Todo el alcance está escrito, commiteado y aplicado: migraciones
 0027 a 0033 con sus guiones en OK (59 reglas), Edge Functions `perfil_publico` y
 `reenviar_enlace_gestion` desplegadas sin JWT, la Web publicada en Firebase Hosting,
 `flutter analyze` sin issues, **362 pruebas en verde** (317 al cierre del Sprint 4) y web y

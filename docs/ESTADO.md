@@ -50,9 +50,9 @@ produjo una decisión técnica, va a la sección 5 de este archivo antes de cerr
 
 | Campo | Valor |
 |---|---|
-| Sprint en curso | **Sprint 5 — Enlaces Públicos y Calificación** (PT 6.0) · 39 pts comprometidos · 01/10 al 14/10 · plan en `docs/sprints/SPRINT-05.md` |
-| Sprint anterior | **Sprint 4 — cerrado, 53/53 pts** (PT 5.0) · tag `v0.4.0` · cierre en `docs/sprints/SPRINT-04-cierre.md` (y `.docx`) |
-| Release | **v0.4.0** · remanente del backlog: **69 pts** (70,6 % de avance acumulado, 72,3 % planificado) |
+| Sprint en curso | **Sprint 6 — Administración, Cierre y Despliegue** (PT 7.0) · por planificar · 15/10 al 28/10 |
+| Sprint anterior | **Sprint 5 — cerrado, 39/39 pts** (PT 6.0) · tag `v0.5.0` · cierre en `docs/sprints/SPRINT-05-cierre.md` (y `.docx`) |
+| Release | **v0.5.0** · remanente del backlog: **30 pts** (87,2 % de avance acumulado, igual al planificado) |
 | Repositorio | https://github.com/tarevaloit/laburito |
 | Proyecto Supabase | `laburito` · ref `xbgwogitgzzxmoixqfjd` · PostgreSQL 17.6, PostGIS 3.3.7 |
 
@@ -740,7 +740,7 @@ con el guion de `docs/sprints/DEMO-S3-S4.md`.
 acreditación no depende de ellos) y ejercitar el comprobante del CU-19 en la app, que
 pasó el guion pero no se descargó todavía desde un teléfono.
 
-## 4d. Sprint 5 — en curso (PT 6.0)
+## 4d. Sprint 5 — cerrado, 39/39 pts (PT 6.0)
 
 Rama **`sprint-5`**, salida de `main` en `v0.4.0`. El plan, las decisiones de diseño y los
 puntos de control viven en `docs/sprints/SPRINT-05.md`; acá va lo que ya pasó.
@@ -791,7 +791,10 @@ más alta. Es el tercer ajuste del 7.4.7 funcionando.
    HTTPS y Chrome rechaza la Web con `ERR_CERT_AUTHORITY_INVALID` (13/10). Vale también
    para la demo del 15/10.
 3. Secretos `SUPABASE_URL` y `SUPABASE_ANON_KEY` en GitHub para el workflow de actividad.
-4. Cierre: merge, tag `v0.5.0`, `CHANGELOG.md`, apartado 7.5 con su burndown.
+4. ~~Cierre~~ hecho el 13/10: merge a `main`, tag `v0.5.0`, `CHANGELOG.md` y apartado 7.5
+   (`generar-cierre-s5-docx.js`), con un recuadro por caso de uso para pegar el diagrama
+   de flujo. La fila «Prueba de punta a punta» del 7.5.3 va en amarillo: se confirma con el
+   recorrido del punto 2 antes de entregar.
 
 ## 5. Decisiones técnicas tomadas
 

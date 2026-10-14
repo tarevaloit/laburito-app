@@ -3,6 +3,38 @@
 Todas las versiones del proyecto, agrupadas por caso de uso. El formato sigue
 la convención de commits del proyecto: `<tipo>(<ID>): <descripción>`.
 
+## v0.5.0 — Sprint 5 · Enlaces Públicos y Calificación (PT 6.0)
+
+_14/10/2026_
+
+El circuito de confianza «Frictionless»: el Profesional comparte su perfil por
+enlace y el Buscador lo consulta y lo califica desde el navegador, sin cuenta.
+La Web queda publicada en Firebase Hosting.
+
+### Casos de uso
+
+- **CU-26 · Compartir Perfil Público** — «Compartir mi perfil» en Mi Perfil:
+  copia el enlace `/p/<slug>` y lo manda por WhatsApp. Exige la documentación
+  aprobada; con la cuenta suspendida el botón se desactiva.
+- **CU-27 · Acceder a Perfil por Link** — vista pública *mobile first* con
+  oficios, trabajos y reseñas, sin correo ni teléfono; 404 propio.
+- **CU-28 · Calificar Profesional** — enlace de un solo uso que nace de un
+  contacto desbloqueado, pedido desde «Mis contactos»; el promedio lo
+  recalcula el servidor.
+- **CU-48 · Ver Notificaciones de Actividad** — campana con contador en vivo y
+  centro de avisos; los escriben disparadores de la base.
+- **CU-45 · Ver Métricas de Perfil** — vistas, contactos abiertos, barras por
+  día o por semana y efectividad.
+- **CU-41 · Reportar Usuario** — desde el perfil público o el pedido, con la
+  alerta en la sección «Denuncias» del panel.
+- **CU-18 · Reenvío de Enlace de Gestión** — «Recuperá tu pedido»: enlace de
+  acceso de un solo uso por correo, con respuesta siempre genérica.
+
+### Técnico
+
+- **T-11** — migraciones 0027 a 0033, 59 reglas de aceptación en OK.
+- Workflow de GitHub Actions que mantiene activa la base de Supabase.
+
 ## v0.4.0 — Sprint 4 · Monetización (PT 5.0)
 
 _01/10/2026_

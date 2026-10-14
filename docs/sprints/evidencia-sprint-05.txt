@@ -1,0 +1,11 @@
+9f12330 docs(S5): probar la Web con datos móviles, no con el wifi de la facultad
+658c41b docs(S5): registrar el avance del sprint y lo que falta para cerrarlo
+66d208a feat(CU-18): reenviar el enlace de gestión del pedido por correo
+68778ce feat(CU-41): reportar a un usuario y alertar al panel del administrador
+c7d8a93 feat(CU-45): métricas del perfil con vistas, contactos y efectividad
+93b0174 feat(CU-48): centro de notificaciones de actividad con campana y avisos en vivo
+52b09ec feat(CU-28): calificar al profesional con un enlace de un solo uso
+8400bcd feat(CU-26,CU-27): compartir el perfil público con un enlace y verlo sin cuenta
+008afbd feat(T-11): esquema de reputación, enlaces y actividad con sus políticas
+8e45af4 chore(S5): actividad periódica sobre Supabase, WEB_URL y Web en Firebase Hosting
+6a70eb3 docs(S5): planificar el Sprint 5 con 39 puntos y sus decisiones de diseño
