@@ -1,0 +1,29 @@
+# Actividad periódica sobre el proyecto de Supabase (ajuste 2 del 7.4.7).
+#
+# El plan gratuito pausa los proyectos tras una semana sin actividad: en el
+# Sprint 4 la base quedó suspendida dos días (apartado 7.4.4 a). Cada tres días
+# este workflow lee una fila de `categorias_oficio`, que es pública, con la
+# clave publicable. No escribe nada.
+#
+# Secretos del repositorio: SUPABASE_URL y SUPABASE_ANON_KEY (los del `.env`).
+name: Actividad de Supabase
+
+on:
+  schedule:
+    - cron: '17 12 */3 * *'
+  workflow_dispatch:
+
+jobs:
+  consultar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Leer una categoría de oficio
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          codigo=$(curl -s -o /dev/null -w '%{http_code}' \
+            "$SUPABASE_URL/rest/v1/categorias_oficio?select=id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY")
+          echo "Respuesta de Supabase: $codigo"
+          test "$codigo" = 200

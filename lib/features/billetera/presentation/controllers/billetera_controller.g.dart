@@ -6,7 +6,7 @@ part of 'billetera_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$billeteraHash() => r'c1fd0f9a41dc420bfd6e3a925cce253414b6ec8d';
+String _$billeteraHash() => r'1ace29a9f4c782d0bc0e51872376e9873f6f08c0';
 
 /// CU-30 — Consultar Saldo de Tokens.
 ///

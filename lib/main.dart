@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -11,6 +12,12 @@ import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Sprint 5. Las direcciones de la Web van sin `#` (`/p/marcelo-gomez`, como
+  // en la Figura 3.6): son las que el Buscador recibe por WhatsApp. Hosting
+  // reescribe cualquier ruta a `index.html` (ver `firebase.json`). En la app
+  // nativa no hace nada.
+  usePathUrlStrategy();
 
   // Qué archivos de logo hay empaquetados. Se resuelve antes de dibujar para
   // no pedir un PNG que todavía no existe.

@@ -7,11 +7,12 @@ import '../../../../core/widgets/marca_laburito.dart';
 import '../../../perfil/data/perfil_repository.dart';
 
 /// Secciones del panel del administrador. En el Sprint 4 existen las dos de la
-/// billetera; el Sprint 6 suma Dashboard, Validaciones, Denuncias y Categorías
-/// sobre este mismo armazón (Figuras 3.20 a 3.24).
+/// billetera y el Sprint 5 suma Denuncias (CU-41); el Sprint 6 suma Dashboard,
+/// Validaciones y Categorías sobre este mismo armazón (Figuras 3.20 a 3.24).
 enum SeccionAdmin {
   precios('Precios', Icons.sell_outlined, '/admin/precios'),
-  cupones('Cupones', Icons.confirmation_number_outlined, '/admin/cupones');
+  cupones('Cupones', Icons.confirmation_number_outlined, '/admin/cupones'),
+  denuncias('Denuncias', Icons.flag_outlined, '/admin/denuncias');
 
   const SeccionAdmin(this.titulo, this.icono, this.ruta);
 

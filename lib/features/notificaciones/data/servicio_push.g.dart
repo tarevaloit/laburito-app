@@ -6,7 +6,7 @@ part of 'servicio_push.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$servicioPushHash() => r'95274f3bc4758dcc3b789e31da44bb8afd60c204';
+String _$servicioPushHash() => r'26e1bbd2b35e5788b9fa1a0410615f95fadb0bc9';
 
 /// Se reemplaza con un `override` en los tests por una implementación de
 /// mentira: nada de esta capa vuelve a hablar con Firebase de verdad.
@@ -14,6 +14,13 @@ String _$servicioPushHash() => r'95274f3bc4758dcc3b789e31da44bb8afd60c204';
 /// Cae en [PushNoConfigurado] si `Firebase.initializeApp()` no corrió (o
 /// falló) en `main.dart` — mismo criterio que el resto del CU-21: sin push la
 /// app funciona igual, así que un Firebase mal configurado no puede tirar acá.
+///
+/// **En la web tampoco hay push.** Las alertas del CU-21 son de la app del
+/// Profesional; la web es la del Buscador y la del administrador. Pedirle el
+/// token a Firebase en el navegador abre el permiso de notificaciones y trata
+/// de registrar un service worker (`firebase-messaging-sw.js`) que el proyecto
+/// no tiene: el navegador recibe el `index.html`, falla por el tipo MIME, y esa
+/// excepción cortaba el cierre de sesión.
 ///
 /// Copied from [servicioPush].
 @ProviderFor(servicioPush)

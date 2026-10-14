@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// Configuración por `--dart-define`. Nunca hardcodear claves en el repositorio.
 class Env {
   const Env._();
@@ -19,6 +21,26 @@ class Env {
   /// caminos distintos para la misma clave; el README explica los dos.
   static const String googleMapsApiKey =
       String.fromEnvironment('GOOGLE_MAPS_API_KEY');
+
+  /// Raíz de la Web publicada (Sprint 5). Los enlaces que la app arma para
+  /// mandar por WhatsApp —perfil público del CU-26, calificación del CU-28—
+  /// apuntan acá, porque los abre el Buscador en el navegador del celular.
+  ///
+  /// En la Web, si no se configuró, se usa el origen de la propia página: así
+  /// un enlace armado en `flutter run -d chrome` apunta al servidor local.
+  static const String _webUrl = String.fromEnvironment('WEB_URL');
+
+  static String get webUrl {
+    final configurada = _webUrl.isNotEmpty
+        ? _webUrl
+        : (kIsWeb ? Uri.base.origin : _webUrlPorDefecto);
+    return configurada.endsWith('/')
+        ? configurada.substring(0, configurada.length - 1)
+        : configurada;
+  }
+
+  /// El sitio de Firebase Hosting del proyecto (decisión del 13/10).
+  static const String _webUrlPorDefecto = 'https://byto-laburitoapp-2e5af.web.app';
 
   static bool get esValido =>
       supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;

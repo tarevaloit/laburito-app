@@ -9,8 +9,11 @@ import '../../../../core/utils/fechas.dart';
 import '../../../../core/widgets/boton_principal.dart';
 import '../../../../core/widgets/marca_laburito.dart';
 import '../../../billetera/presentation/controllers/billetera_controller.dart';
+import '../../../denuncias/presentation/reportar_usuario.dart';
 import '../../../pedidos/data/urls_firmadas.dart';
 import '../../../pedidos/presentation/widgets/mini_mapa_pedido.dart';
+import '../../../reputacion/domain/calificacion.dart';
+import '../../../reputacion/presentation/pedir_calificacion.dart';
 import '../../data/contacto_repository.dart';
 import '../../data/tablero_repository.dart';
 import '../../domain/contacto_buscador.dart';
@@ -53,6 +56,18 @@ class DetallePedidoPublicoScreen extends ConsumerWidget {
               ? context.pop()
               : context.go('/profesional/tablero'),
         ),
+        actions: [
+          // CU-41. El Profesional reporta al Buscador del pedido.
+          IconButton(
+            tooltip: 'Reportar usuario',
+            icon: const Icon(Icons.flag_outlined),
+            onPressed: () => mostrarReporteUsuario(
+              context,
+              sobre: 'el Buscador de este pedido',
+              pedidoId: id,
+            ),
+          ),
+        ],
       ),
       body: pedidoAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -296,6 +311,30 @@ class _AccionesState extends ConsumerState<_Acciones> {
                 ),
               ],
             ),
+            // CU-28. Al terminar el trabajo; también desde «Mis contactos»,
+            // que sigue mostrando el contacto después de que el Buscador
+            // cierre el pedido.
+            if (desbloqueado)
+              TextButton.icon(
+                onPressed: _trabajando
+                    ? null
+                    : () => _hacer(() async {
+                          await pedirCalificacion(
+                            context,
+                            ref,
+                            MiContacto(
+                              pedidoId: pedido.id,
+                              titulo: pedido.titulo,
+                              estadoPedido: 'publicado',
+                              nombreCorto: contacto!.nombreCorto,
+                              telefono: contacto.telefono,
+                              desbloqueadoAt: DateTime.now(),
+                            ),
+                          );
+                        }),
+                icon: const Icon(Icons.star_outline_rounded, size: 18),
+                label: const Text('¿Terminaste el trabajo? Pedí tu calificación'),
+              ),
           ],
         ),
       ),

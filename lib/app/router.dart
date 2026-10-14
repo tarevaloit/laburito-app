@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/config/superficie.dart';
 import '../core/providers/supabase_providers.dart';
 import '../features/admin/presentation/screens/cupones_screen.dart';
+import '../features/admin/presentation/screens/denuncias_screen.dart';
 import '../features/admin/presentation/screens/precios_screen.dart';
 import '../features/auth/presentation/screens/codigo_recuperacion_screen.dart';
 import '../features/billetera/presentation/screens/billetera_screen.dart';
@@ -24,12 +25,18 @@ import '../features/pedidos/presentation/screens/crear_pedido_screen.dart';
 import '../features/pedidos/presentation/screens/detalle_pedido_screen.dart';
 import '../features/pedidos/presentation/screens/editar_pedido_screen.dart';
 import '../features/pedidos/presentation/screens/historial_pedidos_screen.dart';
+import '../features/pedidos/presentation/screens/recuperar_pedido_screen.dart';
+import '../features/notificaciones/presentation/screens/notificaciones_screen.dart';
 import '../features/perfil/presentation/screens/baja_cuenta_screen.dart';
 import '../features/profesional/presentation/screens/detalle_pedido_publico_screen.dart';
 import '../features/profesional/presentation/screens/horarios_screen.dart';
 import '../features/profesional/presentation/screens/portafolio_screen.dart';
 import '../features/profesional/presentation/screens/tablero_screen.dart';
 import '../features/profesional/presentation/screens/zona_cobertura_screen.dart';
+import '../features/reputacion/presentation/screens/calificar_screen.dart';
+import '../features/reputacion/presentation/screens/estadisticas_screen.dart';
+import '../features/reputacion/presentation/screens/mis_contactos_screen.dart';
+import '../features/reputacion/presentation/screens/perfil_publico_screen.dart';
 import '../features/perfil/presentation/screens/perfil_screen.dart';
 import '../features/verificacion/presentation/screens/carga_documentos_screen.dart';
 
@@ -38,6 +45,8 @@ const _soloSinSesion = <String>{
   '/login',
   '/registro',
   '/registro/profesional',
+  // CU-18: con sesión ya se llega a los pedidos.
+  '/recuperar-pedido',
 };
 
 /// Alta de Buscador. Existe solo en la web: la app nativa es la del
@@ -55,6 +64,14 @@ const _neutrales = <String>{
   '/legales/terminos',
   '/legales/privacidad',
 };
+
+/// Rutas públicas del Sprint 5, con un parámetro: las abre alguien sin cuenta
+/// desde un enlace de WhatsApp (modelo «Frictionless»). Con sesión también se
+/// ven: un Buscador registrado puede abrir el mismo enlace.
+const _prefijosPublicos = <String>['/p/', '/calificar/'];
+
+bool esRutaNeutral(String ruta) =>
+    _neutrales.contains(ruta) || _prefijosPublicos.any(ruta.startsWith);
 
 final routerProvider = Provider<GoRouter>((ref) {
   final refresco = _RefrescoDeAuth(
@@ -83,7 +100,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       final accesibleSinSesion =
-          _soloSinSesion.contains(destino) || _neutrales.contains(destino);
+          _soloSinSesion.contains(destino) || esRutaNeutral(destino);
 
       if (sesion == null) {
         return accesibleSinSesion ? null : '/login';
@@ -92,8 +109,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // CU-08: con el correo sin validar no se llega al home. La sesión solo
       // existe acá si el PIN todavía no se confirmó o si Supabase tiene
       // desactivado *Confirm email*.
-      if (sesion.user.emailConfirmedAt == null &&
-          !_neutrales.contains(destino)) {
+      if (sesion.user.emailConfirmedAt == null && !esRutaNeutral(destino)) {
         final email = Uri.encodeComponent(sesion.user.email ?? '');
         return '/verificar?email=$email';
       }
@@ -153,6 +169,46 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const NuevaPasswordScreen(),
           ),
         ],
+      ),
+      // CU-27. Perfil público del Profesional (Figura 3.6).
+      GoRoute(
+        path: '/p/:slug',
+        name: 'perfilPublico',
+        builder: (context, state) => PerfilPublicoScreen(
+          slug: state.pathParameters['slug'] ?? '',
+        ),
+      ),
+      // CU-28. Calificación por enlace de un solo uso (Figura 3.7).
+      GoRoute(
+        path: '/calificar/:token',
+        name: 'calificar',
+        builder: (context, state) => CalificarScreen(
+          token: state.pathParameters['token'] ?? '',
+        ),
+      ),
+      // CU-28. Desde acá el Profesional pide la calificación al terminar.
+      GoRoute(
+        path: '/profesional/contactos',
+        name: 'misContactos',
+        builder: (context, state) => const MisContactosScreen(),
+      ),
+      // CU-48. Centro de notificaciones de los dos actores.
+      GoRoute(
+        path: '/notificaciones',
+        name: 'notificaciones',
+        builder: (context, state) => const NotificacionesScreen(),
+      ),
+      // CU-45 (Figura 3.18).
+      GoRoute(
+        path: '/profesional/estadisticas',
+        name: 'estadisticas',
+        builder: (context, state) => const EstadisticasScreen(),
+      ),
+      // CU-18. «Recuperar mi pedido».
+      GoRoute(
+        path: '/recuperar-pedido',
+        name: 'recuperarPedido',
+        builder: (context, state) => const RecuperarPedidoScreen(),
       ),
       GoRoute(
         path: '/home',
@@ -225,6 +281,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'cupones',
             name: 'adminCupones',
             builder: (context, state) => const CuponesScreen(),
+          ),
+          // CU-41: la alerta del panel.
+          GoRoute(
+            path: 'denuncias',
+            name: 'adminDenuncias',
+            builder: (context, state) => const DenunciasScreen(),
           ),
         ],
       ),

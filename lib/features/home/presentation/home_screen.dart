@@ -8,6 +8,7 @@ import '../../../core/widgets/boton_principal.dart';
 import '../../../core/widgets/marca_laburito.dart';
 import '../../auth/presentation/controllers/auth_controller.dart';
 import '../../billetera/presentation/controllers/billetera_controller.dart';
+import '../../notificaciones/presentation/campana_notificaciones.dart';
 import '../../perfil/data/perfil_repository.dart';
 
 /// Home provisorio del Sprint 1. Confirma la identidad del usuario autenticado,
@@ -49,6 +50,8 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const LogoLaburito(alto: 34),
         actions: [
+          // CU-48.
+          const CampanaNotificaciones(),
           IconButton(
             tooltip: 'Cerrar sesión',
             icon: const Icon(Icons.logout),
@@ -192,6 +195,20 @@ class HomeScreen extends ConsumerWidget {
                     onPressed: () => context.go('/profesional/billetera'),
                     icon: const Icon(Icons.account_balance_wallet_outlined),
                     label: Text('Mi billetera · $saldo tokens'),
+                  ),
+                  const SizedBox(height: 12),
+                  // CU-45.
+                  OutlinedButton.icon(
+                    onPressed: () => context.go('/profesional/estadisticas'),
+                    icon: const Icon(Icons.bar_chart),
+                    label: const Text('Mis estadísticas'),
+                  ),
+                  const SizedBox(height: 12),
+                  // CU-28.
+                  OutlinedButton.icon(
+                    onPressed: () => context.go('/profesional/contactos'),
+                    icon: const Icon(Icons.people_outline),
+                    label: const Text('Mis contactos y calificaciones'),
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
