@@ -792,8 +792,8 @@ más alta. Es el tercer ajuste del 7.4.7 funcionando.
    para la demo del 15/10.
 3. Secretos `SUPABASE_URL` y `SUPABASE_ANON_KEY` en GitHub para el workflow de actividad.
 4. ~~Cierre~~ hecho el 13/10: merge a `main`, tag `v0.5.0`, `CHANGELOG.md` y apartado 7.5
-   (`generar-cierre-s5-docx.js`), con un recuadro por caso de uso para pegar el diagrama
-   de flujo. La fila «Prueba de punta a punta» del 7.5.3 va en amarillo: se confirma con el
+   (`generar-cierre-s5-docx.js`). Sin diagramas de flujo, como los apartados anteriores
+   (decisión del responsable). La fila «Prueba de punta a punta» del 7.5.2 va en amarillo: se confirma con el
    recorrido del punto 2 antes de entregar.
 
 ## 5. Decisiones técnicas tomadas
