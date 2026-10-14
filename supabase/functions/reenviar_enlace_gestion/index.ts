@@ -23,7 +23,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { ANON_KEY, campo, CORS, json, servicio, SUPABASE_URL } from '../_shared/http.ts';
 
 /** La Web publicada (decisión del 13/10). Se puede cambiar con el secreto WEB_URL. */
-const WEB_URL = (Deno.env.get('WEB_URL') ?? 'https://byto-laburitoapp-2e5af.web.app')
+const WEB_URL = (Deno.env.get('WEB_URL') ?? 'https://laburito.web.app')
   .replace(/\/+$/, '');
 
 const MENSAJE = 'Si tenés un pedido activo, vas a recibir un correo en breve.';

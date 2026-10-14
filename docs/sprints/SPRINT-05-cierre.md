@@ -53,7 +53,7 @@ Texto del apartado 7.5 tal como va en el documento de Planificación y Desarroll
 | Builds | Web y APK de Android compilan |
 | Migraciones | 0027 a 0033 aplicadas y verificadas contra la base: 59 reglas de aceptación en OK |
 | Edge Functions | perfil_publico y reenviar_enlace_gestion desplegadas sin sesión |
-| Web publicada | https://byto-laburitoapp-2e5af.web.app (Firebase Hosting) |
+| Web publicada | https://laburito.web.app (Firebase Hosting) |
 | Prueba de punta a punta | Compartir el perfil desde la app → abrirlo sin cuenta en el navegador del celular → pedir la calificación por WhatsApp y registrarla → aviso en la campana y en las métricas → reporte desde el perfil y alerta en el panel del administrador |
 | Tag de release | v0.5.0 |
 

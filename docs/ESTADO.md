@@ -768,7 +768,7 @@ La base estaba activa al arrancar (la API respondió 200 el 13/10).
 | `66d208a` `feat(CU-18)` | Edge Function `reenviar_enlace_gestion`, `/recuperar-pedido` | Desplegada; mensaje genérico y correo inválido probados. Sin probar el envío real |
 
 `flutter analyze` 0 issues, **362 pruebas en verde** (45 nuevas), web y APK compilando. Web
-publicada en https://byto-laburitoapp-2e5af.web.app el 13/10. Desde el entorno de Claude no
+publicada en https://laburito.web.app el 13/10. Desde el entorno de Claude no
 se pudo abrir (el proxy intercepta el certificado): la primera vista real es la del celular.
 
 Las pruebas de recorrido encontraron tres defectos antes de llegar al teléfono: las
@@ -779,7 +779,7 @@ más alta. Es el tercer ajuste del 7.4.7 funcionando.
 ### 4d.3 Lo que falta, en orden
 
 1. **Supabase → Authentication → URL Configuration**: agregar
-   `https://byto-laburitoapp-2e5af.web.app/**` a *Redirect URLs* (sin eso el enlace del
+   `https://laburito.web.app/**` a *Redirect URLs* (sin eso el enlace del
    CU-18 cae en la Site URL). En *Email Templates → Magic Link*, un texto tipo «Gestioná
    tu pedido» con `{{ .ConfirmationURL }}`.
 2. **Recorrido en el teléfono** (App del Profesional aprobado + navegador del celular):
@@ -932,6 +932,7 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 | 13/10 | **Sprint 5 sin orden de descarte** | Decisión del responsable al arrancar con un día y medio de plazo: se comprometen los 39 puntos y lo que no cierre se replanifica en el 7.5.3. El punto de control del 07/10 no se cumplió y se documenta |
 | 13/10 | **La Web se publica en Firebase Hosting desde el Sprint 5** | Los enlaces del CU-26, CU-27, CU-28 y CU-18 se abren en el celular del Buscador: necesitan una URL pública. Se usa el proyecto de Firebase del CU-21. Es un adelanto parcial de la T-03, que conserva sus puntos en el Sprint 6. La URL base va en `.env` como `WEB_URL` |
 | 13/10 | **CU-18 con el enlace mágico de Supabase Auth** | La ERS supone un Buscador sin cuenta; en Laburito el Buscador está registrado. El «enlace de gestión» pasa a ser un acceso de un solo uso que abre la sesión en sus pedidos. Una Edge Function mira si hay pedidos activos para el correo antes de pedir el envío; la respuesta es siempre genérica. Se descartó un token propio con Resend: otra cuenta externa y duplicar las acciones del pedido para un acceso sin sesión |
+| 13/10 | **La Web pasa a `laburito.web.app`** | El sitio por defecto del proyecto lleva el sufijo `-2e5af`. Se creó un segundo sitio de Hosting con nombre propio, gratis en el plan Spark; `firebase.json` publica en los dos, así que los enlaces que ya circulaban con la dirección vieja siguen andando. El dominio propio (`laburito.com.ar`) queda para la T-03 |
 | 13/10 | El perfil público se sirve con una Edge Function | El bucket `portafolios` es privado y firmar sus URLs exige la clave de servicio, que una RPC para `anon` no tiene. La función además registra la visita del CU-45 |
 | 13/10 | El Profesional pide la calificación desde «Mis contactos» | El trabajo termina cuando el Buscador ya cerró el pedido, y entonces el detalle del tablero deja de mostrarse. El contacto pagado sigue (0023), así que la lista de contactos desbloqueados es el lugar natural; el detalle del pedido conserva un atajo mientras sigue visible |
 | 13/10 | La denuncia apunta al usuario por el slug o por el pedido, nunca por id | La app no conoce el uuid de la otra persona ni lo necesita: el Buscador denuncia desde el perfil público (el CU-25 decidió que no ve a los interesados) y el Profesional desde el pedido que puede ver o desbloqueó |

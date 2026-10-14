@@ -200,7 +200,7 @@ cierre se replanifica al Sprint 6 en el apartado 7.5.3, con su estimación origi
 | Qué | Dónde | Para qué |
 |---|---|---|
 | Sesión de Firebase CLI y el sitio de Hosting | `firebase login`, consola de Firebase | Publicar la Web (decisión 1) |
-| Plantilla *Magic Link* y URL de redirección | Supabase → Authentication → Email Templates y URL Configuration: agregar `https://byto-laburitoapp-2e5af.web.app/**` a *Redirect URLs* | CU-18 |
+| Plantilla *Magic Link* y URL de redirección | Supabase → Authentication → Email Templates y URL Configuration: agregar `https://laburito.web.app/**` a *Redirect URLs* | CU-18 |
 | Secretos del workflow | GitHub → Settings → Secrets: `SUPABASE_URL`, `SUPABASE_ANON_KEY` | Actividad periódica |
 | Cuentas de desarrollador | Apple Developer Program, Google Play Console | Mitigación del apartado 6 para la T-03 |
 

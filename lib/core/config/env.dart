@@ -40,7 +40,7 @@ class Env {
   }
 
   /// El sitio de Firebase Hosting del proyecto (decisión del 13/10).
-  static const String _webUrlPorDefecto = 'https://byto-laburitoapp-2e5af.web.app';
+  static const String _webUrlPorDefecto = 'https://laburito.web.app';
 
   static bool get esValido =>
       supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
