@@ -30,11 +30,17 @@ class _NotificacionesScreenState extends ConsumerState<NotificacionesScreen> {
 
   void _alCargar(List<Notificacion> lista) {
     if (_nuevas != null) return;
-    _nuevas = {for (final n in lista) if (!n.leida) n.id};
+    _nuevas = {
+      for (final n in lista)
+        if (!n.leida) n.id
+    };
     if (_nuevas!.isNotEmpty) {
       // Sin bloquear el dibujo: si falla, el contador se corrige solo en la
       // próxima apertura.
-      ref.read(notificacionesRepositoryProvider).marcarLeidas().catchError((_) {});
+      ref
+          .read(notificacionesRepositoryProvider)
+          .marcarLeidas()
+          .catchError((_) {});
     }
   }
 
@@ -103,48 +109,47 @@ class _NotificacionesScreenState extends ConsumerState<NotificacionesScreen> {
         data: (lista) {
           _alCargar(lista);
 
-          if (lista.isEmpty) {
-            return const Padding(
-              padding: EdgeInsets.all(24),
-              child: AvisoEstado.exito(
-                icono: Icons.notifications_none,
-                titulo: 'No tenés notificaciones',
-                detalle: 'Acá te avisamos cuando un profesional pida tu '
-                    'contacto, cuando recibas una calificación o cuando '
-                    'cambie el estado de tu cuenta o de un pago.',
-              ),
-            );
-          }
+          if (lista.isEmpty) return const _SinNotificaciones();
 
-          return ListView.separated(
-            itemCount: lista.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, i) {
-              final n = lista[i];
-              final nueva = _nuevas?.contains(n.id) ?? !n.leida;
-              return ListTile(
-                key: Key('notificacion-${n.id}'),
-                tileColor: nueva ? Colores.azulSuave : null,
-                leading: CircleAvatar(
-                  backgroundColor: Colores.superficie,
-                  child: Icon(_icono(n.tipo), color: _color(n.tipo)),
-                ),
-                title: Text(
-                  n.titulo,
-                  style: TextStyle(
-                    fontWeight: nueva ? FontWeight.w700 : FontWeight.w500,
-                    color: Colores.texto,
-                  ),
-                ),
-                subtitle: Text(
-                  [if ((n.cuerpo ?? '').isNotEmpty) n.cuerpo!, Fechas.hace(n.creadaAt.toLocal())]
-                      .join('\n'),
-                ),
-                isThreeLine: (n.cuerpo ?? '').isNotEmpty,
-                trailing: n.ruta == null ? null : const Icon(Icons.chevron_right),
-                onTap: n.ruta == null ? null : () => _abrir(n),
-              );
-            },
+          // En la Web la lista no se estira a todo el ancho del monitor.
+          return Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: ListView.separated(
+                itemCount: lista.length,
+                separatorBuilder: (_, __) => const Divider(height: 1),
+                itemBuilder: (context, i) {
+                  final n = lista[i];
+                  final nueva = _nuevas?.contains(n.id) ?? !n.leida;
+                  return ListTile(
+                    key: Key('notificacion-${n.id}'),
+                    tileColor: nueva ? Colores.azulSuave : null,
+                    leading: CircleAvatar(
+                      backgroundColor: Colores.superficie,
+                      child: Icon(_icono(n.tipo), color: _color(n.tipo)),
+                    ),
+                    title: Text(
+                      n.titulo,
+                      style: TextStyle(
+                        fontWeight: nueva ? FontWeight.w700 : FontWeight.w500,
+                        color: Colores.texto,
+                      ),
+                    ),
+                    subtitle: Text(
+                      [
+                        if ((n.cuerpo ?? '').isNotEmpty) n.cuerpo!,
+                        Fechas.hace(n.creadaAt.toLocal())
+                      ].join('\n'),
+                    ),
+                    isThreeLine: (n.cuerpo ?? '').isNotEmpty,
+                    trailing:
+                        n.ruta == null ? null : const Icon(Icons.chevron_right),
+                    onTap: n.ruta == null ? null : () => _abrir(n),
+                  );
+                },
+              ),
+            ),
           );
         },
       ),
@@ -171,4 +176,44 @@ class _NotificacionesScreenState extends ConsumerState<NotificacionesScreen> {
           Colores.naranja,
         _ => Colores.azulMedio,
       };
+}
+
+/// Estado vacío, con el mismo estilo que el de «Mis pedidos»: centrado y en
+/// gris. Un aviso de color ocupaba todo el ancho de la Web y parecía un error.
+class _SinNotificaciones extends StatelessWidget {
+  const _SinNotificaciones();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(24, 64, 24, 24),
+      children: [
+        const Icon(Icons.notifications_none,
+            size: 56, color: Colores.textoTenue),
+        const SizedBox(height: 16),
+        const Text(
+          'No tenés notificaciones',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Colores.azul,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: const Text(
+              'Acá te avisamos cuando un profesional pida tu contacto, cuando '
+              'recibas una calificación o cuando cambie el estado de tu cuenta '
+              'o de un pago.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colores.textoSecundario, height: 1.4),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }

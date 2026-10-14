@@ -100,6 +100,24 @@ void main() {
       expect(find.text('Se acreditaron 10 tokens'), findsOneWidget);
     });
 
+    testWidgets('la campana cambia la dirección y la flecha vuelve al inicio',
+        (t) async {
+      await abrir(t, avisos);
+
+      await t.tap(find.byKey(const Key('campana-notificaciones')));
+      await t.pumpAndSettle();
+      final router = GoRouter.of(t.element(find.byType(NotificacionesScreen)));
+      // Con `push` la Web seguía mostrando /home y el «atrás» del navegador
+      // no volvía a ningún lado.
+      expect(router.routerDelegate.currentConfiguration.uri.path,
+          '/notificaciones');
+
+      await t.tap(find.byIcon(Icons.arrow_back));
+      await t.pumpAndSettle();
+      expect(find.byType(CampanaNotificaciones), findsOneWidget);
+      expect(router.routerDelegate.currentConfiguration.uri.path, '/home');
+    });
+
     testWidgets('al abrir, se marcan leídas una sola vez', (t) async {
       await abrir(t, avisos, inicio: '/notificaciones');
       await t.pump();

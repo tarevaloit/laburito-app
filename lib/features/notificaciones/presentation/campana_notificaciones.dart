@@ -18,7 +18,11 @@ class CampanaNotificaciones extends ConsumerWidget {
       tooltip: sinLeer == 0
           ? 'Notificaciones'
           : 'Notificaciones: $sinLeer sin leer',
-      onPressed: () => context.push('/notificaciones'),
+      // `go` y no `push`: en la Web, `push` no cambia la dirección ni deja
+      // una entrada en el historial del navegador, y el «atrás» de Chrome
+      // saltaba a lo que había antes del inicio. La flecha de la pantalla
+      // vuelve al inicio por su cuenta.
+      onPressed: () => context.go('/notificaciones'),
       icon: Badge(
         isLabelVisible: sinLeer > 0,
         label: Text(sinLeer > 9 ? '9+' : '$sinLeer'),
