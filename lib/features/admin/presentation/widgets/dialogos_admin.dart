@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/colores.dart';
+import '../../../../core/widgets/campo_texto.dart';
 
 export '../../../../core/widgets/dialogos.dart';
 
@@ -123,6 +124,67 @@ class Pildora extends StatelessWidget {
       child: Text(texto,
           style: TextStyle(
               color: color, fontWeight: FontWeight.w700, fontSize: 12)),
+    );
+  }
+}
+
+/// Segunda confirmación de las operaciones críticas del panel: precios
+/// (CU-40, paso 4) y parámetros globales (CU-47, paso 4). Devuelve la
+/// contraseña escrita o `null` si se canceló; la valida Supabase Auth.
+Future<String?> pedirContrasena(BuildContext context, {required String aviso}) =>
+    showDialog<String>(
+      context: context,
+      builder: (_) => _DialogoPassword(aviso: aviso),
+    );
+
+class _DialogoPassword extends StatefulWidget {
+  const _DialogoPassword({required this.aviso});
+
+  final String aviso;
+
+  @override
+  State<_DialogoPassword> createState() => _DialogoPasswordState();
+}
+
+class _DialogoPasswordState extends State<_DialogoPassword> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Confirmá con tu contraseña'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(widget.aviso),
+          const SizedBox(height: 16),
+          CampoTexto(
+            key: const Key('password-admin'),
+            etiqueta: 'Contraseña',
+            controller: _controller,
+            obscureText: true,
+            autofillHints: const [AutofillHints.password],
+            onFieldSubmitted: (v) => Navigator.pop(context, v),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, _controller.text),
+          child: const Text('Confirmar'),
+        ),
+      ],
     );
   }
 }

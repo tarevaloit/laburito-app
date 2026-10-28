@@ -6,6 +6,7 @@ import '../../../core/errors/mensajes_error.dart';
 import '../../../core/providers/supabase_providers.dart';
 import '../../billetera/domain/paquete_tokens.dart';
 import '../domain/dashboard.dart';
+import '../domain/parametro.dart';
 import 'cupon.dart';
 
 part 'admin_repository.g.dart';
@@ -57,6 +58,22 @@ class AdminRepository {
     });
     return Dashboard.desdeJson(json as Map<String, dynamic>);
   }
+
+  // ---------------------------------------------------------------- CU-47
+
+  Future<List<Parametro>> parametros() async {
+    final filas = await _client
+        .from('parametros_sistema')
+        .select('clave, nombre, descripcion, unidad, valor, minimo, maximo, updated_at')
+        .order('clave');
+    return [
+      for (final f in filas as List) Parametro.desdeFila(f as Map<String, dynamic>),
+    ];
+  }
+
+  Future<void> actualizarParametro(String clave, int valor) => _client.rpc(
+      'actualizar_parametro',
+      params: {'p_clave': clave, 'p_valor': valor});
 
   static String _dia(DateTime f) => '${f.year.toString().padLeft(4, '0')}-'
       '${f.month.toString().padLeft(2, '0')}-'
@@ -147,6 +164,10 @@ Future<List<Cupon>> cuponesAdmin(Ref ref) =>
 @riverpod
 Future<Dashboard> dashboardAdmin(Ref ref, DateTime desde, DateTime hasta) =>
     ref.watch(adminRepositoryProvider).dashboard(desde: desde, hasta: hasta);
+
+@riverpod
+Future<List<Parametro>> parametrosAdmin(Ref ref) =>
+    ref.watch(adminRepositoryProvider).parametros();
 
 @riverpod
 Future<List<AccesoAdmin>> accesosAdmin(Ref ref) =>

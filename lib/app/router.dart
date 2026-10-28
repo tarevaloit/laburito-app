@@ -12,6 +12,7 @@ import '../features/admin/presentation/screens/cupones_screen.dart';
 import '../features/admin/presentation/screens/dashboard_screen.dart';
 import '../features/admin/presentation/screens/denuncias_screen.dart';
 import '../features/admin/presentation/screens/ingreso_admin_screen.dart';
+import '../features/admin/presentation/screens/parametros_screen.dart';
 import '../features/admin/presentation/screens/precios_screen.dart';
 import '../features/admin/presentation/screens/resenas_admin_screen.dart';
 import '../features/admin/presentation/screens/usuarios_screen.dart';
@@ -329,6 +330,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'resenas',
             name: 'adminResenas',
             builder: (context, state) => const ResenasAdminScreen(),
+          ),
+          // CU-47.
+          GoRoute(
+            path: 'parametros',
+            name: 'adminParametros',
+            builder: (context, state) => const ParametrosScreen(),
           ),
           GoRoute(
             path: 'precios',

@@ -243,6 +243,24 @@ class _DashboardAdminProviderElement
   DateTime get hasta => (origin as DashboardAdminProvider).hasta;
 }
 
+String _$parametrosAdminHash() => r'96ec2ab04528a66cad34b50dda8923b261e3ad79';
+
+/// See also [parametrosAdmin].
+@ProviderFor(parametrosAdmin)
+final parametrosAdminProvider =
+    AutoDisposeFutureProvider<List<Parametro>>.internal(
+  parametrosAdmin,
+  name: r'parametrosAdminProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$parametrosAdminHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef ParametrosAdminRef = AutoDisposeFutureProviderRef<List<Parametro>>;
 String _$accesosAdminHash() => r'2f5d3341ef82ee44d90c6b1f4880d4c2d14e24cf';
 
 /// See also [accesosAdmin].
