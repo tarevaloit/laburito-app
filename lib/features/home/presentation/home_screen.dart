@@ -154,6 +154,19 @@ class HomeScreen extends ConsumerWidget {
                     onAccion: () => context.go('/verificacion'),
                   ),
                   const SizedBox(height: 16),
+                ] else if (p.esProfesional &&
+                    p.estadoVerificacion == 'rechazado') ...[
+                  // CU-35: sin esto, a un Profesional rechazado el inicio no
+                  // le decía nada y no tenía cómo volver a cargar.
+                  AvisoEstado.riesgo(
+                    icono: Icons.report_gmailerrorred_outlined,
+                    titulo: 'Rechazamos tu documentación',
+                    detalle: 'Mirá el motivo y volvé a subir las fotos para que '
+                        'las revisemos.',
+                    accion: 'Volver a cargar',
+                    onAccion: () => context.go('/verificacion'),
+                  ),
+                  const SizedBox(height: 16),
                 ],
                 TarjetaPanel(
                   child: Column(
