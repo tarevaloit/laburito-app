@@ -12,6 +12,7 @@ import '../features/admin/presentation/screens/dashboard_screen.dart';
 import '../features/admin/presentation/screens/denuncias_screen.dart';
 import '../features/admin/presentation/screens/ingreso_admin_screen.dart';
 import '../features/admin/presentation/screens/precios_screen.dart';
+import '../features/admin/presentation/screens/validaciones_screen.dart';
 import '../features/auth/presentation/screens/codigo_recuperacion_screen.dart';
 import '../features/billetera/presentation/screens/billetera_screen.dart';
 import '../features/billetera/presentation/screens/canjear_cupon_screen.dart';
@@ -293,6 +294,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'dashboard',
             name: 'adminDashboard',
             builder: (context, state) => const DashboardScreen(),
+          ),
+          // CU-35.
+          GoRoute(
+            path: 'validaciones',
+            name: 'adminValidaciones',
+            builder: (context, state) => const ValidacionesScreen(),
           ),
           GoRoute(
             path: 'precios',

@@ -119,10 +119,49 @@ class _CargaDocumentosScreenState
           final completo = TipoDocumento.values
               .every((t) => cargados.containsKey(t.clave));
 
+          // CU-35: aprobada la identidad, las fotos ya se destruyeron y no
+          // queda nada que cargar. Sin esto la pantalla mostraba los tres
+          // documentos como faltantes a un Profesional verificado.
+          if (perfil?.estadoVerificacion == 'aprobado') {
+            return TarjetaFormulario(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const AvisoEstado.exito(
+                    icono: Icons.verified_outlined,
+                    titulo: 'Tu identidad está verificada',
+                    detalle: 'Tus documentos ya se eliminaron del servidor '
+                        '(Ley 25.326).',
+                  ),
+                  const SizedBox(height: 24),
+                  OutlinedButton(
+                    onPressed: () => context.go('/home'),
+                    child: const Text('Volver al inicio'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final motivoRechazo = perfil?.estadoVerificacion == 'rechazado'
+              ? ref.watch(motivoRechazoVerificacionProvider).valueOrNull
+              : null;
+
           return TarjetaFormulario(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (perfil?.estadoVerificacion == 'rechazado') ...[
+                  AvisoEstado.riesgo(
+                    icono: Icons.report_gmailerrorred_outlined,
+                    titulo: 'Rechazamos tu documentación',
+                    detalle: [
+                      if (motivoRechazo != null) 'Motivo: $motivoRechazo.',
+                      'Volvé a subir las tres fotos para que la revisemos.',
+                    ].join(' '),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 // El título ya está en la barra superior: acá va solo la
                 // consigna, como en la Figura 3.10 del ANEXO UI.
                 const MarcaLaburito(

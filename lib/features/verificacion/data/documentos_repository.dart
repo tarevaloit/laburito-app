@@ -96,6 +96,26 @@ class DocumentosRepository {
     return completo;
   }
 
+  /// CU-35: el motivo del último rechazo, para mostrárselo al Profesional
+  /// cuando vuelve a cargar. Las filas de los documentos ya no existen: lo que
+  /// queda es la decisión asentada en `verificaciones_resueltas` (0037).
+  Future<String?> motivoUltimoRechazo() async {
+    final id = _client.auth.currentUser?.id;
+    if (id == null) return null;
+
+    final fila = await _client
+        .from('verificaciones_resueltas')
+        .select('aprobada, motivo')
+        .eq('profesional_id', id)
+        .order('created_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
+
+    return fila == null || fila['aprobada'] == true
+        ? null
+        : fila['motivo'] as String?;
+  }
+
   Future<String?> urlFirmada(TipoDocumento tipo) async {
     final id = _client.auth.currentUser?.id;
     if (id == null) return null;
@@ -118,4 +138,10 @@ DocumentosRepository documentosRepository(Ref ref) =>
 Future<Map<String, String>> documentosCargados(Ref ref) {
   ref.watch(sesionProvider);
   return ref.watch(documentosRepositoryProvider).cargados();
+}
+
+@riverpod
+Future<String?> motivoRechazoVerificacion(Ref ref) {
+  ref.watch(sesionProvider);
+  return ref.watch(documentosRepositoryProvider).motivoUltimoRechazo();
 }
