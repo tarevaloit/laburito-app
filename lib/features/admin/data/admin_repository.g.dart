@@ -57,5 +57,208 @@ final cuponesAdminProvider = AutoDisposeFutureProvider<List<Cupon>>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef CuponesAdminRef = AutoDisposeFutureProviderRef<List<Cupon>>;
+String _$dashboardAdminHash() => r'92d9e4353c5342a73130e14bb0fa243beb3d99f2';
+
+/// Copied from Dart SDK
+class _SystemHash {
+  _SystemHash._();
+
+  static int combine(int hash, int value) {
+    // ignore: parameter_assignments
+    hash = 0x1fffffff & (hash + value);
+    // ignore: parameter_assignments
+    hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
+    return hash ^ (hash >> 6);
+  }
+
+  static int finish(int hash) {
+    // ignore: parameter_assignments
+    hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
+    // ignore: parameter_assignments
+    hash = hash ^ (hash >> 11);
+    return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
+  }
+}
+
+/// CU-38. El rango es un parámetro de la familia: cambiarlo dispara la
+/// consulta de ese rango sin perder la anterior si se vuelve a ella.
+///
+/// Copied from [dashboardAdmin].
+@ProviderFor(dashboardAdmin)
+const dashboardAdminProvider = DashboardAdminFamily();
+
+/// CU-38. El rango es un parámetro de la familia: cambiarlo dispara la
+/// consulta de ese rango sin perder la anterior si se vuelve a ella.
+///
+/// Copied from [dashboardAdmin].
+class DashboardAdminFamily extends Family<AsyncValue<Dashboard>> {
+  /// CU-38. El rango es un parámetro de la familia: cambiarlo dispara la
+  /// consulta de ese rango sin perder la anterior si se vuelve a ella.
+  ///
+  /// Copied from [dashboardAdmin].
+  const DashboardAdminFamily();
+
+  /// CU-38. El rango es un parámetro de la familia: cambiarlo dispara la
+  /// consulta de ese rango sin perder la anterior si se vuelve a ella.
+  ///
+  /// Copied from [dashboardAdmin].
+  DashboardAdminProvider call(
+    DateTime desde,
+    DateTime hasta,
+  ) {
+    return DashboardAdminProvider(
+      desde,
+      hasta,
+    );
+  }
+
+  @override
+  DashboardAdminProvider getProviderOverride(
+    covariant DashboardAdminProvider provider,
+  ) {
+    return call(
+      provider.desde,
+      provider.hasta,
+    );
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'dashboardAdminProvider';
+}
+
+/// CU-38. El rango es un parámetro de la familia: cambiarlo dispara la
+/// consulta de ese rango sin perder la anterior si se vuelve a ella.
+///
+/// Copied from [dashboardAdmin].
+class DashboardAdminProvider extends AutoDisposeFutureProvider<Dashboard> {
+  /// CU-38. El rango es un parámetro de la familia: cambiarlo dispara la
+  /// consulta de ese rango sin perder la anterior si se vuelve a ella.
+  ///
+  /// Copied from [dashboardAdmin].
+  DashboardAdminProvider(
+    DateTime desde,
+    DateTime hasta,
+  ) : this._internal(
+          (ref) => dashboardAdmin(
+            ref as DashboardAdminRef,
+            desde,
+            hasta,
+          ),
+          from: dashboardAdminProvider,
+          name: r'dashboardAdminProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$dashboardAdminHash,
+          dependencies: DashboardAdminFamily._dependencies,
+          allTransitiveDependencies:
+              DashboardAdminFamily._allTransitiveDependencies,
+          desde: desde,
+          hasta: hasta,
+        );
+
+  DashboardAdminProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.desde,
+    required this.hasta,
+  }) : super.internal();
+
+  final DateTime desde;
+  final DateTime hasta;
+
+  @override
+  Override overrideWith(
+    FutureOr<Dashboard> Function(DashboardAdminRef provider) create,
+  ) {
+    return ProviderOverride(
+      origin: this,
+      override: DashboardAdminProvider._internal(
+        (ref) => create(ref as DashboardAdminRef),
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        desde: desde,
+        hasta: hasta,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeFutureProviderElement<Dashboard> createElement() {
+    return _DashboardAdminProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is DashboardAdminProvider &&
+        other.desde == desde &&
+        other.hasta == hasta;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, desde.hashCode);
+    hash = _SystemHash.combine(hash, hasta.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+mixin DashboardAdminRef on AutoDisposeFutureProviderRef<Dashboard> {
+  /// The parameter `desde` of this provider.
+  DateTime get desde;
+
+  /// The parameter `hasta` of this provider.
+  DateTime get hasta;
+}
+
+class _DashboardAdminProviderElement
+    extends AutoDisposeFutureProviderElement<Dashboard> with DashboardAdminRef {
+  _DashboardAdminProviderElement(super.provider);
+
+  @override
+  DateTime get desde => (origin as DashboardAdminProvider).desde;
+  @override
+  DateTime get hasta => (origin as DashboardAdminProvider).hasta;
+}
+
+String _$accesosAdminHash() => r'2f5d3341ef82ee44d90c6b1f4880d4c2d14e24cf';
+
+/// See also [accesosAdmin].
+@ProviderFor(accesosAdmin)
+final accesosAdminProvider =
+    AutoDisposeFutureProvider<List<AccesoAdmin>>.internal(
+  accesosAdmin,
+  name: r'accesosAdminProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$accesosAdminHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef AccesosAdminRef = AutoDisposeFutureProviderRef<List<AccesoAdmin>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

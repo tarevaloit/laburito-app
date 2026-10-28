@@ -166,7 +166,7 @@ class HomeScreen extends ConsumerWidget {
                   BotonPrincipal(
                     texto: 'Panel de administración',
                     icono: Icons.admin_panel_settings_outlined,
-                    onPressed: () => context.go('/admin/precios'),
+                    onPressed: () => context.go('/admin/dashboard'),
                   ),
                   const SizedBox(height: 12),
                 ],

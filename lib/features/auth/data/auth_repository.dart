@@ -126,7 +126,14 @@ class AuthRepository {
       password: password,
     );
 
-    final estado = await _estadoDelPerfil();
+    final perfil = await _perfilDeLaSesion();
+    final estado = perfil?['estado'] as String?;
+
+    // CU-34: el administrador que entra por el login general también deja su
+    // registro de acceso con IP y hora, no solo el que usa /admin/ingresar.
+    if (perfil?['tipo'] == 'administrador' && estado == 'activo') {
+      await _client.rpc('registrar_acceso_admin');
+    }
 
     if (estado == 'suspendido') {
       await cerrarSesion();
@@ -142,20 +149,30 @@ class AuthRepository {
     }
   }
 
+  /// CU-34 — El ingreso del panel valida el rol con la base (0035), que es
+  /// también la que registra el intento; acá solo se validan las credenciales.
+  Future<void> iniciarSesionSinValidarRol({
+    required String email,
+    required String password,
+  }) async {
+    await _client.auth.signInWithPassword(
+      email: email.trim(),
+      password: password,
+    );
+  }
+
   /// CU-10 y CU-50 — Cerrar Sesión / Logout del Sistema.
   Future<void> cerrarSesion() => _client.auth.signOut();
 
-  Future<String?> _estadoDelPerfil() async {
+  Future<Map<String, dynamic>?> _perfilDeLaSesion() async {
     final id = idUsuario;
     if (id == null) return null;
 
-    final fila = await _client
+    return _client
         .from('perfiles')
-        .select('estado')
+        .select('estado, tipo')
         .eq('id', id)
         .maybeSingle();
-
-    return fila?['estado'] as String?;
   }
 }
 

@@ -8,7 +8,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/config/superficie.dart';
 import '../core/providers/supabase_providers.dart';
 import '../features/admin/presentation/screens/cupones_screen.dart';
+import '../features/admin/presentation/screens/dashboard_screen.dart';
 import '../features/admin/presentation/screens/denuncias_screen.dart';
+import '../features/admin/presentation/screens/ingreso_admin_screen.dart';
 import '../features/admin/presentation/screens/precios_screen.dart';
 import '../features/auth/presentation/screens/codigo_recuperacion_screen.dart';
 import '../features/billetera/presentation/screens/billetera_screen.dart';
@@ -63,7 +65,14 @@ const _neutrales = <String>{
   // Los textos legales se leen antes de tener cuenta y también después.
   '/legales/terminos',
   '/legales/privacidad',
+  // CU-34: el ingreso del panel valida el rol después de iniciar sesión y
+  // navega por su cuenta. Si la ruta expulsara al tener sesión, el aviso de
+  // «esta cuenta no es de un administrador» no llegaría a verse.
+  ingresoAdmin,
 };
+
+/// CU-34. La «URL oculta» del panel: no se enlaza desde la Web pública.
+const ingresoAdmin = '/admin/ingresar';
 
 /// Rutas públicas del Sprint 5, con un parámetro: las abre alguien sin cuenta
 /// desde un enlace de WhatsApp (modelo «Frictionless»). Con sesión también se
@@ -103,7 +112,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           _soloSinSesion.contains(destino) || esRutaNeutral(destino);
 
       if (sesion == null) {
-        return accesibleSinSesion ? null : '/login';
+        if (accesibleSinSesion) return null;
+        // Sin sesión, el panel lleva a su propio ingreso y no al de la app.
+        return destino.startsWith('/admin') ? ingresoAdmin : '/login';
       }
 
       // CU-08: con el correo sin validar no se llega al home. La sesión solo
@@ -261,6 +272,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           id: state.pathParameters['id'] ?? '',
         ),
       ),
+      GoRoute(
+        path: ingresoAdmin,
+        name: 'adminIngresar',
+        builder: (context, state) => const IngresoAdminScreen(),
+      ),
       // Panel del administrador (CU-40, CU-52). El rol se valida en
       // `PanelAdmin`, no en el `redirect`: ver el comentario de esa clase.
       //
@@ -272,6 +288,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/admin',
         redirect: redireccionPanelAdmin,
         routes: [
+          // CU-38: la entrada del panel (CU-34, paso 6).
+          GoRoute(
+            path: 'dashboard',
+            name: 'adminDashboard',
+            builder: (context, state) => const DashboardScreen(),
+          ),
           GoRoute(
             path: 'precios',
             name: 'adminPrecios',
@@ -351,10 +373,10 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-/// `/admin` a secas lleva a Precios; `/admin/cupones` y el resto, a donde
-/// pidieron. Ver el comentario de la ruta en [routerProvider].
+/// `/admin` a secas lleva al Dashboard (CU-34, paso 6); `/admin/cupones` y el
+/// resto, a donde pidieron. Ver el comentario de la ruta en [routerProvider].
 String? redireccionPanelAdmin(BuildContext context, GoRouterState state) =>
-    state.uri.path == '/admin' ? '/admin/precios' : null;
+    state.uri.path == '/admin' ? '/admin/dashboard' : null;
 
 /// Puente entre el stream de Supabase y el `refreshListenable` de go_router.
 class _RefrescoDeAuth extends ChangeNotifier {

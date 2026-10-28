@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/errors/mensajes_error.dart';
 import '../../../core/providers/supabase_providers.dart';
 import '../../billetera/domain/paquete_tokens.dart';
+import '../domain/dashboard.dart';
 import 'cupon.dart';
 
 part 'admin_repository.g.dart';
@@ -22,10 +23,44 @@ class ReautenticacionFallidaException implements ErrorDeNegocio {
 }
 
 /// CU-40 y CU-52 — Las primeras operaciones del administrador (migración 0024).
+/// El Sprint 6 suma el ingreso al panel (CU-34) y el Dashboard (CU-38).
 class AdminRepository {
   const AdminRepository(this._client);
 
   final SupabaseClient _client;
+
+  // ---------------------------------------------------------------- CU-34
+
+  /// Registra el intento con IP y hora (0035) y dice si la cuenta es de un
+  /// administrador activo. La IP la toma la base de los encabezados del
+  /// pedido: la app no la manda.
+  Future<bool> registrarAcceso() async =>
+      await _client.rpc('registrar_acceso_admin') as bool? ?? false;
+
+  Future<List<AccesoAdmin>> accesosRecientes({int limite = 10}) async {
+    final filas = await _client.rpc('accesos_admin_recientes',
+        params: {'p_limite': limite}) as List;
+    return [
+      for (final f in filas) AccesoAdmin.desdeFila(f as Map<String, dynamic>),
+    ];
+  }
+
+  // ---------------------------------------------------------------- CU-38
+
+  Future<Dashboard> dashboard({
+    required DateTime desde,
+    required DateTime hasta,
+  }) async {
+    final json = await _client.rpc('dashboard_admin', params: {
+      'p_desde': _dia(desde),
+      'p_hasta': _dia(hasta),
+    });
+    return Dashboard.desdeJson(json as Map<String, dynamic>);
+  }
+
+  static String _dia(DateTime f) => '${f.year.toString().padLeft(4, '0')}-'
+      '${f.month.toString().padLeft(2, '0')}-'
+      '${f.day.toString().padLeft(2, '0')}';
 
   // ---------------------------------------------------------------- CU-40
 
@@ -106,3 +141,13 @@ Future<List<PaqueteTokens>> paquetesAdmin(Ref ref) =>
 @riverpod
 Future<List<Cupon>> cuponesAdmin(Ref ref) =>
     ref.watch(adminRepositoryProvider).cupones();
+
+/// CU-38. El rango es un parámetro de la familia: cambiarlo dispara la
+/// consulta de ese rango sin perder la anterior si se vuelve a ella.
+@riverpod
+Future<Dashboard> dashboardAdmin(Ref ref, DateTime desde, DateTime hasta) =>
+    ref.watch(adminRepositoryProvider).dashboard(desde: desde, hasta: hasta);
+
+@riverpod
+Future<List<AccesoAdmin>> accesosAdmin(Ref ref) =>
+    ref.watch(adminRepositoryProvider).accesosRecientes();

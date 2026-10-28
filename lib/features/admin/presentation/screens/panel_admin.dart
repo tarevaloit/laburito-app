@@ -4,15 +4,22 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/colores.dart';
 import '../../../../core/widgets/marca_laburito.dart';
+import '../../../auth/data/auth_repository.dart';
 import '../../../perfil/data/perfil_repository.dart';
 
-/// Secciones del panel del administrador. En el Sprint 4 existen las dos de la
-/// billetera y el Sprint 5 suma Denuncias (CU-41); el Sprint 6 suma Dashboard,
-/// Validaciones y Categorías sobre este mismo armazón (Figuras 3.20 a 3.24).
+/// Secciones del panel del administrador. El Sprint 4 trajo las dos de la
+/// billetera y el Sprint 5, Denuncias (CU-41). El Sprint 6 completa el panel
+/// sobre este mismo armazón (Figuras 3.20 a 3.23): el Dashboard es la entrada.
 enum SeccionAdmin {
+  dashboard('Dashboard', Icons.grid_view_rounded, '/admin/dashboard'),
+  validaciones('Validaciones', Icons.verified_outlined, '/admin/validaciones'),
+  denuncias('Denuncias', Icons.flag_outlined, '/admin/denuncias'),
+  resenas('Reseñas', Icons.rate_review_outlined, '/admin/resenas'),
+  usuarios('Usuarios', Icons.people_outline, '/admin/usuarios'),
+  categorias('Categorías', Icons.format_list_bulleted, '/admin/categorias'),
+  parametros('Parámetros', Icons.tune, '/admin/parametros'),
   precios('Precios', Icons.sell_outlined, '/admin/precios'),
-  cupones('Cupones', Icons.confirmation_number_outlined, '/admin/cupones'),
-  denuncias('Denuncias', Icons.flag_outlined, '/admin/denuncias');
+  cupones('Cupones', Icons.confirmation_number_outlined, '/admin/cupones');
 
   const SeccionAdmin(this.titulo, this.icono, this.ruta);
 
@@ -115,75 +122,91 @@ class _Lateral extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Una lista y no una columna con `Spacer`: con las nueve secciones del
+    // Sprint 6, en una ventana baja la columna desbordaba.
     return SafeArea(
-      child: Padding(
+      child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                const Flexible(
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 8),
-                    child: Text(
-                      'Laburito',
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Colores.textoSobreColor,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colores.naranja,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Text(
-                    'ADMIN',
+        children: [
+          Row(
+            children: [
+              const Flexible(
+                child: Padding(
+                  padding: EdgeInsets.only(left: 8),
+                  child: Text(
+                    'Laburito',
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: Colores.textoSobreColor,
-                      fontSize: 10,
+                      fontSize: 18,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            for (final seccion in SeccionAdmin.values)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: ListTile(
-                  selected: seccion == actual,
-                  selectedTileColor: Colores.textoSobreColor.withValues(alpha: 0.12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(Medidas.radio),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colores.naranja,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'ADMIN',
+                  style: TextStyle(
+                    color: Colores.textoSobreColor,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
                   ),
-                  leading: Icon(seccion.icono, color: Colores.textoSobreColor),
-                  title: Text(
-                    seccion.titulo,
-                    style: const TextStyle(color: Colores.textoSobreColor),
-                  ),
-                  onTap: () => context.go(seccion.ruta),
                 ),
               ),
-            const Spacer(),
-            ListTile(
-              leading: const Icon(Icons.home_outlined,
-                  color: Colores.textoSobreColor),
-              title: const Text('Volver al inicio',
-                  style: TextStyle(color: Colores.textoSobreColor)),
-              onTap: () => context.go('/home'),
+            ],
+          ),
+          const SizedBox(height: 24),
+          for (final seccion in SeccionAdmin.values)
+            Padding(
+              key: Key('seccion-${seccion.name}'),
+              padding: const EdgeInsets.only(bottom: 4),
+              child: ListTile(
+                dense: true,
+                selected: seccion == actual,
+                selectedTileColor:
+                    Colores.textoSobreColor.withValues(alpha: 0.12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(Medidas.radio),
+                ),
+                leading: Icon(seccion.icono, color: Colores.textoSobreColor),
+                title: Text(
+                  seccion.titulo,
+                  style: const TextStyle(color: Colores.textoSobreColor),
+                ),
+                onTap: () => context.go(seccion.ruta),
+              ),
             ),
-          ],
-        ),
+          const Divider(color: Colores.textoSobreColor, height: 24),
+          ListTile(
+            dense: true,
+            leading:
+                const Icon(Icons.home_outlined, color: Colores.textoSobreColor),
+            title: const Text('Volver al inicio',
+                style: TextStyle(color: Colores.textoSobreColor)),
+            onTap: () => context.go('/home'),
+          ),
+          // CU-34: el panel tiene su propio ingreso, así que también su
+          // salida. Vuelve al formulario del panel, no al login general.
+          Consumer(
+            builder: (context, ref, _) => ListTile(
+              dense: true,
+              leading: const Icon(Icons.logout, color: Colores.textoSobreColor),
+              title: const Text('Cerrar sesión',
+                  style: TextStyle(color: Colores.textoSobreColor)),
+              onTap: () async {
+                await ref.read(authRepositoryProvider).cerrarSesion();
+                if (context.mounted) context.go('/admin/ingresar');
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -192,7 +215,8 @@ class _Lateral extends StatelessWidget {
 /// Encabezado de cada sección: título grande y bajada, como «Campañas y
 /// cupones · Generá códigos para regalar tokens» de la Figura 3.24.
 class EncabezadoAdmin extends StatelessWidget {
-  const EncabezadoAdmin({super.key, required this.titulo, required this.bajada});
+  const EncabezadoAdmin(
+      {super.key, required this.titulo, required this.bajada});
 
   final String titulo;
   final String bajada;

@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:laburito/app/router.dart';
 
 /// Regresión del 01/10: el `redirect` de la ruta padre `/admin` corría también
-/// al navegar a `/admin/cupones` y devolvía siempre a Precios.
+/// al navegar a `/admin/cupones` y devolvía siempre a la primera sección.
 void main() {
   Future<GoRouter> montar(WidgetTester t) async {
     final router = GoRouter(
@@ -15,6 +15,7 @@ void main() {
           path: '/admin',
           redirect: redireccionPanelAdmin,
           routes: [
+            GoRoute(path: 'dashboard', builder: (_, __) => const Text('dashboard')),
             GoRoute(path: 'precios', builder: (_, __) => const Text('precios')),
             GoRoute(path: 'cupones', builder: (_, __) => const Text('cupones')),
           ],
@@ -25,7 +26,7 @@ void main() {
     return router;
   }
 
-  testWidgets('/admin/cupones abre Cupones, no Precios', (t) async {
+  testWidgets('/admin/cupones abre Cupones, no el Dashboard', (t) async {
     final router = await montar(t);
 
     router.go('/admin/cupones');
@@ -34,12 +35,12 @@ void main() {
     expect(find.text('cupones'), findsOneWidget);
   });
 
-  testWidgets('/admin a secas lleva a Precios', (t) async {
+  testWidgets('/admin a secas lleva al Dashboard (CU-34, paso 6)', (t) async {
     final router = await montar(t);
 
     router.go('/admin');
     await t.pumpAndSettle();
 
-    expect(find.text('precios'), findsOneWidget);
+    expect(find.text('dashboard'), findsOneWidget);
   });
 }
