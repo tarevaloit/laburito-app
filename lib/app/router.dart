@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/config/superficie.dart';
 import '../core/providers/supabase_providers.dart';
+import '../features/admin/presentation/screens/categorias_admin_screen.dart';
 import '../features/admin/presentation/screens/cupones_screen.dart';
 import '../features/admin/presentation/screens/dashboard_screen.dart';
 import '../features/admin/presentation/screens/denuncias_screen.dart';
@@ -300,6 +301,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'validaciones',
             name: 'adminValidaciones',
             builder: (context, state) => const ValidacionesScreen(),
+          ),
+          // CU-37.
+          GoRoute(
+            path: 'categorias',
+            name: 'adminCategorias',
+            builder: (context, state) => const CategoriasAdminScreen(),
           ),
           GoRoute(
             path: 'precios',
