@@ -18,6 +18,7 @@ import '../features/admin/presentation/screens/resenas_admin_screen.dart';
 import '../features/admin/presentation/screens/usuarios_screen.dart';
 import '../features/admin/presentation/screens/validaciones_screen.dart';
 import '../features/auth/presentation/screens/codigo_recuperacion_screen.dart';
+import '../features/ayuda/presentation/ayuda_screen.dart';
 import '../features/billetera/presentation/screens/billetera_screen.dart';
 import '../features/billetera/presentation/screens/canjear_cupon_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
@@ -72,6 +73,8 @@ const _neutrales = <String>{
   // Los textos legales se leen antes de tener cuenta y también después.
   '/legales/terminos',
   '/legales/privacidad',
+  // CU-42: la ayuda se abre con o sin sesión.
+  '/ayuda',
   // CU-34: el ingreso del panel valida el rol después de iniciar sesión y
   // navega por su cuenta. Si la ruta expulsara al tener sesión, el aviso de
   // «esta cuenta no es de un administrador» no llegaría a verse.
@@ -376,6 +379,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const CanjearCuponScreen(),
           ),
         ],
+      ),
+      // CU-42.
+      GoRoute(
+        path: '/ayuda',
+        name: 'ayuda',
+        builder: (context, state) => const AyudaScreen(),
       ),
       // CU-49. La abre el aviso de la sanción y el de una apelación rechazada.
       GoRoute(

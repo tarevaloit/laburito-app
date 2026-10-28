@@ -53,6 +53,12 @@ class HomeScreen extends ConsumerWidget {
         actions: [
           // CU-48.
           const CampanaNotificaciones(),
+          // CU-42.
+          IconButton(
+            tooltip: 'Ayuda',
+            icon: const Icon(Icons.help_outline),
+            onPressed: () => context.push('/ayuda'),
+          ),
           IconButton(
             tooltip: 'Cerrar sesión',
             icon: const Icon(Icons.logout),

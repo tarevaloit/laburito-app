@@ -136,6 +136,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               _EnlaceRegistro(
                 onTap: cargando ? null : () => context.go('/registro'),
               ),
+              // CU-42: «desde el menú principal o pie de página».
+              Center(
+                child: TextButton.icon(
+                  onPressed: () => context.push('/ayuda'),
+                  icon: const Icon(Icons.help_outline, size: 18),
+                  label: const Text('Ayuda y soporte'),
+                ),
+              ),
             ],
           ),
         ),
