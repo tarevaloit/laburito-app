@@ -42,7 +42,7 @@ void main() {
   }
 
   testWidgets('temas, buscador, respuesta y contacto', (t) async {
-    await montar(t, _AyudaFalsa(preguntas));
+    await montar(t, const _AyudaFalsa(preguntas));
 
     expect(find.text('Cuenta y seguridad'), findsOneWidget);
     expect(find.text('Tokens y pagos'), findsOneWidget);
@@ -59,7 +59,7 @@ void main() {
 
   testWidgets('sin base de conocimientos, los datos de contacto (flujo 1.1)',
       (t) async {
-    await montar(t, _AyudaFalsa(null));
+    await montar(t, const _AyudaFalsa(null));
 
     expect(find.byKey(const Key('ayuda-sin-conexion')), findsOneWidget);
     expect(find.byKey(const Key('contacto-correo')), findsOneWidget);

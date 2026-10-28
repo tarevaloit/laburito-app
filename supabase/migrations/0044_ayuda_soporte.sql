@@ -33,7 +33,7 @@ insert into public.preguntas_frecuentes (categoria, pregunta, respuesta, orden) 
 ('Para Profesionales', '¿Por qué tengo que subir mi DNI y una selfie?',
  'Para que los Buscadores confíen en vos. El equipo de Laburito revisa las fotos, aprueba tu cuenta y las elimina del servidor apenas resuelve. Si la rechaza, te avisamos el motivo para que vuelvas a cargarlas.', 10),
 ('Para Profesionales', '¿Cómo recibo avisos de pedidos?',
- 'Configurá tu zona de cobertura, tus oficios y tus horarios desde Mi Perfil, y dejá activada la disponibilidad. Cuando se publica un pedido de tu oficio dentro de tu zona, te llega una notificación al celular.', 20),
+ 'Configurá tu zona de cobertura, tus oficios y tus horarios, y dejá encendido «Estoy disponible». Cuando se publica un pedido de tu oficio dentro de tu zona, te llega una notificación al celular.', 20),
 ('Para Profesionales', '¿Cómo comparto mi perfil?',
  'Desde Mi Perfil, «Compartir mi perfil» genera un enlace público con tus datos, tu portafolio y tus reseñas. Cualquiera lo abre en el navegador, sin cuenta.', 30),
 ('Para Profesionales', 'Recibí una reseña falsa u ofensiva, ¿qué hago?',
@@ -45,7 +45,7 @@ insert into public.preguntas_frecuentes (categoria, pregunta, respuesta, orden) 
 ('Tokens y pagos', '¿Qué pasa si desbloqueo dos veces el mismo pedido?',
  'Nada: un contacto se paga una sola vez. Si volvés a abrirlo, no se descuenta otro token.', 20),
 ('Tokens y pagos', 'Tengo un cupón, ¿dónde lo uso?',
- 'En la billetera, «Canjear cupón». Ingresá el código y los tokens se suman a tu saldo. Cada cupón tiene vencimiento y una cantidad máxima de usos.', 30),
+ 'En la billetera, «Tengo un código». Ingresá el código y los tokens se suman a tu saldo. Cada cupón tiene vencimiento y una cantidad máxima de usos.', 30),
 
 -- Cuenta y seguridad
 ('Cuenta y seguridad', 'Me olvidé la contraseña',
