@@ -84,7 +84,7 @@ const contenido = [
     ['Distribución de la app', '==TestFlight (iOS) y prueba interna de Google Play (Android) — completar con lo que se haya hecho=='],
     ['Prueba de punta a punta', '==Ingreso al panel → aprobar un Profesional → denuncia desde la Web → suspensión desde el panel → apelación desde la cuenta suspendida → aceptación y reactivación=='],
     ['Documentación', 'Manual de Usuario y FAQ (docs/manual/MANUAL-USUARIO.docx); las mismas preguntas en la pantalla de Ayuda'],
-    ['Tag de release', '==v1.0.0=='],
+    ['Tag de release', 'v1.0.0'],
   ]),
 
   H3('7.6.3 Tareas faltantes y replanificación'),

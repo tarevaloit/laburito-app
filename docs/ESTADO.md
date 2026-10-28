@@ -829,7 +829,8 @@ orden de fases viven en `docs/sprints/SPRINT-06.md`; acá va lo que ya pasó.
    Google Play Console. El APK de release ya compila.
 4. Recorrido de punta a punta con datos móviles: ingreso al panel → aprobar un Profesional
    → denuncia → suspensión → apelación → reactivación.
-5. Merge a `main`, tag `v1.0.0`, completar lo amarillo del 7.6 y pegar el burndown.
+5. ~~Merge a `main` y tag `v1.0.0`~~ hechos el 28/10 (sin pushear). Falta completar lo
+   amarillo del 7.6 y pegar el burndown.
 
 ## 5. Decisiones técnicas tomadas
 
