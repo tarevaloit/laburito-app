@@ -201,9 +201,9 @@ update public.categorias_oficio c
         ('plomeria', '🔧'), ('electricidad', '⚡'), ('gas', '🔥'), ('albanileria', '🧱'),
         ('pintura', '🎨'), ('carpinteria', '🪚'), ('herreria', '⚒️'), ('cerrajeria', '🔑'),
         ('aire-acondicionado', '❄️'), ('techista', '🏠'), ('durlock', '📐'),
-        ('jardineria', '🌿'), ('limpieza', '🧽'), ('fletes-y-mudanzas', '🚚'),
-        ('service-de-electrodomesticos', '🔌'), ('redes-e-internet', '📶'),
-        ('camaras-de-seguridad', '📹'), ('colocacion-de-pisos', '🪵'), ('vidrieria', '🪟'),
+        ('jardineria', '🌿'), ('limpieza', '🧽'), ('fletes-mudanzas', '🚚'),
+        ('service-electro', '🔌'), ('redes-internet', '📶'),
+        ('camaras-seguridad', '📹'), ('pisos', '🪵'), ('vidrieria', '🪟'),
         ('destapaciones', '🚿'), ('impermeabilizacion', '💧'), ('tapiceria', '🛋️')
        ) as v(slug, icono)
  where c.slug = v.slug and c.icono is null;
