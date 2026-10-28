@@ -159,4 +159,8 @@ class _UsuariosFalso implements UsuariosRepository {
 
   @override
   Future<void> levantar(String sancionId, String motivo) async {}
+
+  // Las apelaciones (CU-49) se prueban en recuperar_cuenta_test.dart.
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

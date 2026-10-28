@@ -135,11 +135,13 @@ class AuthRepository {
       await _client.rpc('registrar_acceso_admin');
     }
 
+    // CU-49: la sesión de una cuenta suspendida no se cierra en el acto. El
+    // home muestra el motivo y el botón «Apelar sanción», y para apelar hace
+    // falta saber quién es. La RLS ya trata a la cuenta como suspendida.
+    // Esta llamada además levanta sola una suspensión temporal vencida
+    // (CU-36), así que la persona entra como siempre si ya cumplió el plazo.
     if (estado == 'suspendido') {
-      await cerrarSesion();
-      throw const CuentaNoHabilitadaException(
-        'Tu cuenta está suspendida. Escribinos para revisar la situación.',
-      );
+      await _client.rpc('revisar_mi_suspension');
     }
     if (estado == 'baja') {
       await cerrarSesion();

@@ -145,7 +145,53 @@ class SuspensionPedida {
   final bool apelable;
 }
 
-/// CU-36 — Suspender Cuenta (migración 0039).
+/// CU-49 — Una apelación, como la ve el administrador (`apelaciones_admin`).
+class ApelacionAdmin {
+  const ApelacionAdmin({
+    required this.id,
+    required this.numero,
+    required this.usuarioId,
+    required this.usuario,
+    required this.sancionMotivo,
+    required this.permanente,
+    required this.descargo,
+    required this.estado,
+    required this.fecha,
+    this.hasta,
+    this.respuesta,
+  });
+
+  final String id;
+  final int numero;
+  final String usuarioId;
+  final String usuario;
+  final String sancionMotivo;
+  final bool permanente;
+  final DateTime? hasta;
+  final String descargo;
+  final String estado;
+  final String? respuesta;
+  final DateTime fecha;
+
+  bool get pendiente => estado == 'pendiente';
+
+  factory ApelacionAdmin.desdeFila(Map<String, dynamic> f) => ApelacionAdmin(
+        id: f['id'] as String,
+        numero: (f['numero'] as num).toInt(),
+        usuarioId: f['usuario_id'] as String,
+        usuario: f['usuario'] as String? ?? '',
+        sancionMotivo: f['sancion_motivo'] as String? ?? '',
+        permanente: f['permanente'] as bool? ?? false,
+        hasta: f['hasta'] == null ? null : DateTime.parse(f['hasta'] as String),
+        descargo: f['descargo'] as String? ?? '',
+        estado: f['estado'] as String? ?? 'pendiente',
+        respuesta: f['respuesta'] as String?,
+        fecha: DateTime.parse(f['created_at'] as String),
+      );
+}
+
+/// CU-36 — Suspender Cuenta (migración 0039) y la resolución de las
+/// apelaciones del CU-49 (0043).
 class UsuariosRepository {
   const UsuariosRepository(this._client);
 
@@ -180,6 +226,24 @@ class UsuariosRepository {
   Future<void> levantar(String sancionId, String motivo) => _client.rpc(
       'levantar_sancion',
       params: {'p_sancion': sancionId, 'p_motivo': motivo});
+
+  Future<List<ApelacionAdmin>> apelaciones() async {
+    final filas = await _client.rpc('apelaciones_admin') as List;
+    return [
+      for (final f in filas) ApelacionAdmin.desdeFila(f as Map<String, dynamic>),
+    ];
+  }
+
+  Future<void> resolverApelacion(
+    String id, {
+    required bool aceptar,
+    required String respuesta,
+  }) =>
+      _client.rpc('resolver_apelacion', params: {
+        'p_id': id,
+        'p_aceptar': aceptar,
+        'p_respuesta': respuesta,
+      });
 }
 
 @Riverpod(keepAlive: true)
@@ -196,3 +260,7 @@ Future<List<UsuarioAdmin>> usuariosAdmin(Ref ref, String texto, String? tipo) =>
 @riverpod
 Future<DetalleUsuario> detalleUsuarioAdmin(Ref ref, String id) =>
     ref.watch(usuariosRepositoryProvider).detalle(id);
+
+@riverpod
+Future<List<ApelacionAdmin>> apelacionesAdmin(Ref ref) =>
+    ref.watch(usuariosRepositoryProvider).apelaciones();

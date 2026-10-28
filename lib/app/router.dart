@@ -35,6 +35,7 @@ import '../features/pedidos/presentation/screens/historial_pedidos_screen.dart';
 import '../features/pedidos/presentation/screens/recuperar_pedido_screen.dart';
 import '../features/notificaciones/presentation/screens/notificaciones_screen.dart';
 import '../features/perfil/presentation/screens/baja_cuenta_screen.dart';
+import '../features/perfil/presentation/screens/cuenta_suspendida_screen.dart';
 import '../features/profesional/presentation/screens/detalle_pedido_publico_screen.dart';
 import '../features/profesional/presentation/screens/horarios_screen.dart';
 import '../features/profesional/presentation/screens/portafolio_screen.dart';
@@ -347,11 +348,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'adminCupones',
             builder: (context, state) => const CuponesScreen(),
           ),
-          // CU-41: la alerta del panel.
+          // CU-41 y CU-39; `?vista=apelaciones` abre las del CU-49.
           GoRoute(
             path: 'denuncias',
             name: 'adminDenuncias',
-            builder: (context, state) => const DenunciasScreen(),
+            builder: (context, state) => DenunciasScreen(
+              pestanaInicial:
+                  state.uri.queryParameters['vista'] == 'apelaciones' ? 1 : 0,
+            ),
           ),
         ],
       ),
@@ -372,6 +376,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const CanjearCuponScreen(),
           ),
         ],
+      ),
+      // CU-49. La abre el aviso de la sanción y el de una apelación rechazada.
+      GoRoute(
+        path: '/cuenta-suspendida',
+        name: 'cuentaSuspendida',
+        builder: (context, state) => const CuentaSuspendidaScreen(),
       ),
       GoRoute(
         path: '/verificacion',

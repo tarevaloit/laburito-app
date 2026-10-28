@@ -8,6 +8,7 @@ import '../../../../core/utils/fechas.dart';
 import '../../../../core/widgets/marca_laburito.dart';
 import '../../../denuncias/data/denuncias_repository.dart';
 import '../../../denuncias/domain/denuncia.dart';
+import '../../data/usuarios_repository.dart';
 import '../widgets/dialogo_suspension.dart';
 import '../widgets/dialogos_admin.dart';
 import 'panel_admin.dart';
@@ -28,6 +29,7 @@ class DenunciasScreen extends ConsumerStatefulWidget {
 class _DenunciasScreenState extends ConsumerState<DenunciasScreen> {
   String? _elegida;
   bool _resolviendo = false;
+  late int _pestana = widget.pestanaInicial;
 
   Future<void> _resolver(DenunciaAdmin d, {required String accion}) async {
     ResolucionDenuncia? r;
@@ -55,7 +57,9 @@ class _DenunciasScreenState extends ConsumerState<DenunciasScreen> {
           ejemplo: 'Se habló con las dos partes y el trabajo se completó.',
           confirmar: 'Marcar resuelta',
         );
-        if (texto != null) r = ResolucionDenuncia(desestimar: false, texto: texto);
+        if (texto != null) {
+          r = ResolucionDenuncia(desestimar: false, texto: texto);
+        }
       case 'desestimar':
         // Flujo alterno 1.1.
         final texto = await pedirTexto(
@@ -67,7 +71,9 @@ class _DenunciasScreenState extends ConsumerState<DenunciasScreen> {
           ejemplo: 'No hay pruebas de que el trabajo no se haya hecho.',
           confirmar: 'Desestimar',
         );
-        if (texto != null) r = ResolucionDenuncia(desestimar: true, texto: texto);
+        if (texto != null) {
+          r = ResolucionDenuncia(desestimar: true, texto: texto);
+        }
     }
     if (r == null || !mounted) return;
 
@@ -111,68 +117,88 @@ class _DenunciasScreenState extends ConsumerState<DenunciasScreen> {
                   : '${denuncias.value!.where((d) => d.abierta).length} '
                       'pendientes de revisión',
             ),
-            const SizedBox(height: 20),
-            ...denuncias.when(
-              loading: () => const [Center(child: CircularProgressIndicator())],
-              error: (e, _) => [
-                AvisoEstado.riesgo(
-                  icono: Icons.error_outline,
-                  titulo: 'No pudimos cargar las denuncias',
-                  detalle: MensajesError.desde(e),
-                ),
+            const SizedBox(height: 16),
+            // CU-49, punto de extensión CU-39: las apelaciones de las cuentas
+            // suspendidas se resuelven en esta misma bandeja.
+            SegmentedButton<int>(
+              segments: const [
+                ButtonSegment(value: 0, label: Text('Denuncias')),
+                ButtonSegment(value: 1, label: Text('Apelaciones')),
               ],
-              data: (lista) {
-                if (lista.isEmpty) {
-                  return const [
-                    AvisoEstado.exito(
-                      icono: Icons.verified_user_outlined,
-                      titulo: 'No hay denuncias',
-                      detalle: 'Cuando alguien reporte a un usuario, aparece acá.',
+              selected: {_pestana},
+              onSelectionChanged: (s) => setState(() => _pestana = s.first),
+            ),
+            const SizedBox(height: 20),
+            if (_pestana == 1)
+              const _Apelaciones()
+            else
+              ...denuncias.when(
+                loading: () =>
+                    const [Center(child: CircularProgressIndicator())],
+                error: (e, _) => [
+                  AvisoEstado.riesgo(
+                    icono: Icons.error_outline,
+                    titulo: 'No pudimos cargar las denuncias',
+                    detalle: MensajesError.desde(e),
+                  ),
+                ],
+                data: (lista) {
+                  if (lista.isEmpty) {
+                    return const [
+                      AvisoEstado.exito(
+                        icono: Icons.verified_user_outlined,
+                        titulo: 'No hay denuncias',
+                        detalle:
+                            'Cuando alguien reporte a un usuario, aparece acá.',
+                      ),
+                    ];
+                  }
+                  final actual = lista.firstWhere(
+                    (d) => d.id == _elegida,
+                    orElse: () => lista.first,
+                  );
+                  final listado = Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (final d in lista)
+                        TarjetaSeleccionable(
+                          key: Key('denuncia-${d.id}'),
+                          seleccionada: d.id == actual.id,
+                          insignia: _PildoraGravedad(d.gravedad),
+                          titulo: '${d.denunciante} denunció a ${d.denunciado}',
+                          bajada: '${d.motivo.etiqueta} · '
+                              '${d.abierta ? Fechas.hace(d.creadaAt.toLocal()) : d.estadoLegible}',
+                          onTap: () => setState(() => _elegida = d.id),
+                        ),
+                    ],
+                  );
+                  final detalle = _Detalle(
+                    denuncia: actual,
+                    resolviendo: _resolviendo,
+                    onAccion: (a) => _resolver(actual, accion: a),
+                  );
+                  return [
+                    LayoutBuilder(
+                      builder: (context, r) => r.maxWidth >= 900
+                          ? Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(width: 380, child: listado),
+                                const SizedBox(width: 20),
+                                Expanded(child: detalle),
+                              ],
+                            )
+                          : Column(
+                              children: [
+                                listado,
+                                const SizedBox(height: 20),
+                                detalle
+                              ],
+                            ),
                     ),
                   ];
-                }
-                final actual = lista.firstWhere(
-                  (d) => d.id == _elegida,
-                  orElse: () => lista.first,
-                );
-                final listado = Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (final d in lista)
-                      TarjetaSeleccionable(
-                        key: Key('denuncia-${d.id}'),
-                        seleccionada: d.id == actual.id,
-                        insignia: _PildoraGravedad(d.gravedad),
-                        titulo: '${d.denunciante} denunció a ${d.denunciado}',
-                        bajada: '${d.motivo.etiqueta} · '
-                            '${d.abierta ? Fechas.hace(d.creadaAt.toLocal()) : d.estadoLegible}',
-                        onTap: () => setState(() => _elegida = d.id),
-                      ),
-                  ],
-                );
-                final detalle = _Detalle(
-                  denuncia: actual,
-                  resolviendo: _resolviendo,
-                  onAccion: (a) => _resolver(actual, accion: a),
-                );
-                return [
-                  LayoutBuilder(
-                    builder: (context, r) => r.maxWidth >= 900
-                        ? Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(width: 380, child: listado),
-                              const SizedBox(width: 20),
-                              Expanded(child: detalle),
-                            ],
-                          )
-                        : Column(
-                            children: [listado, const SizedBox(height: 20), detalle],
-                          ),
-                  ),
-                ];
-              },
-            ),
+                },
+              ),
           ],
         ),
       ),
@@ -236,7 +262,9 @@ class _Detalle extends ConsumerWidget {
                 child: Text(
                   d.numero == 0 ? 'Denuncia' : 'Denuncia #${d.numero}',
                   style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.w800, color: Colores.texto),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: Colores.texto),
                 ),
               ),
               _PildoraGravedad(d.gravedad),
@@ -279,7 +307,8 @@ class _Detalle extends ConsumerWidget {
               DatoAdmin(
                 etiqueta: 'Reputación',
                 valor: [
-                  if (d.reputacion != null) '★ ${d.reputacion!.toStringAsFixed(1)}',
+                  if (d.reputacion != null)
+                    '★ ${d.reputacion!.toStringAsFixed(1)}',
                   '${d.denunciasPrevias} denuncias previas',
                 ].join(' · '),
               ),
@@ -287,7 +316,8 @@ class _Detalle extends ConsumerWidget {
           ),
           if (d.denunciadoId != null)
             TextButton.icon(
-              onPressed: () => context.go('/admin/usuarios?id=${d.denunciadoId}'),
+              onPressed: () =>
+                  context.go('/admin/usuarios?id=${d.denunciadoId}'),
               icon: const Icon(Icons.person_outline),
               label: const Text('Ver el perfil del denunciado'),
             ),
@@ -369,10 +399,148 @@ class _Trazabilidad extends StatelessWidget {
               '${Fechas.conHora(DateTime.parse((e as Map)['fecha'] as String).toLocal())}'
               ' · ${e['de'] ?? '—'} → ${e['a']}'
               '${e['motivo'] == null ? '' : ' · ${e['motivo']}'}',
-              style: const TextStyle(color: Colores.textoSecundario, fontSize: 13),
+              style:
+                  const TextStyle(color: Colores.textoSecundario, fontSize: 13),
             ),
           ),
       ],
     );
+  }
+}
+
+/// CU-49 — Las apelaciones de las cuentas suspendidas, pendientes primero.
+class _Apelaciones extends ConsumerWidget {
+  const _Apelaciones();
+
+  Future<void> _resolver(
+    BuildContext context,
+    WidgetRef ref,
+    ApelacionAdmin a, {
+    required bool aceptar,
+  }) async {
+    final respuesta = await pedirTexto(
+      context,
+      titulo: aceptar
+          ? 'Aceptar la apelación #${a.numero}'
+          : 'Rechazar la apelación #${a.numero}',
+      etiqueta: 'Respuesta para ${a.usuario}',
+      ayuda: aceptar
+          ? 'Se levanta la sanción y la cuenta vuelve a estar activa.'
+          : 'La sanción se mantiene. La respuesta la lee el usuario.',
+      confirmar: aceptar ? 'Aceptar y reactivar' : 'Rechazar',
+    );
+    if (respuesta == null || !context.mounted) return;
+    try {
+      await ref
+          .read(usuariosRepositoryProvider)
+          .resolverApelacion(a.id, aceptar: aceptar, respuesta: respuesta);
+      ref.invalidate(apelacionesAdminProvider);
+      if (context.mounted) {
+        mostrarMensaje(
+          context,
+          aceptar
+              ? 'Apelación aceptada: la cuenta de ${a.usuario} está activa.'
+              : 'Apelación rechazada.',
+          esError: false,
+        );
+      }
+    } catch (e) {
+      if (context.mounted) mostrarMensaje(context, MensajesError.desde(e));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ref.watch(apelacionesAdminProvider).when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => AvisoEstado.riesgo(
+            icono: Icons.error_outline,
+            titulo: 'No pudimos cargar las apelaciones',
+            detalle: MensajesError.desde(e),
+          ),
+          data: (lista) => lista.isEmpty
+              ? const AvisoEstado.exito(
+                  icono: Icons.inbox_outlined,
+                  titulo: 'No hay apelaciones',
+                  detalle: 'Cuando un usuario suspendido apele su sanción, '
+                      'aparece acá con su número de trámite.',
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final a in lista) ...[
+                      TarjetaPanel(
+                        key: Key('apelacion-${a.numero}'),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'Apelación #${a.numero} · ${a.usuario}',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                        color: Colores.texto),
+                                  ),
+                                ),
+                                Text(Fechas.hace(a.fecha.toLocal()),
+                                    style: const TextStyle(
+                                        color: Colores.textoTenue,
+                                        fontSize: 12)),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Sanción: ${a.sancionMotivo} · '
+                              '${a.permanente ? 'permanente' : 'hasta el ${Fechas.corta(a.hasta!.toLocal())}'}',
+                              style: const TextStyle(
+                                  color: Colores.textoSecundario),
+                            ),
+                            const SizedBox(height: 8),
+                            Text('«${a.descargo}»',
+                                style: const TextStyle(height: 1.4)),
+                            const SizedBox(height: 12),
+                            if (a.pendiente)
+                              Wrap(
+                                spacing: 12,
+                                children: [
+                                  FilledButton(
+                                    key: Key('aceptar-${a.numero}'),
+                                    style: FilledButton.styleFrom(
+                                        backgroundColor: Colores.exito),
+                                    onPressed: () => _resolver(context, ref, a,
+                                        aceptar: true),
+                                    child: const Text('Aceptar y reactivar'),
+                                  ),
+                                  OutlinedButton(
+                                    key: Key('rechazar-${a.numero}'),
+                                    onPressed: () => _resolver(context, ref, a,
+                                        aceptar: false),
+                                    child: const Text('Rechazar'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => context.go(
+                                        '/admin/usuarios?id=${a.usuarioId}'),
+                                    child: const Text('Ver historial'),
+                                  ),
+                                ],
+                              )
+                            else
+                              Text(
+                                '${a.estado == 'aceptada' ? 'Aceptada' : 'Rechazada'}'
+                                '${a.respuesta == null ? '' : ': ${a.respuesta}'}',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    color: Colores.textoSecundario),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                  ],
+                ),
+        );
   }
 }

@@ -10,6 +10,7 @@ import '../../auth/presentation/controllers/auth_controller.dart';
 import '../../billetera/presentation/controllers/billetera_controller.dart';
 import '../../notificaciones/presentation/campana_notificaciones.dart';
 import '../../perfil/data/perfil_repository.dart';
+import '../../perfil/presentation/screens/cuenta_suspendida_screen.dart';
 
 /// Home provisorio del Sprint 1. Confirma la identidad del usuario autenticado,
 /// da acceso al perfil y a la verificación, y expone el CU-10 / CU-50.
@@ -70,6 +71,10 @@ class HomeScreen extends ConsumerWidget {
           if (p == null) {
             return const Center(child: Text('Sin perfil asociado.'));
           }
+
+          // CU-49, paso 2: con la cuenta suspendida, el inicio es el motivo
+          // de la sanción y la apelación, no el tablero.
+          if (p.estado == 'suspendido') return const CuentaSuspendida();
 
           // El saldo sale de la billetera y no del perfil: el perfil se lee
           // una vez al iniciar sesión, y la billetera es la que se actualiza
