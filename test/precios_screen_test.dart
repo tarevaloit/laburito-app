@@ -155,4 +155,9 @@ class _AdminFalso implements AdminRepository {
     int? limiteUsos,
   }) =>
       throw UnimplementedError();
+
+  // Lo que el Sprint 6 sumó al repositorio (CU-34, CU-38) no se usa en esta
+  // pantalla.
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

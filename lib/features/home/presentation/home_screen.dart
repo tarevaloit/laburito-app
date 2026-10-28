@@ -10,6 +10,7 @@ import '../../auth/presentation/controllers/auth_controller.dart';
 import '../../billetera/presentation/controllers/billetera_controller.dart';
 import '../../notificaciones/presentation/campana_notificaciones.dart';
 import '../../perfil/data/perfil_repository.dart';
+import '../../perfil/presentation/screens/cuenta_suspendida_screen.dart';
 
 /// Home provisorio del Sprint 1. Confirma la identidad del usuario autenticado,
 /// da acceso al perfil y a la verificación, y expone el CU-10 / CU-50.
@@ -52,6 +53,12 @@ class HomeScreen extends ConsumerWidget {
         actions: [
           // CU-48.
           const CampanaNotificaciones(),
+          // CU-42.
+          IconButton(
+            tooltip: 'Ayuda',
+            icon: const Icon(Icons.help_outline),
+            onPressed: () => context.push('/ayuda'),
+          ),
           IconButton(
             tooltip: 'Cerrar sesión',
             icon: const Icon(Icons.logout),
@@ -70,6 +77,10 @@ class HomeScreen extends ConsumerWidget {
           if (p == null) {
             return const Center(child: Text('Sin perfil asociado.'));
           }
+
+          // CU-49, paso 2: con la cuenta suspendida, el inicio es el motivo
+          // de la sanción y la apelación, no el tablero.
+          if (p.estado == 'suspendido') return const CuentaSuspendida();
 
           // El saldo sale de la billetera y no del perfil: el perfil se lee
           // una vez al iniciar sesión, y la billetera es la que se actualiza
@@ -143,6 +154,19 @@ class HomeScreen extends ConsumerWidget {
                     onAccion: () => context.go('/verificacion'),
                   ),
                   const SizedBox(height: 16),
+                ] else if (p.esProfesional &&
+                    p.estadoVerificacion == 'rechazado') ...[
+                  // CU-35: sin esto, a un Profesional rechazado el inicio no
+                  // le decía nada y no tenía cómo volver a cargar.
+                  AvisoEstado.riesgo(
+                    icono: Icons.report_gmailerrorred_outlined,
+                    titulo: 'Rechazamos tu documentación',
+                    detalle: 'Mirá el motivo y volvé a subir las fotos para que '
+                        'las revisemos.',
+                    accion: 'Volver a cargar',
+                    onAccion: () => context.go('/verificacion'),
+                  ),
+                  const SizedBox(height: 16),
                 ],
                 TarjetaPanel(
                   child: Column(
@@ -166,7 +190,7 @@ class HomeScreen extends ConsumerWidget {
                   BotonPrincipal(
                     texto: 'Panel de administración',
                     icono: Icons.admin_panel_settings_outlined,
-                    onPressed: () => context.go('/admin/precios'),
+                    onPressed: () => context.go('/admin/dashboard'),
                   ),
                   const SizedBox(height: 12),
                 ],

@@ -7,10 +7,18 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/config/superficie.dart';
 import '../core/providers/supabase_providers.dart';
+import '../features/admin/presentation/screens/categorias_admin_screen.dart';
 import '../features/admin/presentation/screens/cupones_screen.dart';
+import '../features/admin/presentation/screens/dashboard_screen.dart';
 import '../features/admin/presentation/screens/denuncias_screen.dart';
+import '../features/admin/presentation/screens/ingreso_admin_screen.dart';
+import '../features/admin/presentation/screens/parametros_screen.dart';
 import '../features/admin/presentation/screens/precios_screen.dart';
+import '../features/admin/presentation/screens/resenas_admin_screen.dart';
+import '../features/admin/presentation/screens/usuarios_screen.dart';
+import '../features/admin/presentation/screens/validaciones_screen.dart';
 import '../features/auth/presentation/screens/codigo_recuperacion_screen.dart';
+import '../features/ayuda/presentation/ayuda_screen.dart';
 import '../features/billetera/presentation/screens/billetera_screen.dart';
 import '../features/billetera/presentation/screens/canjear_cupon_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
@@ -28,6 +36,7 @@ import '../features/pedidos/presentation/screens/historial_pedidos_screen.dart';
 import '../features/pedidos/presentation/screens/recuperar_pedido_screen.dart';
 import '../features/notificaciones/presentation/screens/notificaciones_screen.dart';
 import '../features/perfil/presentation/screens/baja_cuenta_screen.dart';
+import '../features/perfil/presentation/screens/cuenta_suspendida_screen.dart';
 import '../features/profesional/presentation/screens/detalle_pedido_publico_screen.dart';
 import '../features/profesional/presentation/screens/horarios_screen.dart';
 import '../features/profesional/presentation/screens/portafolio_screen.dart';
@@ -36,6 +45,7 @@ import '../features/profesional/presentation/screens/zona_cobertura_screen.dart'
 import '../features/reputacion/presentation/screens/calificar_screen.dart';
 import '../features/reputacion/presentation/screens/estadisticas_screen.dart';
 import '../features/reputacion/presentation/screens/mis_contactos_screen.dart';
+import '../features/reputacion/presentation/screens/mis_resenas_screen.dart';
 import '../features/reputacion/presentation/screens/perfil_publico_screen.dart';
 import '../features/perfil/presentation/screens/perfil_screen.dart';
 import '../features/verificacion/presentation/screens/carga_documentos_screen.dart';
@@ -63,7 +73,16 @@ const _neutrales = <String>{
   // Los textos legales se leen antes de tener cuenta y también después.
   '/legales/terminos',
   '/legales/privacidad',
+  // CU-42: la ayuda se abre con o sin sesión.
+  '/ayuda',
+  // CU-34: el ingreso del panel valida el rol después de iniciar sesión y
+  // navega por su cuenta. Si la ruta expulsara al tener sesión, el aviso de
+  // «esta cuenta no es de un administrador» no llegaría a verse.
+  ingresoAdmin,
 };
+
+/// CU-34. La «URL oculta» del panel: no se enlaza desde la Web pública.
+const ingresoAdmin = '/admin/ingresar';
 
 /// Rutas públicas del Sprint 5, con un parámetro: las abre alguien sin cuenta
 /// desde un enlace de WhatsApp (modelo «Frictionless»). Con sesión también se
@@ -103,7 +122,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           _soloSinSesion.contains(destino) || esRutaNeutral(destino);
 
       if (sesion == null) {
-        return accesibleSinSesion ? null : '/login';
+        if (accesibleSinSesion) return null;
+        // Sin sesión, el panel lleva a su propio ingreso y no al de la app.
+        return destino.startsWith('/admin') ? ingresoAdmin : '/login';
       }
 
       // CU-08: con el correo sin validar no se llega al home. La sesión solo
@@ -199,6 +220,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const NotificacionesScreen(),
       ),
       // CU-45 (Figura 3.18).
+      // CU-46: la vía del Profesional para reportar una reseña.
+      GoRoute(
+        path: '/profesional/resenas',
+        name: 'misResenas',
+        builder: (context, state) => const MisResenasScreen(),
+      ),
       GoRoute(
         path: '/profesional/estadisticas',
         name: 'estadisticas',
@@ -261,6 +288,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           id: state.pathParameters['id'] ?? '',
         ),
       ),
+      GoRoute(
+        path: ingresoAdmin,
+        name: 'adminIngresar',
+        builder: (context, state) => const IngresoAdminScreen(),
+      ),
       // Panel del administrador (CU-40, CU-52). El rol se valida en
       // `PanelAdmin`, no en el `redirect`: ver el comentario de esa clase.
       //
@@ -272,6 +304,43 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/admin',
         redirect: redireccionPanelAdmin,
         routes: [
+          // CU-38: la entrada del panel (CU-34, paso 6).
+          GoRoute(
+            path: 'dashboard',
+            name: 'adminDashboard',
+            builder: (context, state) => const DashboardScreen(),
+          ),
+          // CU-35.
+          GoRoute(
+            path: 'validaciones',
+            name: 'adminValidaciones',
+            builder: (context, state) => const ValidacionesScreen(),
+          ),
+          // CU-37.
+          GoRoute(
+            path: 'categorias',
+            name: 'adminCategorias',
+            builder: (context, state) => const CategoriasAdminScreen(),
+          ),
+          // CU-36. `?id=` abre el detalle de un usuario (desde Denuncias).
+          GoRoute(
+            path: 'usuarios',
+            name: 'adminUsuarios',
+            builder: (context, state) =>
+                UsuariosScreen(inicial: state.uri.queryParameters['id']),
+          ),
+          // CU-46.
+          GoRoute(
+            path: 'resenas',
+            name: 'adminResenas',
+            builder: (context, state) => const ResenasAdminScreen(),
+          ),
+          // CU-47.
+          GoRoute(
+            path: 'parametros',
+            name: 'adminParametros',
+            builder: (context, state) => const ParametrosScreen(),
+          ),
           GoRoute(
             path: 'precios',
             name: 'adminPrecios',
@@ -282,11 +351,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'adminCupones',
             builder: (context, state) => const CuponesScreen(),
           ),
-          // CU-41: la alerta del panel.
+          // CU-41 y CU-39; `?vista=apelaciones` abre las del CU-49.
           GoRoute(
             path: 'denuncias',
             name: 'adminDenuncias',
-            builder: (context, state) => const DenunciasScreen(),
+            builder: (context, state) => DenunciasScreen(
+              pestanaInicial:
+                  state.uri.queryParameters['vista'] == 'apelaciones' ? 1 : 0,
+            ),
           ),
         ],
       ),
@@ -307,6 +379,18 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const CanjearCuponScreen(),
           ),
         ],
+      ),
+      // CU-42.
+      GoRoute(
+        path: '/ayuda',
+        name: 'ayuda',
+        builder: (context, state) => const AyudaScreen(),
+      ),
+      // CU-49. La abre el aviso de la sanción y el de una apelación rechazada.
+      GoRoute(
+        path: '/cuenta-suspendida',
+        name: 'cuentaSuspendida',
+        builder: (context, state) => const CuentaSuspendidaScreen(),
       ),
       GoRoute(
         path: '/verificacion',
@@ -351,10 +435,10 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-/// `/admin` a secas lleva a Precios; `/admin/cupones` y el resto, a donde
-/// pidieron. Ver el comentario de la ruta en [routerProvider].
+/// `/admin` a secas lleva al Dashboard (CU-34, paso 6); `/admin/cupones` y el
+/// resto, a donde pidieron. Ver el comentario de la ruta en [routerProvider].
 String? redireccionPanelAdmin(BuildContext context, GoRouterState state) =>
-    state.uri.path == '/admin' ? '/admin/precios' : null;
+    state.uri.path == '/admin' ? '/admin/dashboard' : null;
 
 /// Puente entre el stream de Supabase y el `refreshListenable` de go_router.
 class _RefrescoDeAuth extends ChangeNotifier {

@@ -128,10 +128,11 @@ void main() {
     ));
     await t.pumpAndSettle();
 
+    // Desde el Sprint 6 la bandeja es la del CU-39 (Figura 3.22).
     expect(find.text('1 pendientes de revisión'), findsOneWidget);
-    expect(find.text('No cumplió lo acordado'), findsOneWidget);
-    expect(find.textContaining('Laura Gómez (Buscador) reportó a Marcelo Pérez'),
-        findsOneWidget);
+    expect(find.text('Laura Gómez denunció a Marcelo Pérez'), findsOneWidget);
+    expect(find.textContaining('No cumplió lo acordado'), findsWidgets);
+    expect(find.text('«No vino el día que acordamos.»'), findsOneWidget);
   });
 }
 
@@ -149,4 +150,8 @@ class _RepoFalso implements DenunciasRepository {
 
   @override
   Future<List<DenunciaAdmin>> listarAdmin() async => const [];
+
+  // La resolución (CU-39) se prueba en gestionar_denuncias_test.dart.
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

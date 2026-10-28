@@ -196,6 +196,15 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => context.push('/profesional/contactos'),
                       ),
+                      // CU-46: reportar una reseña falsa u ofensiva.
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.rate_review_outlined,
+                            color: Colores.azulMedio),
+                        title: const Text('Mis reseñas'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.push('/profesional/resenas'),
+                      ),
                     ],
                   ],
                   const SizedBox(height: 24),

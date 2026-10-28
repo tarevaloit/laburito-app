@@ -3,6 +3,48 @@
 Todas las versiones del proyecto, agrupadas por caso de uso. El formato sigue
 la convención de commits del proyecto: `<tipo>(<ID>): <descripción>`.
 
+## v1.0.0 — Sprint 6 · Administración, Cierre y Despliegue (PT 7.0)
+
+_28/10/2026_
+
+El Panel de Administración completo —la tercera superficie del sistema—, el
+endurecimiento de seguridad de los perfiles y la documentación de usuario.
+Cierra los 235 puntos del backlog.
+
+### Casos de uso
+
+- **CU-34 · Iniciar Sesión Administrador** — `/admin/ingresar`, sin registro.
+  Cada intento queda registrado con IP, navegador y hora; una cuenta que no es
+  de administrador se rechaza y se cierra su sesión.
+- **CU-38 · Consultar Estadísticas** — Dashboard con pedidos, ingresos, altas y
+  reportes del rango elegido contra el período anterior, altas de doce meses,
+  ingresos por pack y exportación a CSV.
+- **CU-35 · Validar Identidad Profesional** — revisión de las fotos con los
+  datos del registro; aprobar o rechazar con motivo, y las fotos se destruyen
+  al resolver.
+- **CU-37 · Gestionar Categorías de Oficios** — alta con ícono, edición,
+  ocultamiento y baja; una categoría en uso no se borra.
+- **CU-36 · Suspender Cuenta** — buscador de usuarios con su historial;
+  suspensión temporal o permanente que cierra sesiones y pausa pedidos.
+- **CU-39 · Gestionar Denuncias** — bandeja por gravedad con la trazabilidad
+  del pedido; resolver con sanción, marcar resuelta o desestimar.
+- **CU-46 · Moderar Reseñas** — reporte desde «Mis reseñas» y filtro
+  automático; eliminar recalcula el promedio.
+- **CU-47 · Configurar Parámetros Globales** — radio máximo de cobertura y
+  límites de renovación, leídos por las funciones de la base.
+- **CU-49 · Recuperar Cuenta Bloqueada** — apelación con número de trámite y su
+  resolución desde el panel.
+- **CU-42 · Consultar Ayuda y Soporte** — `/ayuda` pública con preguntas
+  frecuentes, buscador y canales de contacto.
+
+### Técnico
+
+- **T-12** — migraciones 0034 a 0044, cada una con su guion de aceptación.
+- **T-13** — guard de columnas de `perfiles`: nadie se escribe el rol ni el
+  estado de la cuenta por la API.
+- **T-04** — Manual de Usuario y FAQ en `docs/manual/`.
+- 411 pruebas (362 en v0.5.0).
+
 ## v0.5.0 — Sprint 5 · Enlaces Públicos y Calificación (PT 6.0)
 
 _14/10/2026_
