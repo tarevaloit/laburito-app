@@ -13,6 +13,7 @@ import '../features/admin/presentation/screens/dashboard_screen.dart';
 import '../features/admin/presentation/screens/denuncias_screen.dart';
 import '../features/admin/presentation/screens/ingreso_admin_screen.dart';
 import '../features/admin/presentation/screens/precios_screen.dart';
+import '../features/admin/presentation/screens/usuarios_screen.dart';
 import '../features/admin/presentation/screens/validaciones_screen.dart';
 import '../features/auth/presentation/screens/codigo_recuperacion_screen.dart';
 import '../features/billetera/presentation/screens/billetera_screen.dart';
@@ -307,6 +308,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'categorias',
             name: 'adminCategorias',
             builder: (context, state) => const CategoriasAdminScreen(),
+          ),
+          // CU-36. `?id=` abre el detalle de un usuario (desde Denuncias).
+          GoRoute(
+            path: 'usuarios',
+            name: 'adminUsuarios',
+            builder: (context, state) =>
+                UsuariosScreen(inicial: state.uri.queryParameters['id']),
           ),
           GoRoute(
             path: 'precios',
