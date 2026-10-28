@@ -13,6 +13,7 @@ import '../features/admin/presentation/screens/dashboard_screen.dart';
 import '../features/admin/presentation/screens/denuncias_screen.dart';
 import '../features/admin/presentation/screens/ingreso_admin_screen.dart';
 import '../features/admin/presentation/screens/precios_screen.dart';
+import '../features/admin/presentation/screens/resenas_admin_screen.dart';
 import '../features/admin/presentation/screens/usuarios_screen.dart';
 import '../features/admin/presentation/screens/validaciones_screen.dart';
 import '../features/auth/presentation/screens/codigo_recuperacion_screen.dart';
@@ -41,6 +42,7 @@ import '../features/profesional/presentation/screens/zona_cobertura_screen.dart'
 import '../features/reputacion/presentation/screens/calificar_screen.dart';
 import '../features/reputacion/presentation/screens/estadisticas_screen.dart';
 import '../features/reputacion/presentation/screens/mis_contactos_screen.dart';
+import '../features/reputacion/presentation/screens/mis_resenas_screen.dart';
 import '../features/reputacion/presentation/screens/perfil_publico_screen.dart';
 import '../features/perfil/presentation/screens/perfil_screen.dart';
 import '../features/verificacion/presentation/screens/carga_documentos_screen.dart';
@@ -213,6 +215,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const NotificacionesScreen(),
       ),
       // CU-45 (Figura 3.18).
+      // CU-46: la vía del Profesional para reportar una reseña.
+      GoRoute(
+        path: '/profesional/resenas',
+        name: 'misResenas',
+        builder: (context, state) => const MisResenasScreen(),
+      ),
       GoRoute(
         path: '/profesional/estadisticas',
         name: 'estadisticas',
@@ -315,6 +323,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'adminUsuarios',
             builder: (context, state) =>
                 UsuariosScreen(inicial: state.uri.queryParameters['id']),
+          ),
+          // CU-46.
+          GoRoute(
+            path: 'resenas',
+            name: 'adminResenas',
+            builder: (context, state) => const ResenasAdminScreen(),
           ),
           GoRoute(
             path: 'precios',
