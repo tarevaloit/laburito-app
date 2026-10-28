@@ -807,15 +807,15 @@ orden de fases viven en `docs/sprints/SPRINT-06.md`; acá va lo que ya pasó.
 |---|---|---|
 | `14fd95d` `docs(S6)` | `docs/sprints/SPRINT-06.md` | — |
 | `5404333` `feat(T-12,T-13)` | 0034: `sanciones`, `apelaciones`, `parametros_sistema`, `accesos_admin`, `preguntas_frecuentes`, columnas de moderación, tipos de aviso, guard de `perfiles` | **Aplicada, 9/9 OK** |
-| `27513c3` `feat(CU-34,CU-38)` | 0035, 0036, `/admin/ingresar`, Dashboard con CSV | Guion `verificar_0035_0036.sql` escrito, **sin aplicar** |
-| `96e1c10` `feat(CU-35)` | 0037, Validaciones, borrado de fotos | `verificar_0037.sql`, sin aplicar |
-| `8352911` `feat(CU-37)` | 0038, Categorías con íconos | `verificar_0038.sql`, sin aplicar |
-| `2d35428` `feat(CU-36)` | 0039, Usuarios y suspensión | `verificar_0039.sql`, sin aplicar |
-| `4f7a7c2` `feat(CU-39)` | 0040, Denuncias por gravedad | `verificar_0040.sql`, sin aplicar |
-| `19b7acf` `feat(CU-46)` | 0041, reporte y moderación de reseñas | `verificar_0041.sql`, sin aplicar |
-| `a34a2a3` `feat(CU-47)` | 0042, Parámetros cableados a zona y renovación | `verificar_0042.sql`, sin aplicar |
-| `58baa69` `feat(CU-49)` | 0043, Cuenta suspendida y apelaciones | `verificar_0043.sql`, sin aplicar |
-| `3bf73a0` `feat(CU-42)` | 0044 (FAQ), `/ayuda` | Sin guion: es contenido |
+| `27513c3` `feat(CU-34,CU-38)` | 0035, 0036, `/admin/ingresar`, Dashboard con CSV | **Aplicadas, 8/8 OK** |
+| `96e1c10` `feat(CU-35)` | 0037, Validaciones, borrado de fotos | **Aplicada, 7/7 OK** |
+| `8352911` `feat(CU-37)` | 0038, Categorías con íconos | **Aplicada, 7/7 (tras corregir 5 slugs) OK** |
+| `2d35428` `feat(CU-36)` | 0039, Usuarios y suspensión | **Aplicada, 9/9 OK** |
+| `4f7a7c2` `feat(CU-39)` | 0040, Denuncias por gravedad | **Aplicada, 6/6 OK** |
+| `19b7acf` `feat(CU-46)` | 0041, reporte y moderación de reseñas | **Aplicada, 7/7 OK** |
+| `a34a2a3` `feat(CU-47)` | 0042, Parámetros cableados a zona y renovación | **Aplicada, 5/5 OK** |
+| `58baa69` `feat(CU-49)` | 0043, Cuenta suspendida y apelaciones | **Aplicada, 8/8 OK** |
+| `3bf73a0` `feat(CU-42)` | 0044 (FAQ), `/ayuda` | Aplicada, 19 preguntas |
 | `c1cf976` `fix(CU-35)` | Aviso de documentación rechazada en el inicio | Prueba de widget |
 | `b07803e` `docs(T-04)` | `docs/manual/` (Manual de Usuario y FAQ) | — |
 
@@ -823,11 +823,8 @@ orden de fases viven en `docs/sprints/SPRINT-06.md`; acá va lo que ya pasó.
 
 ### 4e.2 Lo que falta, en orden
 
-1. **Aplicar 0035 a 0044** en ese orden, cada una envuelta en `begin … commit` con
-   `supabase db query --linked -f`, y correr su guion de `supabase/scripts/`. La 0041
-   depende de `normalizar_nombre` (0038) y la 0040 de `suspender_cuenta` (0039).
-2. **Publicar la Web** (`flutter build web --release --dart-define-from-file=.env` y
-   `firebase deploy --only hosting`): es la que trae el panel.
+1. ~~Aplicar 0035 a 0044~~ hecho el 28/10: 66 reglas en OK con la 0034.
+2. ~~Publicar la Web~~ hecho el 28/10 en los dos sitios de Hosting.
 3. **Distribución de la app** (T-03): requiere las cuentas de Apple Developer Program y
    Google Play Console. El APK de release ya compila.
 4. Recorrido de punta a punta con datos móviles: ingreso al panel → aprobar un Profesional

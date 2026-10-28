@@ -29,7 +29,7 @@ const FIGURA = (t, aviso, alto = 5200) => ({ tipo: 'figura', t, aviso, alto });
 
 const contenido = [
   H2('7.6 Sprint 6 — Administración, Cierre y Despliegue'),
-  P('**Estado: cerrado.** Los catorce ítems comprometidos se implementaron: el Panel de Administración —tercera superficie de interfaz del sistema— quedó completo con sus diez casos de uso, se cerró una deuda de seguridad que permitía a cualquier usuario darse el rol de administrador, y el producto quedó documentado con el Manual de Usuario y la ayuda dentro de la aplicación. ==La Web quedó publicada con el panel, la aplicación distribuida a los dispositivos de prueba== y el release v1.0.0 etiquetado en el repositorio.'),
+  P('**Estado: cerrado.** Los catorce ítems comprometidos se implementaron: el Panel de Administración —tercera superficie de interfaz del sistema— quedó completo con sus diez casos de uso, se cerró una deuda de seguridad que permitía a cualquier usuario darse el rol de administrador, y el producto quedó documentado con el Manual de Usuario y la ayuda dentro de la aplicación. Las migraciones se aplicaron y se verificaron contra la base, la Web quedó publicada con el panel, ==la aplicación distribuida a los dispositivos de prueba== y el release v1.0.0 etiquetado en el repositorio.'),
   T([3200, 6438], ['Atributo', 'Detalle'], [
     ['Paquete de trabajo', 'PT 7.0'],
     ['Período de desarrollo', '15/10/2026 al 28/10/2026'],
@@ -53,7 +53,7 @@ const contenido = [
     ['CU-34', 'Iniciar Sesión Administrador', '3', 'Hecho', '27513c3'],
     ['CU-38', 'Consultar Estadísticas (Dashboard)', '3', 'Hecho', '27513c3'],
     ['CU-35', 'Validar Identidad Profesional', '3', 'Hecho', '96e1c10, c1cf976'],
-    ['CU-37', 'Gestionar Categorías de Oficios', '3', 'Hecho', '8352911'],
+    ['CU-37', 'Gestionar Categorías de Oficios', '3', 'Hecho', '8352911, a9581c8'],
     ['CU-36', 'Suspender Cuenta', '3', 'Hecho', '2d35428'],
     ['CU-39', 'Gestionar Denuncias', '3', 'Hecho', '4f7a7c2'],
     ['CU-46', 'Moderar Reseñas', '2', 'Hecho', '19b7acf'],
@@ -62,7 +62,7 @@ const contenido = [
     ['CU-42', 'Consultar Ayuda y Soporte', '2', 'Hecho', '3bf73a0'],
     ['T-03', 'Despliegue de la Web y el backend; distribución de la app', '2', '==Hecho==', '==(completar)=='],
     ['T-04', 'Manual de Usuario y FAQ', '2', 'Hecho', 'b07803e'],
-    ['TOTAL', '14 ítems comprometidos — 14 completados', '32', '100 %', '==13 commits=='],
+    ['TOTAL', '14 ítems comprometidos — 14 completados', '32', '100 %', '13 commits'],
   ]),
   P('**Lectura del resultado.** El sprint cerró su compromiso completo y con él el backlog del proyecto. Se sostuvo el método de los sprints anteriores: el esquema completo en una primera migración (T-12) y cada migración con su guion de aceptación antes de construir encima. La T-12 no lleva puntos, con el criterio de la T-07, la T-10 y la T-11. Los 2 puntos de la T-13 son deuda técnica y no descuentan backlog.'),
   P('**Mitigación del apartado 6 que se aprovechó.** El armazón del panel y sus componentes de tabla y formulario se habían adelantado en el Sprint 4 (precios y cupones) y el Sprint 5 (denuncias): las seis secciones nuevas se montaron sobre ese armazón, y las tablas de calificaciones y denuncias ya traían las columnas de moderación previstas.'),
@@ -78,9 +78,9 @@ const contenido = [
     ['flutter analyze', '0 issues'],
     ['flutter test', '411 pruebas en verde (362 al cierre del Sprint 5), con una prueba de recorrido por cada pantalla nueva'],
     ['Builds', 'Web y APK de Android en modo release compilan'],
-    ['Migraciones', '0034 a 0044, cada una con su guion de aceptación. ==0034 aplicada con 9 de 9 reglas en OK; 0035 a 0044 aplicadas y verificadas contra la base (completar el total de reglas)=='],
+    ['Migraciones', '0034 a 0044 aplicadas y verificadas contra la base: 66 reglas de aceptación en OK'],
     ['Seguridad (T-13)', 'Verificado contra la base: un usuario ya no puede escribirse el rol ni el estado de la cuenta por la API, y sigue editando sus datos de contacto'],
-    ['Web publicada', '==https://byto-laburitoapp-2e5af.web.app (Firebase Hosting), con el panel en /admin/ingresar=='],
+    ['Web publicada', 'https://byto-laburitoapp-2e5af.web.app (Firebase Hosting), con el panel en /admin/ingresar'],
     ['Distribución de la app', '==TestFlight (iOS) y prueba interna de Google Play (Android) — completar con lo que se haya hecho=='],
     ['Prueba de punta a punta', '==Ingreso al panel → aprobar un Profesional → denuncia desde la Web → suspensión desde el panel → apelación desde la cuenta suspendida → aceptación y reactivación=='],
     ['Documentación', 'Manual de Usuario y FAQ (docs/manual/MANUAL-USUARIO.docx); las mismas preguntas en la pantalla de Ayuda'],
@@ -95,10 +95,12 @@ const contenido = [
   ]),
 
   H3('7.6.4 Problemas encontrados'),
-  P('Se documentan los tres que dejan un aprendizaje.'),
+  P('Se documentan los cuatro que dejan un aprendizaje.'),
   P('**a) Cualquier usuario podía darse el rol de administrador.** Al planificar el panel se revisaron las políticas de la tabla de perfiles: la de actualización del propio perfil era de fila entera y la tabla no tenía guard de columnas, a diferencia de profesionales (T-09) y pedidos (Sprint 2). Con una llamada directa a la API, un usuario podía escribir su propio tipo de cuenta o levantarse una suspensión. *Solución:* un guard antes de cada actualización que deja al dueño escribir solo sus datos de contacto; tipo y estado se cambian únicamente con las funciones del panel, que dejan registro. Se verificó contra la base. *Aprendizaje:* el guard de columnas tiene que acompañar a toda política de fila entera; se había aplicado tabla por tabla a medida que aparecía el problema y no como regla.'),
   P('**b) Un Profesional rechazado no tenía cómo volver a cargar.** Al escribir el Manual de Usuario y contrastar cada paso con la aplicación, se vio que el inicio avisaba la documentación pendiente y la que estaba en revisión, pero no la rechazada; además, tres nombres de botones del texto de ayuda no coincidían con la pantalla. *Solución:* aviso de rechazo en el inicio con el acceso a la carga y el motivo visible en la pantalla de documentación; los textos de ayuda se corrigieron antes de cargarlos en la base. *Aprendizaje:* redactar la documentación de usuario recorriendo la aplicación funciona como una prueba de aceptación más.'),
   P('**c) Una vez aprobada la identidad, la pantalla de documentación mostraba los documentos como faltantes.** Es consecuencia directa del requerimiento especial del CU-35: las fotos se destruyen al resolver, y la pantalla del CU-09 contaba documentos cargados. *Solución:* con la identidad aprobada, la pantalla muestra el estado verificado y ya no ofrece cargar nada. *Aprendizaje:* borrar datos por una regla de privacidad cambia lo que ven las pantallas que los leían; hay que revisarlas en el mismo cambio.'),
+
+  P('**d) Cinco categorías quedaron sin ícono al aplicar la migración.** El guion de aceptación de la 0038 lo detectó: la carga de íconos buscaba los oficios por un identificador deducido del nombre, y cinco de ellos tenían uno abreviado desde la carga inicial del Sprint 1. *Solución:* se corrigieron los identificadores en la migración y se volvió a aplicar, que es segura de repetir. *Aprendizaje:* los datos que ya están en la base se consultan antes de escribir una migración que los toca, como se hizo con los esquemas desde el Sprint 3.'),
 
   H3('7.6.5 Burndown del proyecto tras el Sprint 6'),
   P('El gráfico siguiente incorpora el sexto y último punto medido de la línea de ejecución real. Se conservan la línea ideal y la línea planificada tal como fueron publicadas en la Sección 1.'),
