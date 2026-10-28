@@ -38,21 +38,27 @@ Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanific
 
 | ID | Tarea / Caso de Uso | Tipo | Pts | Estado | Evidencia |
 |---|---|---|---|---|---|
-| T-12 | Esquema de administración con sus políticas RLS (infraestructura) | Backend | — | ⬜ | |
-| T-13 | Deuda de seguridad: columnas de `perfiles` | Backend | 2 | ⬜ | |
-| CU-34 | Iniciar Sesión Administrador | Full-stack | 3 | ⬜ | |
-| CU-38 | Consultar Estadísticas (Dashboard) | Frontend | 3 | ⬜ | |
-| CU-35 | Validar Identidad Profesional | Full-stack | 3 | ⬜ | |
-| CU-37 | Gestionar Categorías de Oficios | Full-stack | 3 | ⬜ | |
-| CU-36 | Suspender Cuenta | Full-stack | 3 | ⬜ | |
-| CU-39 | Gestionar Denuncias | Full-stack | 3 | ⬜ | |
-| CU-46 | Moderar Reseñas | Full-stack | 2 | ⬜ | |
-| CU-47 | Configurar Parámetros Globales | Full-stack | 2 | ⬜ | |
-| CU-49 | Recuperar Cuenta Bloqueada | Full-stack | 2 | ⬜ | |
-| CU-42 | Consultar Ayuda y Soporte | Frontend | 2 | ⬜ | |
-| T-03 | Despliegue de la Web y el backend; distribución de la app | Técnica | 2 | ⬜ | |
-| T-04 | Manual de Usuario y FAQ | Técnica | 2 | ⬜ | |
+| T-12 | Esquema de administración con sus políticas RLS (infraestructura) | Backend | — | ✅ | `5404333` |
+| T-13 | Deuda de seguridad: columnas de `perfiles` | Backend | 2 | ✅ | `5404333` |
+| CU-34 | Iniciar Sesión Administrador | Full-stack | 3 | ✅ | `27513c3` |
+| CU-38 | Consultar Estadísticas (Dashboard) | Frontend | 3 | ✅ | `27513c3` |
+| CU-35 | Validar Identidad Profesional | Full-stack | 3 | ✅ | `96e1c10`, `c1cf976` |
+| CU-37 | Gestionar Categorías de Oficios | Full-stack | 3 | ✅ | `8352911` |
+| CU-36 | Suspender Cuenta | Full-stack | 3 | ✅ | `2d35428` |
+| CU-39 | Gestionar Denuncias | Full-stack | 3 | ✅ | `4f7a7c2` |
+| CU-46 | Moderar Reseñas | Full-stack | 2 | ✅ | `19b7acf` |
+| CU-47 | Configurar Parámetros Globales | Full-stack | 2 | ✅ | `a34a2a3` |
+| CU-49 | Recuperar Cuenta Bloqueada | Full-stack | 2 | ✅ | `58baa69` |
+| CU-42 | Consultar Ayuda y Soporte | Frontend | 2 | ✅ | `3bf73a0` |
+| T-03 | Despliegue de la Web y el backend; distribución de la app | Técnica | 2 | 🟡 | Builds de release listos; falta aplicar 0035–0044, publicar la Web y distribuir |
+| T-04 | Manual de Usuario y FAQ | Técnica | 2 | ✅ | `b07803e` |
 | | **Total** | | **32** | | |
+
+**Estado.** Todo el alcance está escrito, commiteado y probado: `flutter analyze` sin issues,
+**411 pruebas en verde** (362 al cierre del Sprint 5), Web y APK de release compilando. La 0034
+está aplicada con su guion en OK (9/9). Lo que falta es la T-03: aplicar 0035 a 0044 con sus
+guiones, publicar la Web y la distribución de la app (apartado 5). El apartado 7.6 está en
+`SPRINT-06-cierre.md` y `.docx`, con lo que falta confirmar en amarillo.
 
 La T-12 no lleva puntos, con el criterio de la T-07, la T-10 y la T-11: es la
 infraestructura sin la cual los casos de uso no existen. La T-13 sí, con el criterio de la

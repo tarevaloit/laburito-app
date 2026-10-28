@@ -2,7 +2,7 @@
 
 > **Fuente de verdad del proyecto.** Este archivo se actualiza al cerrar cada sesión de trabajo.
 > Vive en `docs/ESTADO.md` del repo y se commitea junto con el código.
-> Última actualización: 13/10/2026
+> Última actualización: 27/10/2026
 
 ---
 
@@ -796,12 +796,54 @@ más alta. Es el tercer ajuste del 7.4.7 funcionando.
    (decisión del responsable). La fila «Prueba de punta a punta» del 7.5.2 va en amarillo: se confirma con el
    recorrido del punto 2 antes de entregar.
 
+## 4e. Sprint 6 — en cierre, 32 pts (PT 7.0)
+
+Rama **`sprint-6`**, salida de `main` en `v0.5.0`. El plan, las decisiones de diseño y el
+orden de fases viven en `docs/sprints/SPRINT-06.md`; acá va lo que ya pasó.
+
+### 4e.1 Lo escrito y commiteado
+
+| Commit | Qué | Verificado |
+|---|---|---|
+| `14fd95d` `docs(S6)` | `docs/sprints/SPRINT-06.md` | — |
+| `5404333` `feat(T-12,T-13)` | 0034: `sanciones`, `apelaciones`, `parametros_sistema`, `accesos_admin`, `preguntas_frecuentes`, columnas de moderación, tipos de aviso, guard de `perfiles` | **Aplicada, 9/9 OK** |
+| `27513c3` `feat(CU-34,CU-38)` | 0035, 0036, `/admin/ingresar`, Dashboard con CSV | Guion `verificar_0035_0036.sql` escrito, **sin aplicar** |
+| `96e1c10` `feat(CU-35)` | 0037, Validaciones, borrado de fotos | `verificar_0037.sql`, sin aplicar |
+| `8352911` `feat(CU-37)` | 0038, Categorías con íconos | `verificar_0038.sql`, sin aplicar |
+| `2d35428` `feat(CU-36)` | 0039, Usuarios y suspensión | `verificar_0039.sql`, sin aplicar |
+| `4f7a7c2` `feat(CU-39)` | 0040, Denuncias por gravedad | `verificar_0040.sql`, sin aplicar |
+| `19b7acf` `feat(CU-46)` | 0041, reporte y moderación de reseñas | `verificar_0041.sql`, sin aplicar |
+| `a34a2a3` `feat(CU-47)` | 0042, Parámetros cableados a zona y renovación | `verificar_0042.sql`, sin aplicar |
+| `58baa69` `feat(CU-49)` | 0043, Cuenta suspendida y apelaciones | `verificar_0043.sql`, sin aplicar |
+| `3bf73a0` `feat(CU-42)` | 0044 (FAQ), `/ayuda` | Sin guion: es contenido |
+| `c1cf976` `fix(CU-35)` | Aviso de documentación rechazada en el inicio | Prueba de widget |
+| `b07803e` `docs(T-04)` | `docs/manual/` (Manual de Usuario y FAQ) | — |
+
+`flutter analyze` 0 issues, **411 pruebas en verde** (49 nuevas), Web y APK de release compilando.
+
+### 4e.2 Lo que falta, en orden
+
+1. **Aplicar 0035 a 0044** en ese orden, cada una envuelta en `begin … commit` con
+   `supabase db query --linked -f`, y correr su guion de `supabase/scripts/`. La 0041
+   depende de `normalizar_nombre` (0038) y la 0040 de `suspender_cuenta` (0039).
+2. **Publicar la Web** (`flutter build web --release --dart-define-from-file=.env` y
+   `firebase deploy --only hosting`): es la que trae el panel.
+3. **Distribución de la app** (T-03): requiere las cuentas de Apple Developer Program y
+   Google Play Console. El APK de release ya compila.
+4. Recorrido de punta a punta con datos móviles: ingreso al panel → aprobar un Profesional
+   → denuncia → suspensión → apelación → reactivación.
+5. Merge a `main`, tag `v1.0.0`, completar lo amarillo del 7.6 y pegar el burndown.
+
 ## 5. Decisiones técnicas tomadas
 
 Formato: fecha · decisión · motivo. No se borran, se agregan.
 
 | Fecha | Decisión | Motivo |
 |---|---|---|
+| 27/10 | `perfiles` lleva guard de columnas (T-13): el dueño escribe solo nombre, apellido, teléfono y avatar | La política de actualización era de fila entera: cualquiera podía escribirse `tipo = 'administrador'`. Tipo y estado se cambian solo con las funciones del panel |
+| 27/10 | No hay rol «SuperAdmin»: nadie sanciona a otro administrador y el CU-47 pide contraseña | La ERS lo nombra en el CU-36 y el CU-47, pero un segundo nivel de rol no suma nada con un solo administrador |
+| 27/10 | Las fotos del DNI las borra el panel por Storage antes de `resolver_verificacion` | Mismo orden que el CU-11: si algo falla en el medio, se puede reintentar |
+| 27/10 | La sesión de una cuenta suspendida no se cierra al entrar: el inicio muestra la sanción y la apelación | Para apelar (CU-49) hace falta saber quién es; la RLS ya la trata como suspendida |
 | 05/08 | Supabase reemplaza a Firebase | Modelo relacional + RLS + Edge Functions en un solo servicio; PostGIS para el radio de búsqueda |
 | 05/08 | Riverpod reemplaza a Bloc | Menos boilerplate para un equipo de una persona; providers componibles |
 | 05/08 | Distribución móvil por TestFlight + canal interno de Play | Evita los plazos de revisión de tiendas, externos al proyecto |
@@ -977,10 +1019,10 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 _(Lo primero que hay que hacer al retomar. Está en orden: cada punto depende
 del anterior.)_
 
-### 7.1 Sprint 5 — lo que sigue
+### 7.1 Sprint 6 — lo que sigue
 
-Ver «4d.3 Lo que falta, en orden»: configuración de Supabase Auth para el CU-18, recorrido
-en el teléfono, secretos del workflow y cierre con el apartado 7.5. Sigue pendiente del
+Ver «4e.2 Lo que falta, en orden»: aplicar 0035 a 0044 con sus guiones, publicar la Web,
+distribuir la app y cerrar con el apartado 7.6. Sigue pendiente del
 responsable: alta de las cuentas de desarrollador de Apple y Google, pegar la sección 7.4
 en el documento y volver el pack Bronce a $4.500 si quedó modificado por la demo.
 
