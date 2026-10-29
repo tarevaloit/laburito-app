@@ -32,6 +32,12 @@ class MensajesError {
       if (m.contains('rate limit') || m.contains('too many')) {
         return 'Demasiados intentos. Esperá unos minutos.';
       }
+      // El trigger del alta abortó y Auth no pasa el motivo. El único rechazo
+      // conocido es el DNI repetido (0045), que la app ya consulta antes.
+      if (m.contains('database error saving new user')) {
+        return 'No pudimos crear la cuenta. Revisá que tu DNI no esté '
+            'registrado en otra cuenta.';
+      }
       return error.message;
     }
 
@@ -105,6 +111,20 @@ abstract class ErrorDeNegocio implements Exception {
 /// La cuenta existe pero está suspendida o dada de baja (CU-03).
 class CuentaNoHabilitadaException implements ErrorDeNegocio {
   const CuentaNoHabilitadaException(this.message);
+
+  @override
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
+/// Otro Profesional ya se registró con ese DNI (CU-02).
+class DniEnUsoException implements ErrorDeNegocio {
+  const DniEnUsoException([
+    this.message = 'Ese DNI ya está en uso. Si ya tenés una cuenta, '
+        'iniciá sesión.',
+  ]);
 
   @override
   final String message;

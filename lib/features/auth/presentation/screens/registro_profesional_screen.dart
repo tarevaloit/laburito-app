@@ -64,8 +64,17 @@ class _RegistroProfesionalScreenState
     super.dispose();
   }
 
-  void _siguiente() {
+  Future<void> _siguiente() async {
     if (!_formPaso1.currentState!.validate()) return;
+
+    final controller = ref.read(authControllerProvider.notifier);
+    final ok = await controller.comprobarDni(_dni.text);
+    if (!mounted) return;
+    if (!ok) {
+      final error = ref.read(authControllerProvider).error;
+      mostrarMensaje(context, MensajesError.desde(error!));
+      return;
+    }
     setState(() => _paso = 1);
   }
 
@@ -104,6 +113,8 @@ class _RegistroProfesionalScreenState
     } else {
       final error = ref.read(authControllerProvider).error;
       mostrarMensaje(context, MensajesError.desde(error!));
+      // El DNI está en el paso 1: se vuelve ahí para corregirlo.
+      if (error is DniEnUsoException) setState(() => _paso = 0);
     }
   }
 

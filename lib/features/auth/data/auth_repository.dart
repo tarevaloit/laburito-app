@@ -39,6 +39,19 @@ class AuthRepository {
     );
   }
 
+  /// CU-02 — el DNI no se repite entre Profesionales. La pantalla lo consulta
+  /// al pasar del paso 1 al 2, para avisar antes de que elija sus oficios; el
+  /// trigger `handle_new_user` lo vuelve a comprobar y aborta el alta (0045).
+  Future<void> comprobarDni(String dni) async {
+    final libre = await _client.rpc<bool>(
+      'dni_disponible',
+      params: {'p_dni': _normalizarDni(dni)},
+    );
+    if (!libre) throw const DniEnUsoException();
+  }
+
+  String _normalizarDni(String dni) => dni.replaceAll(RegExp(r'[\.\s]'), '');
+
   /// CU-02 — Registrar Profesional.
   /// Las categorías viajan en el metadata: el trigger `handle_new_user` las
   /// inserta, porque durante el signUp todavía no hay sesión para las RLS.
@@ -52,6 +65,10 @@ class AuthRepository {
     required List<String> categorias,
     required String password,
   }) async {
+    // Otra vez antes del alta: entre el paso 1 y el 2 alguien pudo tomarlo, y
+    // si lo frena el trigger, Supabase Auth devuelve un error genérico.
+    await comprobarDni(dni);
+
     await _client.auth.signUp(
       email: email.trim(),
       password: password,
@@ -60,7 +77,7 @@ class AuthRepository {
         'nombre': nombre.trim(),
         'apellido': apellido.trim(),
         'telefono': telefono.trim(),
-        'dni': dni.replaceAll(RegExp(r'[\.\s]'), ''),
+        'dni': _normalizarDni(dni),
         'descripcion': descripcion.trim(),
         'categorias': categorias,
         'acepto_legales_en': _ahora(),

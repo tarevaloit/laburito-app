@@ -45,6 +45,10 @@ class AuthController extends _$AuthController {
             password: password,
           ));
 
+  /// CU-02 — paso 1 del registro
+  Future<bool> comprobarDni(String dni) =>
+      _ejecutar(() => _repo.comprobarDni(dni));
+
   /// CU-02
   Future<bool> registrarProfesional({
     required String nombre,
