@@ -308,57 +308,68 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'dashboard',
             name: 'adminDashboard',
-            builder: (context, state) => const DashboardScreen(),
+            pageBuilder: (context, state) =>
+                paginaDelPanel(state, const DashboardScreen()),
           ),
           // CU-35.
           GoRoute(
             path: 'validaciones',
             name: 'adminValidaciones',
-            builder: (context, state) => const ValidacionesScreen(),
+            pageBuilder: (context, state) =>
+                paginaDelPanel(state, const ValidacionesScreen()),
           ),
           // CU-37.
           GoRoute(
             path: 'categorias',
             name: 'adminCategorias',
-            builder: (context, state) => const CategoriasAdminScreen(),
+            pageBuilder: (context, state) =>
+                paginaDelPanel(state, const CategoriasAdminScreen()),
           ),
           // CU-36. `?id=` abre el detalle de un usuario (desde Denuncias).
           GoRoute(
             path: 'usuarios',
             name: 'adminUsuarios',
-            builder: (context, state) =>
-                UsuariosScreen(inicial: state.uri.queryParameters['id']),
+            pageBuilder: (context, state) => paginaDelPanel(state,
+                UsuariosScreen(inicial: state.uri.queryParameters['id'])),
           ),
           // CU-46.
           GoRoute(
             path: 'resenas',
             name: 'adminResenas',
-            builder: (context, state) => const ResenasAdminScreen(),
+            pageBuilder: (context, state) =>
+                paginaDelPanel(state, const ResenasAdminScreen()),
           ),
           // CU-47.
           GoRoute(
             path: 'parametros',
             name: 'adminParametros',
-            builder: (context, state) => const ParametrosScreen(),
+            pageBuilder: (context, state) =>
+                paginaDelPanel(state, const ParametrosScreen()),
           ),
           GoRoute(
             path: 'precios',
             name: 'adminPrecios',
-            builder: (context, state) => const PreciosScreen(),
+            pageBuilder: (context, state) =>
+                paginaDelPanel(state, const PreciosScreen()),
           ),
           GoRoute(
             path: 'cupones',
             name: 'adminCupones',
-            builder: (context, state) => const CuponesScreen(),
+            pageBuilder: (context, state) =>
+                paginaDelPanel(state, const CuponesScreen()),
           ),
           // CU-41 y CU-39; `?vista=apelaciones` abre las del CU-49.
           GoRoute(
             path: 'denuncias',
             name: 'adminDenuncias',
-            builder: (context, state) => DenunciasScreen(
-              pestanaInicial:
-                  state.uri.queryParameters['vista'] == 'apelaciones' ? 1 : 0,
-            ),
+            pageBuilder: (context, state) => paginaDelPanel(
+                state,
+                DenunciasScreen(
+                  pestanaInicial:
+                      state.uri.queryParameters['vista'] == 'apelaciones'
+                          ? 1
+                          : 0,
+                )),
           ),
         ],
       ),
@@ -434,6 +445,13 @@ final routerProvider = Provider<GoRouter>((ref) {
     ),
   );
 });
+
+/// Las secciones del panel cambian sin animación. Todas comparten la misma
+/// barra lateral (`PanelAdmin`), así que con la transición de una pantalla
+/// nueva parecía que se iba a otro lado cuando solo cambia el contenido de la
+/// derecha.
+Page<void> paginaDelPanel(GoRouterState state, Widget child) =>
+    NoTransitionPage<void>(key: state.pageKey, child: child);
 
 /// `/admin` a secas lleva al Dashboard (CU-34, paso 6); `/admin/cupones` y el
 /// resto, a donde pidieron. Ver el comentario de la ruta en [routerProvider].

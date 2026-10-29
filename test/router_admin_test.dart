@@ -15,9 +15,15 @@ void main() {
           path: '/admin',
           redirect: redireccionPanelAdmin,
           routes: [
-            GoRoute(path: 'dashboard', builder: (_, __) => const Text('dashboard')),
-            GoRoute(path: 'precios', builder: (_, __) => const Text('precios')),
-            GoRoute(path: 'cupones', builder: (_, __) => const Text('cupones')),
+            GoRoute(
+                path: 'dashboard',
+                pageBuilder: (_, s) => paginaDelPanel(s, const Text('dashboard'))),
+            GoRoute(
+                path: 'precios',
+                pageBuilder: (_, s) => paginaDelPanel(s, const Text('precios'))),
+            GoRoute(
+                path: 'cupones',
+                pageBuilder: (_, s) => paginaDelPanel(s, const Text('cupones'))),
           ],
         ),
       ],
@@ -42,5 +48,20 @@ void main() {
     await t.pumpAndSettle();
 
     expect(find.text('dashboard'), findsOneWidget);
+  });
+
+  // Regresión del 28/10: cambiar de sección animaba una pantalla nueva, cuando
+  // la barra lateral es la misma y solo cambia el contenido.
+  testWidgets('cambiar de sección no anima: en el primer cuadro ya está',
+      (t) async {
+    final router = await montar(t);
+    router.go('/admin/dashboard');
+    await t.pumpAndSettle();
+
+    router.go('/admin/cupones');
+    await t.pump();
+
+    expect(find.text('cupones'), findsOneWidget);
+    expect(find.text('dashboard'), findsNothing);
   });
 }
