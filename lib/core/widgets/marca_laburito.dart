@@ -170,18 +170,22 @@ class MarcaLaburito extends StatelessWidget {
 
 /// Contenedor centrado y acotado en ancho, para que la Web no se estire.
 class TarjetaFormulario extends StatelessWidget {
-  const TarjetaFormulario({super.key, required this.child});
+  const TarjetaFormulario({super.key, required this.child, this.physics});
 
   final Widget child;
+
+  /// `AlwaysScrollableScrollPhysics` debajo de un RefreshIndicator, para que
+  /// se pueda arrastrar aunque el contenido entre entero en la pantalla.
+  final ScrollPhysics? physics;
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: SingleChildScrollView(
+        physics: physics,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: ConstrainedBox(
-          constraints:
-              const BoxConstraints(maxWidth: Medidas.anchoFormulario),
+          constraints: const BoxConstraints(maxWidth: Medidas.anchoFormulario),
           child: child,
         ),
       ),
