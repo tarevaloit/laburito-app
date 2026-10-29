@@ -796,7 +796,7 @@ más alta. Es el tercer ajuste del 7.4.7 funcionando.
    (decisión del responsable). La fila «Prueba de punta a punta» del 7.5.2 va en amarillo: se confirma con el
    recorrido del punto 2 antes de entregar.
 
-## 4e. Sprint 6 — en cierre, 32 pts (PT 7.0)
+## 4e. Sprint 6 — cerrado, 32/32 pts (PT 7.0)
 
 Rama **`sprint-6`**, salida de `main` en `v0.5.0`. El plan, las decisiones de diseño y el
 orden de fases viven en `docs/sprints/SPRINT-06.md`; acá va lo que ya pasó.
@@ -825,8 +825,9 @@ orden de fases viven en `docs/sprints/SPRINT-06.md`; acá va lo que ya pasó.
 
 1. ~~Aplicar 0035 a 0044~~ hecho el 28/10: 66 reglas en OK con la 0034.
 2. ~~Publicar la Web~~ hecho el 28/10 en los dos sitios de Hosting.
-3. **Distribución de la app** (T-03): requiere las cuentas de Apple Developer Program y
-   Google Play Console. El APK de release ya compila.
+3. ~~Distribución de la app~~ pasa a **deuda técnica** (decisión del 28/10): la subida a
+   TestFlight y a la prueba interna de Google Play espera el alta de las cuentas de
+   desarrollador. El APK de release ya compila. Ver la sección 6.
 4. Recorrido de punta a punta con datos móviles: ingreso al panel → aprobar un Profesional
    → denuncia → suspensión → apelación → reactivación.
 5. ~~Merge a `main` y tag `v1.0.0`~~ hechos el 28/10 (sin pushear). Falta completar lo
@@ -985,8 +986,9 @@ Formato: fecha · decisión · motivo. No se borran, se agregan.
 
 | Ítem | Detalle | Cuándo se salda |
 |---|---|---|
-| Aprobación manual de Profesionales | CU-09 deja al Profesional en «En Revisión» pero CU-35 (resolverla) recién está en Sprint 6. Se aprueba a mano por SQL. | Sprint 6 |
-| Categorías de oficio | Se cargan por seed en T-02; su ABM (CU-37) es del Sprint 6 | Sprint 6 |
+| **Distribución por las tiendas de prueba** | La T-03 se cerró con la Web y el backend desplegados y el APK de release. Falta subir la app a TestFlight y a la prueba interna de Google Play: requiere Apple Developer Program (anual) y Google Play Console (alta única) | Al dar de alta las cuentas |
+| ~~Aprobación manual de Profesionales~~ | **Saldada el 27/10 con el CU-35** (panel → Validaciones). | ✅ |
+| ~~Categorías de oficio~~ | **Saldada el 27/10 con el CU-37** (panel → Categorías). | ✅ |
 | ~~Providers escritos a mano~~ | **Saldada el 02/09.** Todo el proyecto pasó a `@riverpod` y `freezed`. La UI no se tocó: los nombres generados coinciden con los de antes. | ✅ |
 | ~~El estado del pedido se puede cambiar sin pasar por la RPC~~ | **Saldada el 02/09 con la migración 0008.** Trigger `pedidos_guard_estado` `BEFORE UPDATE` + compuerta `app.transicion_estado` en las tres RPC que sí pueden mover el estado. | ✅ |
 | ~~Un pedido puede nacer en un estado terminal~~ | **Saldada el 02/09 con la migración 0009.** Trigger `pedidos_guard_alta` `BEFORE INSERT`, con la misma compuerta que el de UPDATE. | ✅ |

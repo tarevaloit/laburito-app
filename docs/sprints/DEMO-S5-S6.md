@@ -104,7 +104,7 @@ Todo en la **ventana de incógnito (B)**, salvo donde se indica.
 | ¿Dónde está el «SuperAdmin»? | Hay un solo rol de administrador. Sancionar a otro administrador se bloquea siempre, y los parámetros piden contraseña (7.6.1) |
 | ¿Por qué CSV y no Excel o PDF? | Excel lo abre directamente y no suma dependencias (7.6.1) |
 | ¿Cómo se prueba todo esto? | 411 pruebas automáticas, una de recorrido por pantalla, y un guion de aceptación por migración: 66 reglas verificadas contra la base |
-| ¿Y la app en las tiendas? | Se distribuye por los canales de prueba (apartado 2.1). ==Completar según el estado de las cuentas de desarrollador== |
+| ¿Y la app en las tiendas? | La subida a TestFlight y a la prueba interna de Google Play quedó como deuda técnica: depende del alta de las cuentas de desarrollador, que es externa al proyecto. El APK de release ya está listo (7.6.3) |
 
 ## Después de la demo
 

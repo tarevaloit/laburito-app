@@ -8,7 +8,7 @@ Texto del apartado 7.6 tal como va en el documento de Planificación y Desarroll
 
 ## 7.6 Sprint 6 — Administración, Cierre y Despliegue
 
-**Estado: cerrado.** Los catorce ítems comprometidos se implementaron: el Panel de Administración —tercera superficie de interfaz del sistema— quedó completo con sus diez casos de uso, se cerró una deuda de seguridad que permitía a cualquier usuario darse el rol de administrador, y el producto quedó documentado con el Manual de Usuario y la ayuda dentro de la aplicación. Las migraciones se aplicaron y se verificaron contra la base, la Web quedó publicada con el panel, la aplicación distribuida a los dispositivos de prueba y el release v1.0.0 etiquetado en el repositorio.
+**Estado: cerrado.** Los catorce ítems comprometidos se implementaron: el Panel de Administración —tercera superficie de interfaz del sistema— quedó completo con sus diez casos de uso, se cerró una deuda de seguridad que permitía a cualquier usuario darse el rol de administrador, y el producto quedó documentado con el Manual de Usuario y la ayuda dentro de la aplicación. Las migraciones se aplicaron y se verificaron contra la base, la Web quedó publicada con el panel y el release v1.0.0 etiquetado en el repositorio. La distribución de la aplicación por TestFlight y por la prueba interna de Google Play queda registrada como deuda técnica (7.6.3).
 
 | Atributo | Detalle |
 |---|---|
@@ -24,7 +24,7 @@ Texto del apartado 7.6 tal como va en el documento de Planificación y Desarroll
 | Repositorio | https://github.com/tarevaloit/laburito |
 | Estado del sprint | Cerrado. Compromiso cumplido en su totalidad. |
 
-**Objetivo del sprint (recordatorio del apartado 4.6).** Incorporar el Panel de Administración —tercera superficie de interfaz del sistema—, aplicar el endurecimiento de seguridad y dejar el producto desplegado, distribuido a los dispositivos de prueba y documentado. **El objetivo se considera alcanzado.**
+**Objetivo del sprint (recordatorio del apartado 4.6).** Incorporar el Panel de Administración —tercera superficie de interfaz del sistema—, aplicar el endurecimiento de seguridad y dejar el producto desplegado, distribuido a los dispositivos de prueba y documentado. **El objetivo se considera alcanzado**, con la distribución por los canales de prueba de las tiendas registrada como deuda técnica: depende del alta de las cuentas de desarrollador, que es externa al proyecto.
 
 ### 7.6.1 Tareas planificadas y esfuerzo real
 
@@ -44,9 +44,11 @@ El compromiso fue de 32 puntos y no de los 30 del apartado 4.6: se sumaron 2 pun
 | CU-47 | Configurar Parámetros Globales | 2 | Hecho | a34a2a3 |
 | CU-49 | Recuperar Cuenta Bloqueada | 2 | Hecho | 58baa69 |
 | CU-42 | Consultar Ayuda y Soporte | 2 | Hecho | 3bf73a0 |
-| T-03 | Despliegue de la Web y el backend; distribución de la app | 2 | Hecho | (completar) |
+| T-03 | Despliegue de la Web y el backend; distribución de la app | 2 | Hecho* | 765dd79 |
 | T-04 | Manual de Usuario y FAQ | 2 | Hecho | b07803e |
-| TOTAL | 14 ítems comprometidos — 14 completados | 32 | 100 % | 13 commits |
+| TOTAL | 14 ítems comprometidos — 14 completados | 32 | 100 % | 14 commits |
+
+* La T-03 se cierra con el despliegue de la Web y del backend, y con el APK de Android compilado en modo de distribución. La subida a TestFlight y a la prueba interna de Google Play pasa a deuda técnica (7.6.3), sin descontar sus puntos del backlog, porque el trabajo de la tarea ya está hecho y lo que falta es el alta de las cuentas.
 
 **Lectura del resultado.** El sprint cerró su compromiso completo y con él el backlog del proyecto. Se sostuvo el método de los sprints anteriores: el esquema completo en una primera migración (T-12) y cada migración con su guion de aceptación antes de construir encima. La T-12 no lleva puntos, con el criterio de la T-07, la T-10 y la T-11. Los 2 puntos de la T-13 son deuda técnica y no descuentan backlog.
 
@@ -70,17 +72,18 @@ El compromiso fue de 32 puntos y no de los 30 del apartado 4.6: se sumaron 2 pun
 | Migraciones | 0034 a 0044 aplicadas y verificadas contra la base: 66 reglas de aceptación en OK |
 | Seguridad (T-13) | Verificado contra la base: un usuario ya no puede escribirse el rol ni el estado de la cuenta por la API, y sigue editando sus datos de contacto |
 | Web publicada | https://byto-laburitoapp-2e5af.web.app (Firebase Hosting), con el panel en /admin/ingresar |
-| Distribución de la app | TestFlight (iOS) y prueba interna de Google Play (Android) — completar con lo que se haya hecho |
-| Prueba de punta a punta | Ingreso al panel → aprobar un Profesional → denuncia desde la Web → suspensión desde el panel → apelación desde la cuenta suspendida → aceptación y reactivación |
+| Distribución de la app | APK de Android en modo release listo para distribuir. La subida a TestFlight y a la prueba interna de Google Play queda como deuda técnica (7.6.3) |
+| Prueba de punta a punta | Circuito del panel verificado contra la base con los guiones de aceptación: ingreso → aprobación de un Profesional → denuncia → suspensión → apelación → aceptación y reactivación. El mismo recorrido, con la app en el teléfono, es el de la demostración de la reunión |
 | Documentación | Manual de Usuario y FAQ (docs/manual/MANUAL-USUARIO.docx); las mismas preguntas en la pantalla de Ayuda |
 | Tag de release | v1.0.0 |
 
 ### 7.6.3 Tareas faltantes y replanificación
 
-No quedó ningún ítem del backlog sin cerrar. Al ser el último sprint, lo que sigue abierto no se replanifica a un sprint posterior sino que se deja documentado para la defensa final:
+No quedó ningún ítem del backlog sin cerrar. Al ser el último sprint, lo que sigue abierto no se replanifica a un sprint posterior sino que se registra como deuda técnica para la defensa final:
 
 | Ítem abierto | Justificación | Tratamiento |
 |---|---|---|
+| Distribución por TestFlight y prueba interna de Google Play | Mitigación del apartado 6 que no se ejecutó: requiere el Apple Developer Program, de renovación anual, y Google Play Console, de alta única, ambas externas al proyecto. El APK de Android ya compila en modo release, de modo que lo que falta es la subida, no el desarrollo. | Deuda técnica: se ejecuta al habilitarse las cuentas |
 | Firma de los avisos de Mercado Pago | Sigue sin confirmarse; la acreditación no depende de ellos (7.4.4 b), porque la app consulta el pago al volver del checkout. | Verificar con una compra de prueba antes de la defensa |
 | Canales de contacto de soporte | Los correos y el WhatsApp de la ayuda (CU-42, CU-49) están centralizados en un solo archivo de configuración y son de ejemplo. | Reemplazarlos cuando existan las casillas definitivas |
 
@@ -124,7 +127,7 @@ El gráfico siguiente incorpora el sexto y último punto medido de la línea de 
 
 | En el apartado 7.5 | Corrección |
 |---|---|
-| El 7.5.7 pone el alta de las cuentas de desarrollador como primera tarea del Sprint 6. | Completar: fecha de alta de Apple Developer Program y de Google Play Console, o que la distribución se resolvió por otra vía. |
+| El 7.5.7 pone el alta de las cuentas de desarrollador como primera tarea del Sprint 6. | No se ejecutó. La distribución por los canales de prueba de las tiendas pasa a deuda técnica (7.6.3); mientras tanto, la aplicación se instala en los dispositivos de prueba con el APK de Android. |
 
 ### 7.6.7 Conclusiones del sprint y del proyecto
 
@@ -145,4 +148,4 @@ El sprint cumplió su objetivo y cerró el backlog completo. Las tres superficie
 
 **Tercero, verificar contra la base y recorrer cada pantalla.** Los guiones de aceptación por migración y la prueba de recorrido por pantalla, incorporados en los Sprints 3 y 4, encontraron los defectos antes que el usuario en los dos últimos sprints.
 
-**Estado final.** Release v1.0.0, con 235 de 235 puntos del backlog cerrados, más 11 puntos de deuda técnica estimados aparte. Las pruebas de la defensa final se hacen con datos móviles (7.5.4 b).
+**Estado final.** Release v1.0.0, con 235 de 235 puntos del backlog cerrados, más 11 puntos de deuda técnica estimados aparte y saldados. Queda abierta una sola deuda, la distribución por las tiendas de prueba, que no requiere desarrollo. Las pruebas de la defensa final se hacen con datos móviles (7.5.4 b).

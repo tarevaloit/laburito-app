@@ -50,14 +50,15 @@ Estados: `⬜ pendiente` · `🟡 en curso` · `✅ hecho` · `⏭️ replanific
 | CU-47 | Configurar Parámetros Globales | Full-stack | 2 | ✅ | `a34a2a3` |
 | CU-49 | Recuperar Cuenta Bloqueada | Full-stack | 2 | ✅ | `58baa69` |
 | CU-42 | Consultar Ayuda y Soporte | Frontend | 2 | ✅ | `3bf73a0` |
-| T-03 | Despliegue de la Web y el backend; distribución de la app | Técnica | 2 | 🟡 | Migraciones aplicadas (66 reglas OK) y Web publicada; falta la distribución de la app |
+| T-03 | Despliegue de la Web y el backend; distribución de la app | Técnica | 2 | ✅ | `765dd79`: migraciones aplicadas (66 reglas OK), Web publicada y APK de release. La subida a las tiendas de prueba pasa a deuda técnica |
 | T-04 | Manual de Usuario y FAQ | Técnica | 2 | ✅ | `b07803e` |
 | | **Total** | | **32** | | |
 
 **Estado.** Todo el alcance está escrito, commiteado y probado: `flutter analyze` sin issues,
 **411 pruebas en verde** (362 al cierre del Sprint 5), Web y APK de release compilando. La 0034
 a 0044 están aplicadas con sus guiones en OK (66 reglas) y la Web está publicada con el panel.
-Lo que falta de la T-03 es la distribución de la app (apartado 5). El apartado 7.6 está en
+La subida a TestFlight y a la prueba interna de Google Play queda como deuda técnica: depende del alta de
+las cuentas de desarrollador (apartado 5). El apartado 7.6 está en
 `SPRINT-06-cierre.md` y `.docx`, con lo que falta confirmar en amarillo.
 
 La T-12 no lleva puntos, con el criterio de la T-07, la T-10 y la T-11: es la
