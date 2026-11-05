@@ -1,11 +1,46 @@
 # Laburito
 
-Plataforma geolocalizada que conecta **Buscadores** con **Profesionales** de oficios.
+[![CI](https://github.com/tarevaloit/laburito-app/actions/workflows/ci.yml/badge.svg)](https://github.com/tarevaloit/laburito-app/actions/workflows/ci.yml)
 
-Seminario de Integración Profesional 2026 · Comisión P03 · Release actual: `v0.1.0`
+Plataforma geolocalizada que conecta **Buscadores** con **Profesionales** de oficios.
+Un solo proyecto Flutter con tres superficies: la **web del Buscador**, la **app
+del Profesional** (Android e iOS) y un **panel de administración**.
+
+Proyecto final de Ingeniería en Informática (USAL) · Seminario de Integración
+Profesional 2026 · Release actual: `v1.0.0`
+
+| App del Profesional | | | |
+|---|---|---|---|
+| ![Zona de cobertura](docs/screenshots/app-zona.webp) | ![Horarios](docs/screenshots/app-horarios.webp) | ![Billetera de tokens](docs/screenshots/app-billetera.webp) | ![Estadísticas](docs/screenshots/app-estadisticas.webp) |
+
+| Web del Buscador | Panel de administración |
+|---|---|
+| ![Publicar un pedido](docs/screenshots/web-publicar-pedido.webp) | ![Dashboard](docs/screenshots/web-admin-dashboard.webp) |
+| ![Ubicación del pedido](docs/screenshots/web-ubicacion.webp) | ![Categorías](docs/screenshots/web-admin-categorias.webp) |
+
+## Lo más interesante
+
+- **La base valida, la app acompaña.** Supabase con PostgreSQL: RLS en las 34
+  tablas, PostGIS para la geolocalización y 45 migraciones versionadas en
+  [`supabase/migrations/`](supabase/migrations/). Los estados de un pedido y sus
+  transiciones viven en la base; la app los refleja para no ofrecer acciones
+  que el servidor va a rechazar.
+- **Lógica sensible del lado del servidor.** Edge Functions en Deno
+  ([`supabase/functions/`](supabase/functions/)): a quién avisar de un pedido
+  nuevo lo decide el servidor y la alerta sale por FCM; los pagos con Mercado
+  Pago validan la firma HMAC del webhook antes de acreditar tokens.
+- **Feature-first con capas.** Cada feature en `lib/features/<feature>/` con
+  `presentation/`, `domain/` y `data/`; estado con Riverpod
+  (`riverpod_generator`), modelos con `freezed`, navegación con `go_router`.
+- **417 tests** en [`test/`](test/), más los que corren en un navegador real
+  para las trampas que solo existen en la web.
+- **Gestión de proyecto real:** plan IEEE 1058, matriz de riesgos, seis sprints
+  con burndown y un tag por release ([`docs/`](docs/)).
+
+## Documentación
 
 - Estado del proyecto: [`docs/ESTADO.md`](docs/ESTADO.md)
-- Plan del sprint en curso: [`docs/sprints/`](docs/sprints/)
+- Sprints: [`docs/sprints/`](docs/sprints/)
 - Puesta en marcha paso a paso: [`ARRANQUE.md`](ARRANQUE.md)
 
 ## Stack
@@ -23,6 +58,9 @@ flutter pub get
 cp .env.example .env      # completá SUPABASE_URL y SUPABASE_ANON_KEY
 flutter run -d chrome --dart-define-from-file=.env
 ```
+
+Firebase (notificaciones push) se configura con `flutterfire configure`, que
+genera `lib/firebase_options.dart`; ese archivo no se versiona.
 
 En VS Code alcanza con **F5**: las configuraciones de `.vscode/launch.json` ya
 leen el `.env`.

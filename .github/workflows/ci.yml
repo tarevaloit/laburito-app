@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Analyze y tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      # `lib/firebase_options.dart` lo genera `flutterfire configure` y no se
+      # versiona: para analizar alcanza con un stub con la misma API.
+      - name: Stub de firebase_options.dart
+        run: |
+          cat > lib/firebase_options.dart <<'DART'
+          import 'package:firebase_core/firebase_core.dart';
+
+          class DefaultFirebaseOptions {
+            static FirebaseOptions get currentPlatform =>
+                throw UnsupportedError('Corré flutterfire configure.');
+          }
+          DART
+
+      - run: flutter analyze
+      - run: flutter test

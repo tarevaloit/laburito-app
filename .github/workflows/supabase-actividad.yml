@@ -15,6 +15,9 @@ on:
 
 jobs:
   consultar:
+    # Solo en el repo privado, que tiene los secretos; la copia pública no
+    # necesita mantener viva la base.
+    if: github.repository == 'tarevaloit/laburito'
     runs-on: ubuntu-latest
     steps:
       - name: Leer una categoría de oficio
